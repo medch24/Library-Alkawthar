@@ -53,6 +53,7 @@ const History = mongoose.model('History', HistorySchema);
 
 // --- ROUTES API ---
 
+// ... (Les autres routes GET, POST, PUT, DELETE pour les livres et les prêts restent identiques) ...
 // GET: Récupérer tous les livres
 app.get('/api/books', async (req, res) => {
     try {
@@ -67,7 +68,6 @@ app.get('/api/books', async (req, res) => {
 app.post('/api/books', async (req, res) => {
     try {
         const { isbn, title, totalCopies, ...rest } = req.body;
-        // Si le livre existe, on ajoute la quantité. Sinon, on le crée (upsert).
         const updatedBook = await Book.findOneAndUpdate(
             { isbn: isbn },
             { $inc: { totalCopies: totalCopies || 1 }, $setOnInsert: { isbn, title, ...rest } },
@@ -78,53 +78,6 @@ app.post('/api/books', async (req, res) => {
         res.status(500).json({ message: "Erreur serveur", error });
     }
 });
-
-// POST: Upload via Excel
-app.post('/api/books/upload', upload.single('excelFile'), async (req, res) => {
-    if (!req.file) {
-        return res.status(400).send('Aucun fichier uploadé.');
-    }
-    try {
-        const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const json = xlsx.utils.sheet_to_json(worksheet);
-
-        let addedCount = 0;
-        let updatedCount = 0;
-
-        for (const row of json) {
-            const isbn = row['ISBN'] ? String(row['ISBN']).trim() : null;
-            if (!isbn || !row['Title']) continue;
-
-            const existingBook = await Book.findOne({ isbn: isbn });
-
-            if (existingBook) {
-                existingBook.totalCopies += parseInt(row['QTY'], 10) || 1;
-                await existingBook.save();
-                updatedCount++;
-            } else {
-                await Book.create({
-                    title: row['Title'],
-                    isbn: isbn,
-                    totalCopies: parseInt(row['QTY'], 10) || 1,
-                    subject: row['Subject'] || '',
-                    level: row['level'] || '',
-                    language: row['language'] || '',
-                    cornerName: row['Corner name'] || 'Non classé',
-                    cornerNumber: row['Corner number'] ? String(row['Corner number']) : '0',
-                    loanedCopies: 0
-                });
-                addedCount++;
-            }
-        }
-        res.json({ message: "Importation terminée!", addedCount, updatedCount });
-    } catch (error) {
-        res.status(500).json({ message: "Erreur lors du traitement du fichier Excel", error });
-    }
-});
-
-
 // PUT: Mettre à jour un livre
 app.put('/api/books/:originalIsbn', async (req, res) => {
     try {
@@ -187,10 +140,8 @@ app.delete('/api/loans', async (req, res) => {
 
         const book = await Book.findOne({ isbn: isbn });
         if (book) {
-            book.loanedCopies = Math.max(0, book.loanedCopies - 1); // Éviter les nombres négatifs
+            book.loanedCopies = Math.max(0, book.loanedCopies - 1);
             await book.save();
-
-            // Ajouter à l'historique
             await History.create({
                 isbn: book.isbn,
                 bookTitle: book.title,
@@ -226,9 +177,68 @@ app.get('/api/history/student/:studentName', async (req, res) => {
 });
 
 
+// NOUVELLE ROUTE D'UPLOAD AMÉLIORÉE
+app.post('/api/books/upload', upload.single('excelFile'), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ message: 'Aucun fichier uploadé.' });
+    }
+    try {
+        const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const json = xlsx.utils.sheet_to_json(worksheet);
+
+        const processedIsbnsInFile = new Set();
+        const newBooksPayload = [];
+
+        // 1. Filtrer les doublons du fichier Excel lui-même
+        for (const row of json) {
+            const isbn = row['ISBN'] ? String(row['ISBN']).trim() : null;
+            if (!isbn || !row['Title'] || processedIsbnsInFile.has(isbn)) {
+                continue;
+            }
+            processedIsbnsInFile.add(isbn);
+            newBooksPayload.push({
+                title: row['Title'],
+                isbn: isbn,
+                totalCopies: parseInt(row['QTY'], 10) || 1,
+                subject: row['Subject'] || '',
+                level: row['level'] || '',
+                language: row['language'] || '',
+                cornerName: row['Corner name'] || 'Non classé',
+                cornerNumber: row['Corner number'] ? String(row['Corner number']) : '0',
+                loanedCopies: 0
+            });
+        }
+
+        // 2. Vérifier en une seule fois quels ISBN existent déjà dans la base de données
+        const existingIsbnsInDb = new Set(
+            (await Book.find({ isbn: { $in: Array.from(processedIsbnsInFile) } }, 'isbn').lean())
+            .map(b => b.isbn)
+        );
+
+        // 3. Ne garder que les livres qui ne sont pas déjà dans la base de données
+        const booksToInsert = newBooksPayload.filter(book => !existingIsbnsInDb.has(book.isbn));
+
+        const addedCount = booksToInsert.length;
+        const ignoredCount = json.length - addedCount;
+
+        // 4. Insérer en masse les nouveaux livres
+        if (booksToInsert.length > 0) {
+            await Book.insertMany(booksToInsert, { ordered: false });
+        }
+
+        res.json({ message: "Importation terminée!", addedCount, ignoredCount });
+
+    } catch (error) {
+        console.error("Error processing Excel file:", error);
+        res.status(500).json({ message: "Erreur lors du traitement du fichier Excel. Vérifiez le format.", error: error.message });
+    }
+});
+
+
 app.listen(port, () => {
     console.log(`Serveur démarré sur http://localhost:${port}`);
 });
 
-// Exporter l'application pour Vercel
 module.exports = app;
