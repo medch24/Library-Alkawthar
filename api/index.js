@@ -229,5 +229,6 @@ app.get('/api/history/student/:studentName', async (req, res) => {
 app.listen(port, () => {
     console.log(`Serveur démarré sur http://localhost:${port}`);
 });
+
 // Exporter l'application pour Vercel
 module.exports = app;
