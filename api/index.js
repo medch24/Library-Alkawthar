@@ -33,7 +33,7 @@ const History = mongoose.model('History', HistorySchema);
 
 // --- ROUTES API ---
 
-// MODIFIÉ : Renvoie TOUS les livres de la base de données
+// Renvoie TOUS les livres de la base de données
 app.get('/api/books', async (req, res) => {
     try {
         const books = await Book.find({});
