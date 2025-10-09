@@ -4,19 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-lang-key="title">مكتبة الكوثر</title>
-    <!-- Assurez-vous que le fichier styles.css est dans le même dossier -->
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
-    <!-- PAGE DE CONNEXION -->
+    <!-- ... (Page de connexion inchangée) ... -->
     <div id="login-page">
          <div class="language-switcher standalone"><button class="lang-btn" data-lang="ar">العربية</button><button class="lang-btn" data-lang="fr">Français</button><button class="lang-btn" data-lang="en">English</button></div>
         <div class="login-container">
             <img src="https://lh3.googleusercontent.com/d/1lQ3Babrs3Wgv4rakVmkK0oCWcM0cTKPK" alt="Logo Alkawthar" class="logo">
             <h1 data-lang-key="welcome_title">مرحباً بكم في مكتبة مدارس الكوثر العالمية</h1>
-            <p class="welcome-subtitle" data-lang-key="welcome_subtitle">الرجاء إدخال بيانات الاعتماد الخاصة بك للوصول إلى لوحة التحكم.</p>
+            <p class="welcome_subtitle" data-lang-key="welcome_subtitle">الرجاء إدخال بيانات الاعتماد الخاصة بك للوصول إلى لوحة التحكم.</p>
             <form id="login-form">
                 <div class="input-group"><i class="fas fa-user"></i><input type="text" id="username" required data-lang-key-placeholder="username_label"></div>
                 <div class="input-group"><i class="fas fa-lock"></i><input type="password" id="password" required data-lang-key-placeholder="password_label"></div>
@@ -29,6 +28,7 @@
     <!-- TABLEAU DE BORD -->
     <div id="dashboard-page" style="display:none;">
         <header>
+            <!-- ... (Header inchangé) ... -->
              <div class="logo-header"><i class="fas fa-book-open"></i><h1 data-lang-key="dashboard_title">لوحة تحكم مكتبة الكوثر</h1></div>
              <div class="header-controls">
                 <div class="language-switcher"><button class="lang-btn" data-lang="ar">AR</button><button class="lang-btn" data-lang="fr">FR</button><button class="lang-btn" data-lang="en">EN</button></div>
@@ -37,7 +37,7 @@
             </div>
         </header>
         <main class="container">
-            <!-- Stats & Prêts -->
+            <!-- ... (Sections Stats, Scanner, Excel inchangées) ... -->
             <section class="card stats-card animated">
                  <h2 data-lang-key="stats_title"><i class="fas fa-chart-pie"></i> إحصائيات المكتبة</h2>
                 <div class="stats-container">
@@ -49,13 +49,11 @@
             </section>
             
             <div class="columns">
-                 <!-- Scanner -->
                 <section class="card barcode-section animated">
                     <h2 data-lang-key="scanner_title"><i class="fas fa-barcode"></i> بحث سريع بالباركود</h2>
                     <div class="form-group"><label for="isbn-scanner" data-lang-key="scanner_label">امسح ISBN الكتاب هنا:</label><input type="text" id="isbn-scanner" data-lang-key-placeholder="scanner_placeholder"></div>
                     <div id="book-details-view" class="book-details-view"><p class="placeholder" data-lang-key="scanner_instruction">الرجاء مسح كتاب ضوئياً لعرض معلوماته.</p></div>
                 </section>
-                <!-- Excel -->
                 <section class="card animated">
                     <h2 data-lang-key="excel_upload_title"><i class="fas fa-file-excel"></i> إضافة عبر ملف Excel</h2>
                     <p data-lang-key="excel_instruction">اختر ملف (.xlsx) بالأعمدة: Title, ISBN, QTY, Subject, level, language, Corner name, Corner number</p>
@@ -69,7 +67,6 @@
                 </section>
             </div>
             
-            <!-- Recherche d'historique par élève -->
             <section class="card animated">
                 <h2 data-lang-key="student_history_title"><i class="fas fa-history"></i> تاريخ الطالب</h2>
                 <form id="student-history-form">
@@ -80,8 +77,6 @@
                     <button type="submit" class="btn btn-secondary"><i class="fas fa-search"></i> <span data-lang-key="search_btn">بحث</span></button>
                 </form>
             </section>
-
-            <!-- Recherche d'inventaire -->
             <section class="card animated">
                 <h2 data-lang-key="search_book_title"><i class="fas fa-search"></i> البحث في المخزون</h2>
                 <div class="form-group"><input type="text" id="search-input" data-lang-key-placeholder="search_placeholder" placeholder="ابحث بالعنوان أو ISBN..."></div>
@@ -92,11 +87,12 @@
                     </table>
                 </div>
             </section>
-            
-            <!-- Ajout Manuel & Gestion des Prêts -->
+
+            <!-- Section d'ajout et de prêt -->
             <div class="columns">
+                <!-- Section ajout manuel (inchangée) -->
                 <section class="card animated">
-                    <h2 data-lang-key="add_book_title"><i class="fas fa-plus-circle"></i> تسجيل كتاب جديد يدوياً</h2>
+                     <h2 data-lang-key="add_book_title"><i class="fas fa-plus-circle"></i> تسجيل كتاب جديد يدوياً</h2>
                     <form id="add-book-form">
                          <div class="form-group"><label for="new-title" data-lang-key="book_title_label">عنوان الكتاب</label><input type="text" id="new-title" required></div>
                         <div class="form-group"><label for="new-isbn">ISBN</label><input type="text" id="new-isbn" required></div>
@@ -109,6 +105,8 @@
                         <button type="submit" class="btn" data-lang-key="save_book_btn">حفظ الكتاب</button>
                     </form>
                 </section>
+                
+                <!-- MODIFIÉ : Section Gestion des Prêts -->
                 <section class="card animated">
                     <h2 data-lang-key="manage_loan_title"><i class="fas fa-hand-holding-heart"></i> إدارة الإعارة</h2>
                     <form id="loan-form">
@@ -116,6 +114,13 @@
                         <div class="form-group auto-filled"><label data-lang-key="book_title_label">عنوان الكتاب</label><p id="loan-book-title">-</p></div>
                         <hr>
                         <div class="form-group"><label for="student-name" data-lang-key="student_name_label">اسم الطالب</label><input type="text" id="student-name" required></div>
+                        
+                        <!-- NOUVEAU : Champ pour la classe de l'élève -->
+                        <div class="form-group">
+                            <label for="student-class" data-lang-key="student_class_label">فصل الطالب</label>
+                            <input type="text" id="student-class" required>
+                        </div>
+
                         <div class="form-group"><label for="loan-date" data-lang-key="loan_date_label">تاريخ الإعارة</label><input type="date" id="loan-date" required></div>
                         <div class="form-group"><label for="return-date" data-lang-key="return_date_label">تاريخ التسليم</label><input type="date" id="return-date" required></div>
                         <button type="submit" class="btn" data-lang-key="loan_book_btn">إعارة الكتاب</button>
@@ -128,14 +133,13 @@
     
     <!-- MODALES -->
     <div id="modal-overlay" class="modal-overlay" style="display:none;">
-        <!-- Modale des prêts -->
-        <div id="loans-modal" class="modal">
+        <!-- ... (Modale des prêts, de modification, d'historique inchangées en HTML) ... -->
+         <div id="loans-modal" class="modal">
             <button class="close-modal-btn">&times;</button>
             <h2 data-lang-key="loaned_books_list_title">قائمة الكتب المعارة</h2>
             <div class="form-group"><input type="text" id="loan-search-input" data-lang-key-placeholder="loan_search_placeholder" placeholder="ابحث بالاسم، العنوان، أو امسح ISBN..."></div>
             <div id="loans-modal-content" class="table-container"></div>
         </div>
-        <!-- Modale de modification -->
         <div id="edit-modal" class="modal">
             <button class="close-modal-btn">&times;</button>
             <h2 data-lang-key="edit_book_title">تعديل معلومات الكتاب</h2>
@@ -152,7 +156,6 @@
                 <button type="submit" class="btn" data-lang-key="save_changes_btn">حفظ التغييرات</button>
             </form>
         </div>
-        <!-- Modale d'historique -->
         <div id="history-modal" class="modal">
             <button class="close-modal-btn">&times;</button>
             <h2 id="history-modal-title">Historique</h2>
@@ -162,7 +165,7 @@
     
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // --- VARIABLES GLOBALES ET ÉLÉMENTS DU DOM ---
+        // --- VARIABLES GLOBALES ET ÉLÉMENTS DU DOM (inchangé) ---
         let allBooks = [];
         let allLoans = [];
 
@@ -185,9 +188,9 @@
               searchInput = document.getElementById('search-input'),
               booksTableBody = document.getElementById('books-table-body'),
               uploadExcelBtn = document.getElementById('upload-excel-btn');
-
-
-        // --- FONCTIONS DE COMMUNICATION API ---
+        
+        // --- FONCTIONS DE COMMUNICATION API et DE MISE À JOUR (inchangées) ---
+        // ... (apiFetch, fetchAllData, updateStats, renderTable, initializeDashboard)
         const apiFetch = async (url, options = {}) => {
             try {
                 const response = await fetch(`/api${url}`, options);
@@ -215,8 +218,6 @@
                 console.error("Impossible de charger les données initiales.");
             }
         };
-
-        // --- FONCTIONS DE MISE À JOUR DE L'INTERFACE ---
         const updateStats = () => {
             const totalCopies = allBooks.reduce((sum, book) => sum + (book.totalCopies || 0), 0);
             const loanedCopies = allBooks.reduce((sum, book) => sum + (book.loanedCopies || 0), 0);
@@ -224,7 +225,6 @@
             document.getElementById('loaned-books-stat').textContent = loanedCopies;
             document.getElementById('available-books-stat').textContent = totalCopies - loanedCopies;
         };
-        
         const renderTable = (bookList) => {
             booksTableBody.innerHTML = '';
             const currentLang = document.documentElement.lang; 
@@ -260,44 +260,6 @@
             updateStats();
             renderTable(allBooks);
         };
-        
-        const displayLoans = (searchTerm = '') => {
-            const loansModalContent = document.getElementById('loans-modal-content');
-            const lowerCaseSearchTerm = searchTerm.toLowerCase(); 
-            const filteredLoans = allLoans.filter(loan => { 
-                const book = allBooks.find(b => b.isbn === loan.isbn); 
-                return loan.studentName.toLowerCase().includes(lowerCaseSearchTerm) || (book && book.title.toLowerCase().includes(lowerCaseSearchTerm)) || loan.isbn.includes(lowerCaseSearchTerm); 
-            }); 
-            
-            if (filteredLoans.length === 0) { 
-                loansModalContent.innerHTML = `<p style="text-align: center; padding: 1rem;">لا توجد نتائج مطابقة.</p>`; 
-                return; 
-            } 
-            
-            const currentLang = document.documentElement.lang; 
-            const headers = { ar: ["اسم الطالب", "عنوان الكتاب", "تاريخ الإعارة", "تاريخ التسليم", "إجراء"], fr: ["Nom de l'élève", "Titre du livre", "Date d'emprunt", "Date de retour", "Action"], en: ["Student Name", "Book Title", "Loan Date", "Return Date", "Action"] }; 
-            const returnText = { ar: "إرجاع", fr: "Retourner", en: "Return" }; 
-            
-            let tableHTML = `<table id="loans-table"><thead><tr><th>${headers[currentLang][0]}</th><th>${headers[currentLang][1]}</th><th>${headers[currentLang][2]}</th><th>${headers[currentLang][3]}</th><th>${headers[currentLang][4]}</th></tr></thead><tbody>`; 
-            
-            filteredLoans.forEach(loan => { 
-                const book = allBooks.find(b => b.isbn === loan.isbn); 
-                tableHTML += `<tr><td>${loan.studentName}</td><td>${book ? book.title : 'Livre inconnu'}</td><td>${new Date(loan.loanDate).toLocaleDateString()}</td><td>${new Date(loan.returnDate).toLocaleDateString()}</td><td><button class="btn-action btn-return" data-isbn="${loan.isbn}" data-student="${loan.studentName}"><i class="fas fa-undo"></i> ${returnText[currentLang]}</button></td></tr>`; 
-            }); 
-            
-            tableHTML += `</tbody></table>`; 
-            loansModalContent.innerHTML = tableHTML; 
-            
-            document.querySelectorAll('.btn-return').forEach(button => { 
-                button.addEventListener('click', (e) => { 
-                    const isbn = e.currentTarget.dataset.isbn; 
-                    const studentName = e.currentTarget.dataset.student; 
-                    returnLoan(isbn, studentName); 
-                }); 
-            });
-        };
-        
-        // --- GESTION DES MODALES ---
         const openModal = (modalElement) => { modalOverlay.style.display = 'flex'; modalElement.style.display = 'flex'; };
         const closeModal = () => { modalOverlay.style.display = 'none'; editModal.style.display = 'none'; loansModal.style.display = 'none'; historyModal.style.display = 'none'; };
         modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
@@ -317,8 +279,64 @@
             document.getElementById('edit-corner-number').value = book.cornerNumber || '';
             openModal(editModal);
         };
+        // MODIFIÉ : Affichage des prêts pour inclure la classe
+        const displayLoans = (searchTerm = '') => {
+            const loansModalContent = document.getElementById('loans-modal-content');
+            const lowerCaseSearchTerm = searchTerm.toLowerCase(); 
+            const filteredLoans = allLoans.filter(loan => { 
+                const book = allBooks.find(b => b.isbn === loan.isbn); 
+                return loan.studentName.toLowerCase().includes(lowerCaseSearchTerm) || 
+                       (loan.studentClass && loan.studentClass.toLowerCase().includes(lowerCaseSearchTerm)) ||
+                       (book && book.title.toLowerCase().includes(lowerCaseSearchTerm)) || 
+                       loan.isbn.includes(lowerCaseSearchTerm); 
+            }); 
+            
+            if (filteredLoans.length === 0) { 
+                loansModalContent.innerHTML = `<p style="text-align: center; padding: 1rem;">لا توجد نتائج مطابقة.</p>`; 
+                return; 
+            } 
+            
+            const currentLang = document.documentElement.lang; 
+            const headers = { 
+                ar: ["اسم الطالب", "الفصل", "عنوان الكتاب", "تاريخ الإعارة", "تاريخ التسليم", "إجراء"], 
+                fr: ["Nom de l'élève", "Classe", "Titre du livre", "Date d'emprunt", "Date de retour", "Action"], 
+                en: ["Student Name", "Class", "Book Title", "Loan Date", "Return Date", "Action"] 
+            }; 
+            const returnText = { ar: "إرجاع", fr: "Retourner", en: "Return" }; 
+            
+            let tableHTML = `<table id="loans-table"><thead><tr>
+                <th>${headers[currentLang][0]}</th>
+                <th>${headers[currentLang][1]}</th>
+                <th>${headers[currentLang][2]}</th>
+                <th>${headers[currentLang][3]}</th>
+                <th>${headers[currentLang][4]}</th>
+                <th>${headers[currentLang][5]}</th>
+                </tr></thead><tbody>`; 
+            
+            filteredLoans.forEach(loan => { 
+                const book = allBooks.find(b => b.isbn === loan.isbn); 
+                tableHTML += `<tr>
+                    <td>${loan.studentName}</td>
+                    <td>${loan.studentClass}</td>
+                    <td>${book ? book.title : 'Livre inconnu'}</td>
+                    <td>${new Date(loan.loanDate).toLocaleDateString()}</td>
+                    <td>${new Date(loan.returnDate).toLocaleDateString()}</td>
+                    <td><button class="btn-action btn-return" data-isbn="${loan.isbn}" data-student="${loan.studentName}"><i class="fas fa-undo"></i> ${returnText[currentLang]}</button></td>
+                </tr>`; 
+            }); 
+            
+            tableHTML += `</tbody></table>`; 
+            loansModalContent.innerHTML = tableHTML; 
+            
+            document.querySelectorAll('.btn-return').forEach(button => { 
+                button.addEventListener('click', (e) => { 
+                    returnLoan(e.currentTarget.dataset.isbn, e.currentTarget.dataset.student); 
+                }); 
+            });
+        };
         
-        // --- ACTIONS CRUD ET LOGIQUE PRINCIPALE ---
+        // --- LOGIQUE PRINCIPALE ---
+        // ... (login, logout, add book, upload, delete book, etc. sont inchangés) ...
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
             if (document.getElementById('username').value === 'Alkawthar@30' && document.getElementById('password').value === 'Alkawthar@30') {
@@ -397,6 +415,34 @@
             }
         };
 
+        // MODIFIÉ : Soumission du formulaire de prêt
+        loanForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const loanData = {
+                isbn: document.getElementById('loan-isbn').value.trim(),
+                studentName: document.getElementById('student-name').value,
+                studentClass: document.getElementById('student-class').value, // NOUVEAU
+                loanDate: document.getElementById('loan-date').value,
+                returnDate: document.getElementById('return-date').value
+            };
+            try {
+                await apiFetch('/loans', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(loanData)
+                });
+                loanForm.reset();
+                document.getElementById('loan-book-title').textContent = '-';
+                alert('Livre prêté avec succès!');
+                await fetchAllData();
+            } catch(error) {
+                // L'alerte avec le message d'erreur (ex: limite de prêt) est déjà gérée par apiFetch
+                console.log("Échec du prêt du livre.");
+            }
+        });
+        
+        // La logique du bouton "Enregistrer les modifications" de la modale de modification.
+        // Ce code était déjà présent et fonctionnel.
         editBookForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const originalIsbn = document.getElementById('edit-original-isbn').value;
@@ -427,29 +473,6 @@
             await fetchAllData();
         });
 
-        loanForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const loanData = {
-                isbn: document.getElementById('loan-isbn').value.trim(),
-                studentName: document.getElementById('student-name').value,
-                loanDate: document.getElementById('loan-date').value,
-                returnDate: document.getElementById('return-date').value
-            };
-            try {
-                await apiFetch('/loans', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(loanData)
-                });
-                loanForm.reset();
-                document.getElementById('loan-book-title').textContent = '-';
-                alert('Livre prêté avec succès!');
-                await fetchAllData();
-            } catch(error) {
-                console.log("Échec du prêt du livre.");
-            }
-        });
-
         const returnLoan = async (isbn, studentName) => {
             await apiFetch('/loans', {
                 method: 'DELETE',
@@ -462,8 +485,9 @@
             }
         };
 
-        // --- Fonctions d'historique ---
-        const showBookHistory = async (isbn, title) => {
+        // --- Fonctions d'historique (inchangées) ---
+        // ... (showBookHistory, showStudentHistory)
+         const showBookHistory = async (isbn, title) => {
             historyModalTitle.textContent = `Historique du livre : ${title}`;
             try {
                 const historyData = await apiFetch(`/history/book/${isbn}`);
@@ -523,179 +547,38 @@
                 showStudentHistory(studentName);
             }
         });
-        
-        // --- Écouteurs d'événements divers ---
+
+        // --- Écouteurs d'événements (inchangés) ---
+        // ... (viewLoansBtn, searchInput, etc.)
         viewLoansBtn.addEventListener('click', () => { displayLoans(); openModal(loansModal); document.getElementById('loan-search-input').focus(); });
         searchInput.addEventListener('input', (e) => { const searchTerm = e.target.value.toLowerCase(); renderTable(allBooks.filter(b => b.title.toLowerCase().includes(searchTerm) || b.isbn.includes(searchTerm))); });
         document.getElementById('loan-search-input').addEventListener('input', (e) => displayLoans(e.target.value));
         document.getElementById('loan-isbn').addEventListener('input', (e) => { const book = allBooks.find(b => b.isbn === e.target.value.trim()); document.getElementById('loan-book-title').textContent = book ? book.title : '-'; });
         document.getElementById('isbn-scanner').addEventListener('input', (e) => { const book = allBooks.find(b => b.isbn === e.target.value.trim()); document.getElementById('book-details-view').textContent = book ? `Titre: ${book.title} | Disponible: ${book.totalCopies - book.loanedCopies}` : 'Livre non trouvé.'; });
-
-
-        // --- GESTION DE LA LANGUE (CORRIGÉ) ---
+        // --- GESTION DE LA LANGUE (MODIFIÉ) ---
         const translations = {
             ar: {
-                title: "مكتبة الكوثر",
-                welcome_title: "مرحباً بكم في مكتبة مدارس الكوثر العالمية",
-                welcome_subtitle: "الرجاء إدخال بيانات الاعتماد الخاصة بك للوصول إلى لوحة التحكم.",
-                username_label: "اسم المستخدم",
-                password_label: "كلمة المرور",
-                login_btn: "تسجيل الدخول",
-                dashboard_title: "لوحة تحكم مكتبة الكوثر",
-                school_name: "مدارس الكوثر العالمية",
-                logout_btn_title: "تسجيل الخروج",
-                stats_title: "إحصائيات المكتبة",
-                total_books: "إجمالي الكتب",
-                loaned_books: "الكتب المعارة",
-                available_books: "الكتب المتاحة",
-                scanner_title: "بحث سريع بالباركود",
-                scanner_label: "امسح ISBN الكتاب هنا:",
-                scanner_placeholder: "امسح الباركود...",
-                scanner_instruction: "الرجاء مسح كتاب ضوئياً لعرض معلوماته.",
-                excel_upload_title: "إضافة عبر ملف Excel",
-                excel_instruction: "اختر ملف (.xlsx) بالأعمدة: Title, ISBN, QTY, Subject, level, language, Corner name, Corner number",
-                choose_file_btn: "اختر ملف...",
-                upload_btn: "رفع الملف",
-                search_book_title: "البحث في المخزون",
-                search_placeholder: "ابحث بالعنوان أو ISBN...",
-                isbn_col: "ISBN",
-                title_col: "العنوان",
-                corner_name_col: "اسم الركن",
-                corner_num_col: "رقم الركن",
-                availability_col: "الإتاحة",
-                actions_col: "الإجراءات",
-                add_book_title: "تسجيل كتاب جديد يدوياً",
-                book_title_label: "عنوان الكتاب",
-                save_book_btn: "حفظ الكتاب",
-                manage_loan_title: "إدارة الإعارة",
-                student_name_label: "اسم الطالب",
-                loan_book_btn: "إعارة الكتاب",
-                corner_name_label: "اسم الركن",
-                corner_num_label: "رقم الركن",
-                quantity_label: "الكمية",
-                subject_label: "المادة",
-                level_label: "المستوى",
-                language_label: "اللغة",
-                loan_date_label: "تاريخ الإعارة",
-                return_date_label: "تاريخ التسليم",
-                footer_text: "© 2025 مدارس الكوثر العالمية - جميع الحقوق محفوظة.",
-                view_loans_btn: "عرض الطلاب المستعيرين",
-                loaned_books_list_title: "قائمة الكتب المعارة",
-                edit_book_title: "تعديل معلومات الكتاب",
-                save_changes_btn: "حفظ التغييرات",
-                loan_search_placeholder: "ابحث بالاسم، العنوان، أو امسح ISBN...",
-                student_history_title: "تاريخ الطالب",
-                search_btn: "بحث",
-                student_history_placeholder: "أدخل اسم الطالب للبحث"
+                // ... (traductions arabes existantes)
+                student_class_label: "فصل الطالب",
+                class_col: "الفصل"
             },
             fr: {
-                title: "Bibliothèque Alkawthar",
-                welcome_title: "Bienvenue à la bibliothèque des écoles internationales Alkawthar",
-                welcome_subtitle: "Veuillez saisir vos identifiants pour accéder au tableau de bord.",
-                username_label: "Nom d'utilisateur",
-                password_label: "Mot de passe",
-                login_btn: "Se connecter",
-                dashboard_title: "Tableau de bord de la bibliothèque Alkawthar",
-                school_name: "Écoles Internationales Alkawthar",
-                logout_btn_title: "Se déconnecter",
-                stats_title: "Statistiques de la bibliothèque",
-                total_books: "Total des livres",
-                loaned_books: "Livres prêtés",
-                available_books: "Livres disponibles",
-                scanner_title: "Scan rapide par code-barres",
-                scanner_label: "Scannez l'ISBN du livre ici :",
-                scanner_placeholder: "Scanner le code-barres...",
-                scanner_instruction: "Veuillez scanner un livre pour voir ses informations.",
-                excel_upload_title: "Ajouter via un fichier Excel",
-                excel_instruction: "Choisissez un fichier (.xlsx) avec les colonnes : Title, ISBN, QTY, Subject, level, language, Corner name, Corner number",
-                choose_file_btn: "Choisir un fichier...",
-                upload_btn: "Téléverser le fichier",
-                search_book_title: "Rechercher dans l'inventaire",
-                search_placeholder: "Rechercher par titre ou ISBN...",
-                isbn_col: "ISBN",
-                title_col: "Titre",
-                corner_name_col: "Nom du coin",
-                corner_num_col: "Numéro du coin",
-                availability_col: "Disponibilité",
-                actions_col: "Actions",
-                add_book_title: "Ajouter un nouveau livre manuellement",
-                book_title_label: "Titre du livre",
-                save_book_btn: "Enregistrer le livre",
-                manage_loan_title: "Gérer les prêts",
-                student_name_label: "Nom de l'élève",
-                loan_book_btn: "Prêter le livre",
-                corner_name_label: "Nom du coin",
-                corner_num_label: "Numéro du coin",
-                quantity_label: "Quantité",
-                subject_label: "Matière",
-                level_label: "Niveau",
-                language_label: "Langue",
-                loan_date_label: "Date du prêt",
-                return_date_label: "Date de retour",
-                footer_text: "© 2025 Écoles Internationales Alkawthar - Tous droits réservés.",
-                view_loans_btn: "Voir les élèves emprunteurs",
-                loaned_books_list_title: "Liste des livres prêtés",
-                edit_book_title: "Modifier les informations du livre",
-                save_changes_btn: "Enregistrer les modifications",
-                loan_search_placeholder: "Rechercher par nom, titre ou ISBN...",
-                student_history_title: "Historique de l'élève",
-                search_btn: "Rechercher",
-                student_history_placeholder: "Entrez le nom de l'élève pour rechercher"
+                // ... (traductions françaises existantes)
+                student_class_label: "Classe de l'élève",
+                class_col: "Classe"
             },
             en: {
-                title: "Alkawthar Library",
-                welcome_title: "Welcome to Alkawthar International Schools Library",
-                welcome_subtitle: "Please enter your credentials to access the dashboard.",
-                username_label: "Username",
-                password_label: "Password",
-                login_btn: "Login",
-                dashboard_title: "Alkawthar Library Dashboard",
-                school_name: "Alkawthar International Schools",
-                logout_btn_title: "Logout",
-                stats_title: "Library Statistics",
-                total_books: "Total Books",
-                loaned_books: "Loaned Books",
-                available_books: "Available Books",
-                scanner_title: "Quick Scan by Barcode",
-                scanner_label: "Scan the book's ISBN here:",
-                scanner_placeholder: "Scan barcode...",
-                scanner_instruction: "Please scan a book to view its information.",
-                excel_upload_title: "Add via Excel File",
-                excel_instruction: "Choose an (.xlsx) file with columns: Title, ISBN, QTY, Subject, level, language, Corner name, Corner number",
-                choose_file_btn: "Choose file...",
-                upload_btn: "Upload File",
-                search_book_title: "Search Inventory",
-                search_placeholder: "Search by title or ISBN...",
-                isbn_col: "ISBN",
-                title_col: "Title",
-                corner_name_col: "Corner Name",
-                corner_num_col: "Corner Number",
-                availability_col: "Availability",
-                actions_col: "Actions",
-                add_book_title: "Add a New Book Manually",
-                book_title_label: "Book Title",
-                save_book_btn: "Save Book",
-                manage_loan_title: "Manage Loans",
-                student_name_label: "Student Name",
-                loan_book_btn: "Loan Book",
-                corner_name_label: "Corner Name",
-                corner_num_label: "Corner Number",
-                quantity_label: "Quantity",
-                subject_label: "Subject",
-                level_label: "Level",
-                language_label: "Language",
-                loan_date_label: "Loan Date",
-                return_date_label: "Return Date",
-                footer_text: "© 2025 Alkawthar International Schools - All rights reserved.",
-                view_loans_btn: "View Borrowing Students",
-                loaned_books_list_title: "List of Loaned Books",
-                edit_book_title: "Edit Book Information",
-                save_changes_btn: "Save Changes",
-                loan_search_placeholder: "Search by name, title, or ISBN...",
-                student_history_title: "Student History",
-                search_btn: "Search",
-                student_history_placeholder: "Enter student name to search"
+                // ... (traductions anglaises existantes)
+                student_class_label: "Student's Class",
+                class_col: "Class"
             }
+        };
+
+        // Fusionner les nouvelles traductions avec les anciennes
+        const fullTranslations = {
+             ar: { ...{title: "مكتبة الكوثر", welcome_title: "مرحباً بكم في مكتبة مدارس الكوثر العالمية", welcome_subtitle: "الرجاء إدخال بيانات الاعتماد الخاصة بك للوصول إلى لوحة التحكم.", username_label: "اسم المستخدم", password_label: "كلمة المرور", login_btn: "تسجيل الدخول", dashboard_title: "لوحة تحكم مكتبة الكوثر", school_name: "مدارس الكوثر العالمية", logout_btn_title: "تسجيل الخروج", stats_title: "إحصائيات المكتبة", total_books: "إجمالي الكتب", loaned_books: "الكتب المعارة", available_books: "الكتب المتاحة", scanner_title: "بحث سريع بالباركود", scanner_label: "امسح ISBN الكتاب هنا:", scanner_placeholder: "امسح الباركود...", scanner_instruction: "الرجاء مسح كتاب ضوئياً لعرض معلوماته.", excel_upload_title: "إضافة عبر ملف Excel", excel_instruction: "اختر ملف (.xlsx) بالأعمدة: Title, ISBN, QTY, Subject, level, language, Corner name, Corner number", choose_file_btn: "اختر ملف...", upload_btn: "رفع الملف", search_book_title: "البحث في المخزون", search_placeholder: "ابحث بالعنوان أو ISBN...", isbn_col: "ISBN", title_col: "العنوان", corner_name_col: "اسم الركن", corner_num_col: "رقم الركن", availability_col: "الإتاحة", actions_col: "الإجراءات", add_book_title: "تسجيل كتاب جديد يدوياً", book_title_label: "عنوان الكتاب", save_book_btn: "حفظ الكتاب", manage_loan_title: "إدارة الإعارة", student_name_label: "اسم الطالب", loan_book_btn: "إعارة الكتاب", corner_name_label: "اسم الركن", corner_num_label: "رقم الركن", quantity_label: "الكمية", subject_label: "المادة", level_label: "المستوى", language_label: "اللغة", loan_date_label: "تاريخ الإعارة", return_date_label: "تاريخ التسليم", footer_text: "© 2025 مدارس الكوثر العالمية - جميع الحقوق محفوظة.", view_loans_btn: "عرض الطلاب المستعيرين", loaned_books_list_title: "قائمة الكتب المعارة", edit_book_title: "تعديل معلومات الكتاب", save_changes_btn: "حفظ التغييرات", loan_search_placeholder: "ابحث بالاسم، العنوان، أو امسح ISBN...", student_history_title: "تاريخ الطالب", search_btn: "بحث", student_history_placeholder: "أدخل اسم الطالب للبحث"}, ...translations.ar },
+             fr: { ...{title: "Bibliothèque Alkawthar", welcome_title: "Bienvenue à la bibliothèque des écoles internationales Alkawthar", welcome_subtitle: "Veuillez saisir vos identifiants pour accéder au tableau de bord.", username_label: "Nom d'utilisateur", password_label: "Mot de passe", login_btn: "Se connecter", dashboard_title: "Tableau de bord de la bibliothèque Alkawthar", school_name: "Écoles Internationales Alkawthar", logout_btn_title: "Se déconnecter", stats_title: "Statistiques de la bibliothèque", total_books: "Total des livres", loaned_books: "Livres prêtés", available_books: "Livres disponibles", scanner_title: "Scan rapide par code-barres", scanner_label: "Scannez l'ISBN du livre ici :", scanner_placeholder: "Scanner le code-barres...", scanner_instruction: "Veuillez scanner un livre pour voir ses informations.", excel_upload_title: "Ajouter via un fichier Excel", excel_instruction: "Choisissez un fichier (.xlsx) avec les colonnes : Title, ISBN, QTY, Subject, level, language, Corner name, Corner number", choose_file_btn: "Choisir un fichier...", upload_btn: "Téléverser le fichier", search_book_title: "Rechercher dans l'inventaire", search_placeholder: "Rechercher par titre ou ISBN...", isbn_col: "ISBN", title_col: "Titre", corner_name_col: "Nom du coin", corner_num_col: "Numéro du coin", availability_col: "Disponibilité", actions_col: "Actions", add_book_title: "Ajouter un nouveau livre manuellement", book_title_label: "Titre du livre", save_book_btn: "Enregistrer le livre", manage_loan_title: "Gérer les prêts", student_name_label: "Nom de l'élève", loan_book_btn: "Prêter le livre", corner_name_label: "Nom du coin", corner_num_label: "Numéro du coin", quantity_label: "Quantité", subject_label: "Matière", level_label: "Niveau", language_label: "Langue", loan_date_label: "Date du prêt", return_date_label: "Date de retour", footer_text: "© 2025 Écoles Internationales Alkawthar - Tous droits réservés.", view_loans_btn: "Voir les élèves emprunteurs", loaned_books_list_title: "Liste des livres prêtés", edit_book_title: "Modifier les informations du livre", save_changes_btn: "Enregistrer les modifications", loan_search_placeholder: "Rechercher par nom, titre ou ISBN...", student_history_title: "Historique de l'élève", search_btn: "Rechercher", student_history_placeholder: "Entrez le nom de l'élève pour rechercher"}, ...translations.fr },
+             en: { ...{title: "Alkawthar Library", welcome_title: "Welcome to Alkawthar International Schools Library", welcome_subtitle: "Please enter your credentials to access the dashboard.", username_label: "Username", password_label: "Password", login_btn: "Login", dashboard_title: "Alkawthar Library Dashboard", school_name: "Alkawthar International Schools", logout_btn_title: "Logout", stats_title: "Library Statistics", total_books: "Total Books", loaned_books: "Loaned Books", available_books: "Available Books", scanner_title: "Quick Scan by Barcode", scanner_label: "Scan the book's ISBN here:", scanner_placeholder: "Scan barcode...", scanner_instruction: "Please scan a book to view its information.", excel_upload_title: "Add via Excel File", excel_instruction: "Choose an (.xlsx) file with columns: Title, ISBN, QTY, Subject, level, language, Corner name, Corner number", choose_file_btn: "Choose file...", upload_btn: "Upload File", search_book_title: "Search Inventory", search_placeholder: "Search by title or ISBN...", isbn_col: "ISBN", title_col: "Title", corner_name_col: "Corner Name", corner_num_col: "Corner Number", availability_col: "Availability", actions_col: "Actions", add_book_title: "Add a New Book Manually", book_title_label: "Book Title", save_book_btn: "Save Book", manage_loan_title: "Manage Loans", student_name_label: "Student Name", loan_book_btn: "Loan Book", corner_name_label: "Corner Name", corner_num_label: "Corner Number", quantity_label: "Quantity", subject_label: "Subject", level_label: "Level", language_label: "Language", loan_date_label: "Loan Date", return_date_label: "Return Date", footer_text: "© 2025 Alkawthar International Schools - All rights reserved.", view_loans_btn: "View Borrowing Students", loaned_books_list_title: "List of Loaned Books", edit_book_title: "Edit Book Information", save_changes_btn: "Save Changes", loan_search_placeholder: "Search by name, title, or ISBN...", student_history_title: "Student History", search_btn: "Search", student_history_placeholder: "Enter student name to search"}, ...translations.en }
         };
 
         const switchLanguage = (lang) => { 
@@ -704,21 +587,20 @@
             
             document.querySelectorAll('[data-lang-key]').forEach(el => { 
                 const key = el.getAttribute('data-lang-key'); 
-                if (translations[lang] && translations[lang][key]) { 
-                    el.textContent = translations[lang][key]; 
+                if (fullTranslations[lang] && fullTranslations[lang][key]) { 
+                    el.textContent = fullTranslations[lang][key]; 
                 } 
             }); 
             
             document.querySelectorAll('[data-lang-key-placeholder]').forEach(el => { 
                 const key = el.getAttribute('data-lang-key-placeholder'); 
-                if (translations[lang] && translations[lang][key]) { 
-                    el.placeholder = translations[lang][key]; 
+                if (fullTranslations[lang] && fullTranslations[lang][key]) { 
+                    el.placeholder = fullTranslations[lang][key]; 
                 } 
             }); 
             
             if (dashboardPage.style.display === 'block') { 
                 renderTable(allBooks); 
-                // Mettre à jour le texte du tableau des prêts s'il est ouvert
                 if (loansModal.style.display === 'flex') {
                     displayLoans(document.getElementById('loan-search-input').value);
                 }
@@ -727,7 +609,6 @@
         
         document.querySelectorAll('.lang-btn').forEach(btn => btn.addEventListener('click', (e) => switchLanguage(e.target.getAttribute('data-lang'))));
         
-        // Initialisation de la langue par défaut
         switchLanguage('ar');
     });
     </script>
