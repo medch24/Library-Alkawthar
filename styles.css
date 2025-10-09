@@ -1,4 +1,3 @@
-/* ... (tout votre CSS existant) ... */
 @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap');
 :root { --primary-color: #005f73; --secondary-color: #0a9396; --accent-color: #ee9b00; --delete-color: #d90429; --return-color: #2a9d8f; --history-color: #0077b6; --background-gradient: linear-gradient(135deg, #e9d8a6 0%, #cae9ff 100%); --text-color: #001219; --card-bg-color: rgba(255, 255, 255, 0.95); --border-radius: 12px; --box-shadow: 0 8px 32px rgba(0, 95, 115, 0.2); }
 body { font-family: 'Tajawal', sans-serif; background: var(--background-gradient); color: var(--text-color); margin: 0; line-height: 1.7; overflow-x: hidden; }
@@ -68,11 +67,39 @@ hr { border: none; border-top: 1px solid #eee; margin: 1.5rem 0; }
 .btn-return { background-color: var(--return-color); }
 .btn-history { background-color: var(--history-color); }
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 1000; display: none; justify-content: center; align-items: center; animation: fadeIn 0.3s; }
-.modal { background: white; padding: 2rem; border-radius: var(--border-radius); box-shadow: 0 5px 15px rgba(0,0,0,0.3); width: 90%; max-width: 800px; position: relative; animation: slideInUp 0.4s; max-height: 90vh; display: none; flex-direction: column; }
-.modal h2 { margin-top: 0; color: var(--primary-color); }
+
+/* MODIFICATION CLÉ ICI */
+.modal {
+    background: white;
+    padding: 0; /* Padding déplacé vers l'intérieur */
+    border-radius: var(--border-radius);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    width: 90%;
+    max-width: 600px; /* Réduit pour les petits écrans */
+    position: relative;
+    animation: slideInUp 0.4s;
+    max-height: 90vh;
+    display: flex; /* Maintient flex */
+    flex-direction: column;
+    overflow: hidden; /* Empêche le débordement */
+}
+.modal h2 {
+    margin: 0;
+    padding: 1.5rem 2rem;
+    color: var(--primary-color);
+    border-bottom: 1px solid #eee; /* Ligne de séparation */
+}
+/* La balise form est maintenant scrollable */
+.modal form {
+    overflow-y: auto; /* Permet le défilement vertical */
+    padding: 2rem; /* Le padding est maintenant ici */
+    flex-grow: 1; /* Permet au formulaire de prendre l'espace restant */
+}
+
 .modal .form-group { margin-bottom: 1.5rem; }
-.close-modal-btn { position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 2rem; cursor: pointer; color: #aaa; }
+.close-modal-btn { position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 2rem; cursor: pointer; color: #aaa; z-index: 10; }
 [dir="rtl"] .close-modal-btn { left: 1rem; right: auto; }
+
 footer { text-align: center; padding: 1.5rem; background-color: var(--primary-color); color: white; margin-top: 3rem; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideInUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
