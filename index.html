@@ -9,7 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
-    <!-- NOUVEAU : Écran de chargement -->
+    <!-- Écran de chargement -->
     <div id="loading-overlay" style="display: none;">
         <div class="loading-text" data-lang-key="loading_data">جاري تحميل البيانات...</div>
         <div class="loading-progress-bar-container">
@@ -17,7 +17,7 @@
         </div>
     </div>
 
-    <!-- ... (Le reste du HTML est inchangé) ... -->
+    <!-- Page de connexion -->
     <div id="login-page">
          <div class="language-switcher standalone"><button class="lang-btn" data-lang="ar">العربية</button><button class="lang-btn" data-lang="fr">Français</button><button class="lang-btn" data-lang="en">English</button></div>
         <div class="login-container">
@@ -32,6 +32,8 @@
             </form>
         </div>
     </div>
+
+    <!-- Tableau de bord -->
     <div id="dashboard-page" style="display:none;">
         <header>
              <div class="logo-header"><i class="fas fa-book-open"></i><h1 data-lang-key="dashboard_title">لوحة تحكم مكتبة الكوثر</h1></div>
@@ -250,49 +252,42 @@
             if (document.getElementById('username').value === 'Alkawthar@30' && document.getElementById('password').value === 'Alkawthar@30') {
                 loginPage.style.display = 'none';
                 dashboardPage.style.display = 'block';
-                loadAllData(); // Lance le chargement avec la barre de progression
+                loadAllData();
             } else { loginError.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة.'; }
         });
         
-        // Recherche en local (rapide car tout est chargé)
         searchInput.addEventListener('input', (e) => {
             const searchTerm = e.target.value.toLowerCase();
             if (!searchTerm) {
-                renderTable(allBooks); // Si vide, afficher tout
+                renderTable(allBooks);
                 return;
             }
-            const filteredBooks = allBooks.filter(book => 
-                book.title.toLowerCase().includes(searchTerm) || 
-                book.isbn.includes(searchTerm)
-            );
+            const filteredBooks = allBooks.filter(book => book.title.toLowerCase().includes(searchTerm) || book.isbn.includes(searchTerm));
             renderTable(filteredBooks);
         });
 
-        // La logique pour le bouton ENREGISTRER de la modale de modification
         editBookForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const originalIsbn = document.getElementById('edit-original-isbn').value;
             const updatedData = { title:document.getElementById('edit-title').value, isbn:document.getElementById('edit-isbn').value.trim(), totalCopies:parseInt(document.getElementById('edit-quantity').value,10), subject:document.getElementById('edit-subject').value, level:document.getElementById('edit-level').value, language:document.getElementById('edit-language').value, cornerName:document.getElementById('edit-corner-name').value, cornerNumber:document.getElementById('edit-corner-number').value };
             
             try {
-                // 1. Envoyer la modification au serveur
                 await apiFetch(`/books/${originalIsbn}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updatedData) });
                 
-                // 2. Mettre à jour les données locales (pour une réactivité immédiate)
                 const bookIndex = allBooks.findIndex(b => b.isbn === originalIsbn);
                 if (bookIndex !== -1) {
                     allBooks[bookIndex] = { ...allBooks[bookIndex], ...updatedData };
                 }
                 
-                // 3. Rafraîchir l'affichage
                 closeModal();
-                renderTable(allBooks); // Ré-affiche le tableau avec les données à jour
-                updateStats(); // Met à jour les statistiques
+                const currentSearch = searchInput.value;
+                const filteredBooks = allBooks.filter(book => book.title.toLowerCase().includes(currentSearch) || book.isbn.includes(currentSearch));
+                renderTable(filteredBooks);
+                updateStats();
 
             } catch(e) { console.error("La modification a échoué.") }
         });
 
-        // Logique pour les boutons d'action de la table (Edit, Delete, History)
         booksTableBody.addEventListener('click', (e) => {
             const button = e.target.closest('.btn-action');
             if (!button) return;
@@ -314,12 +309,11 @@
             }
         });
 
-        // ... (Le reste du code JS est identique à la version précédente) ...
          loanForm.addEventListener('submit', async (e) => { e.preventDefault(); const loanData = { isbn: document.getElementById('loan-isbn').value.trim(), studentName: document.getElementById('student-name').value, studentClass: document.getElementById('student-class').value, loanDate: document.getElementById('loan-date').value, returnDate: document.getElementById('return-date').value }; try { await apiFetch('/loans', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(loanData) }); loanForm.reset(); document.getElementById('loan-book-title').textContent = '-'; alert('Livre prêté avec succès!'); await loadAllData(); } catch(error) { console.log("Échec du prêt du livre."); } });
          logoutBtn.addEventListener('click', () => window.location.reload());
          addBookForm.addEventListener('submit', async (e) => { e.preventDefault(); const bookData = { title: document.getElementById('new-title').value, isbn: document.getElementById('new-isbn').value.trim(), totalCopies: parseInt(document.getElementById('new-quantity').value, 10), subject: document.getElementById('new-subject').value, level: document.getElementById('new-level').value, language: document.getElementById('new-language').value, cornerName: document.getElementById('new-corner-name').value, cornerNumber: document.getElementById('new-corner-number').value }; await apiFetch('/books', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bookData) }); addBookForm.reset(); await loadAllData(); });
          uploadExcelBtn.addEventListener('click', async () => { const fileInput = document.getElementById('excel-file-input'); const uploadStatus = document.getElementById('upload-status'); const progressBarContainer = document.querySelector('.progress-bar-container'); if (fileInput.files.length === 0) { uploadStatus.textContent = 'الرجاء اختيار ملف.'; return; } const formData = new FormData(); formData.append('excelFile', fileInput.files[0]); progressBarContainer.style.display = 'block'; uploadStatus.textContent = 'جاري رفع ومعالجة الملف...'; uploadStatus.style.color = 'var(--primary-color)'; try { const response = await fetch('/api/books/upload', { method: 'POST', body: formData }); const resultData = await response.json(); if (!response.ok) { throw new Error(resultData.message || 'خطأ غير معروف من الخادم.'); } uploadStatus.textContent = `✅ ${resultData.message} تمت إضافة: ${resultData.addedCount}, تم تجاهل التكرارات: ${resultData.ignoredCount}.`; uploadStatus.style.color = 'green'; fileInput.value = ''; await loadAllData(); } catch (error) { console.error("Erreur lors de l'upload:", error); uploadStatus.textContent = `❌ خطأ: ${error.message}`; uploadStatus.style.color = 'var(--delete-color)'; } finally { progressBarContainer.style.display = 'none'; } });
-         const showBookHistory = async (isbn, title) => { historyModalTitle.textContent = `Historique du livre : ${title}`; try { const historyData = await apiFetch(`/history/book/${isbn}`); let content = `<p>Aucun historique trouvé.</p>`; if (historyData.length > 0) { content = `<table id="history-table"><thead><tr><th>Nom de l'élève</th><th>Date de prêt</th><th>Date de retour</th></tr></thead><tbody>`; historyData.forEach(entry => { content += `<tr><td>${entry.studentName}</td><td>${new Date(entry.loanDate).toLocaleDateString()}</td><td>${new Date(entry.actualReturnDate).toLocaleDateString()}</td></tr>`; }); content += `</tbody></table>`; } historyModalContent.innerHTML = content; openModal(historyModal); } catch (error) { historyModalContent.innerHTML = `<p>Erreur lors du chargement de l'historique.</p>`; openModal(historyModal); } };
+         const showBookHistory = async (isbn, title) => { historyModalTitle.textContent = `Historique du livre : ${title}`; try { const historyData = await apiFetch(`/history/book/${isbn}`); let content = `<p>Aucun historique trouvé.</p>`; if (historyData.length > 0) { content = `<table id="history-table"><thead><tr><th>Nom de l'élève</th><th>Classe</th><th>Date de prêt</th><th>Date de retour</th></tr></thead><tbody>`; historyData.forEach(entry => { content += `<tr><td>${entry.studentName}</td><td>${entry.studentClass||'-'}</td><td>${new Date(entry.loanDate).toLocaleDateString()}</td><td>${new Date(entry.actualReturnDate).toLocaleDateString()}</td></tr>`; }); content += `</tbody></table>`; } historyModalContent.innerHTML = content; openModal(historyModal); } catch (error) { historyModalContent.innerHTML = `<p>Erreur lors du chargement de l'historique.</p>`; openModal(historyModal); } };
          const showStudentHistory = async (studentName) => { historyModalTitle.textContent = `Historique de l'élève : ${studentName}`; try { const historyData = await apiFetch(`/history/student/${encodeURIComponent(studentName)}`); let content = `<p>Aucun historique trouvé.</p>`; if (historyData.length > 0) { content = `<table id="history-table"><thead><tr><th>Titre du livre</th><th>ISBN</th><th>Date de prêt</th><th>Date de retour</th></tr></thead><tbody>`; historyData.forEach(entry => { content += `<tr><td>${entry.bookTitle}</td><td>${entry.isbn}</td><td>${new Date(entry.loanDate).toLocaleDateString()}</td><td>${new Date(entry.actualReturnDate).toLocaleDateString()}</td></tr>`; }); content += `</tbody></table>`; } historyModalContent.innerHTML = content; openModal(historyModal); } catch (error) { historyModalContent.innerHTML = `<p>Erreur lors du chargement de l'historique.</p>`; openModal(historyModal); } };
          studentHistoryForm.addEventListener('submit', (e) => { e.preventDefault(); const studentName = document.getElementById('student-history-search').value.trim(); if(studentName) { showStudentHistory(studentName); } });
          viewLoansBtn.addEventListener('click', () => { displayLoans(); openModal(loansModal); });
