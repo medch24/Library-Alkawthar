@@ -8,7 +8,7 @@ const app = express();
 const port = process.env.PORT || 3001;
 
 // --- CONFIGURATION ---
-const MAX_LOANS_PER_STUDENT = 3; // Définissez ici le nombre maximum de prêts par élève
+const MAX_LOANS_PER_STUDENT = 3;
 
 // Middlewares
 app.use(cors());
@@ -23,219 +23,35 @@ mongoose.connect(process.env.MONGODB_URI, {
   .catch(err => console.error("Erreur de connexion MongoDB:", err));
 
 // --- Schémas Mongoose ---
-const BookSchema = new mongoose.Schema({
-    isbn: { type: String, required: true, unique: true, trim: true },
-    title: { type: String, required: true },
-    totalCopies: { type: Number, required: true, min: 1, default: 1 },
-    loanedCopies: { type: Number, default: 0 },
-    subject: String,
-    level: String,
-    language: String,
-    cornerName: String,
-    cornerNumber: String
-});
-
-const LoanSchema = new mongoose.Schema({
-    isbn: { type: String, required: true },
-    studentName: { type: String, required: true },
-    studentClass: { type: String, required: true },
-    loanDate: { type: Date, required: true },
-    returnDate: { type: Date, required: true }
-});
-
-const HistorySchema = new mongoose.Schema({
-    isbn: { type: String, required: true },
-    bookTitle: { type: String, required: true },
-    studentName: { type: String, required: true },
-    studentClass: { type: String },
-    loanDate: { type: Date, required: true },
-    actualReturnDate: { type: Date, default: Date.now }
-});
+const BookSchema = new mongoose.Schema({ isbn: { type: String, required: true, unique: true, trim: true }, title: { type: String, required: true }, totalCopies: { type: Number, required: true, min: 1, default: 1 }, loanedCopies: { type: Number, default: 0 }, subject: String, level: String, language: String, cornerName: String, cornerNumber: String });
+const LoanSchema = new mongoose.Schema({ isbn: { type: String, required: true }, studentName: { type: String, required: true }, studentClass: { type: String, required: true }, loanDate: { type: Date, required: true }, returnDate: { type: Date, required: true } });
+const HistorySchema = new mongoose.Schema({ isbn: { type: String, required: true }, bookTitle: { type: String, required: true }, studentName: { type: String, required: true }, studentClass: { type: String }, loanDate: { type: Date, required: true }, actualReturnDate: { type: Date, default: Date.now } });
 
 const Book = mongoose.model('Book', BookSchema);
 const Loan = mongoose.model('Loan', LoanSchema);
 const History = mongoose.model('History', HistorySchema);
 
-// --- ROUTES API OPTIMISÉES ---
+// --- ROUTES API ---
 
-// Ne renvoie que les 50 derniers livres pour un chargement initial rapide
+// MODIFIÉ : Renvoie TOUS les livres de la base de données
 app.get('/api/books', async (req, res) => {
     try {
-        const books = await Book.find({}).sort({ _id: -1 }).limit(50);
+        const books = await Book.find({});
         res.json(books);
     } catch (error) {
         res.status(500).json({ message: "Erreur serveur", error });
     }
 });
 
-// Route de recherche performante
-app.get('/api/books/search', async (req, res) => {
-    try {
-        const query = req.query.q;
-        if (!query) {
-            return res.json([]);
-        }
-        // Recherche insensible à la casse dans le titre et l'ISBN
-        const books = await Book.find({
-            $or: [
-                { title: { $regex: query, $options: 'i' } },
-                { isbn: { $regex: query, $options: 'i' } }
-            ]
-        }).limit(100); // Limite les résultats pour ne pas surcharger le navigateur
-        res.json(books);
-    } catch (error) {
-        res.status(500).json({ message: "Erreur de recherche serveur", error });
-    }
-});
-
-// Ajouter/Mettre à jour un livre (manuel)
-app.post('/api/books', async (req, res) => {
-    try {
-        const { isbn, title, totalCopies, ...rest } = req.body;
-        const updatedBook = await Book.findOneAndUpdate(
-            { isbn: isbn },
-            { $inc: { totalCopies: totalCopies || 1 }, $setOnInsert: { isbn, title, ...rest } },
-            { new: true, upsert: true, setDefaultsOnInsert: true }
-        );
-        res.status(201).json(updatedBook);
-    } catch (error) {
-        res.status(500).json({ message: "Erreur serveur", error });
-    }
-});
-
-// Upload via Excel
-app.post('/api/books/upload', upload.single('excelFile'), async (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ message: 'Aucun fichier uploadé.' });
-    }
-    try {
-        const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const json = xlsx.utils.sheet_to_json(worksheet);
-
-        const processedIsbnsInFile = new Set();
-        const newBooksPayload = [];
-        for (const row of json) {
-            const isbn = row['ISBN'] ? String(row['ISBN']).trim() : null;
-            if (!isbn || !row['Title'] || processedIsbnsInFile.has(isbn)) continue;
-            processedIsbnsInFile.add(isbn);
-            newBooksPayload.push({
-                title: row['Title'], isbn: isbn, totalCopies: parseInt(row['QTY'], 10) || 1, subject: row['Subject'] || '', level: row['level'] || '', language: row['language'] || '', cornerName: row['Corner name'] || 'Non classé', cornerNumber: row['Corner number'] ? String(row['Corner number']) : '0', loanedCopies: 0
-            });
-        }
-        const existingIsbnsInDb = new Set((await Book.find({ isbn: { $in: Array.from(processedIsbnsInFile) } }, 'isbn').lean()).map(b => b.isbn));
-        const booksToInsert = newBooksPayload.filter(book => !existingIsbnsInDb.has(book.isbn));
-
-        if (booksToInsert.length > 0) {
-            await Book.insertMany(booksToInsert, { ordered: false });
-        }
-
-        res.json({ message: "Importation terminée!", addedCount: booksToInsert.length, ignoredCount: json.length - booksToInsert.length });
-    } catch (error) {
-        res.status(500).json({ message: "Erreur lors du traitement du fichier Excel.", error: error.message });
-    }
-});
-
-
-// Mettre à jour un livre
-app.put('/api/books/:originalIsbn', async (req, res) => {
-    try {
-        const { originalIsbn } = req.params;
-        const updatedBook = await Book.findOneAndUpdate({ isbn: originalIsbn }, req.body, { new: true });
-        if (!updatedBook) return res.status(404).json({ message: "Livre non trouvé" });
-        res.json(updatedBook);
-    } catch (error) {
-        res.status(500).json({ message: "Erreur serveur", error });
-    }
-});
-
-// Supprimer un livre
-app.delete('/api/books/:isbn', async (req, res) => {
-    try {
-        const { isbn } = req.params;
-        const result = await Book.deleteOne({ isbn: isbn });
-        if (result.deletedCount === 0) return res.status(404).json({ message: "Livre non trouvé" });
-        res.status(204).send();
-    } catch (error) {
-        res.status(500).json({ message: "Erreur serveur", error });
-    }
-});
-
-// Récupérer tous les prêts
-app.get('/api/loans', async (req, res) => {
-    try {
-        const loans = await Loan.find({});
-        res.json(loans);
-    } catch (error) {
-        res.status(500).json({ message: "Erreur serveur", error });
-    }
-});
-
-// Créer un prêt
-app.post('/api/loans', async (req, res) => {
-    try {
-        const { isbn, studentName, studentClass, loanDate, returnDate } = req.body;
-        
-        const studentNameRegex = new RegExp(`^${studentName.trim()}$`, 'i');
-        const existingLoansCount = await Loan.countDocuments({ studentName: studentNameRegex });
-        
-        if (existingLoansCount >= MAX_LOANS_PER_STUDENT) {
-            return res.status(400).json({ message: `Cet élève a déjà atteint la limite de ${MAX_LOANS_PER_STUDENT} prêts.` });
-        }
-        
-        const book = await Book.findOne({ isbn: isbn });
-        if (!book) return res.status(404).json({ message: "Livre non trouvé" });
-        if (book.loanedCopies >= book.totalCopies) return res.status(400).json({ message: "Toutes les copies de ce livre sont déjà prêtées." });
-
-        book.loanedCopies++;
-        await book.save();
-        const newLoan = await Loan.create({ isbn, studentName, studentClass, loanDate, returnDate });
-        res.status(201).json(newLoan);
-    } catch (error) {
-        res.status(500).json({ message: "Erreur serveur", error });
-    }
-});
-
-// Retourner un livre (supprimer le prêt)
-app.delete('/api/loans', async (req, res) => {
-    try {
-        const { isbn, studentName } = req.body;
-        const loan = await Loan.findOneAndDelete({ isbn, studentName });
-        if (!loan) return res.status(404).json({ message: "Prêt non trouvé" });
-
-        const book = await Book.findOne({ isbn: isbn });
-        if (book) {
-            book.loanedCopies = Math.max(0, book.loanedCopies - 1);
-            await book.save();
-            await History.create({
-                isbn: book.isbn, bookTitle: book.title, studentName: loan.studentName, studentClass: loan.studentClass, loanDate: loan.loanDate, actualReturnDate: new Date()
-            });
-        }
-        res.status(204).send();
-    } catch (error) {
-        res.status(500).json({ message: "Erreur serveur", error });
-    }
-});
-
-// Routes d'historique
-app.get('/api/history/book/:isbn', async (req, res) => {
-    try {
-        const history = await History.find({ isbn: req.params.isbn }).sort({ actualReturnDate: -1 });
-        res.json(history);
-    } catch (error) {
-        res.status(500).json({ message: "Erreur serveur", error });
-    }
-});
-
-app.get('/api/history/student/:studentName', async (req, res) => {
-    try {
-        const history = await History.find({ studentName: { $regex: new RegExp(req.params.studentName, 'i') } }).sort({ actualReturnDate: -1 });
-        res.json(history);
-    } catch (error) {
-        res.status(500).json({ message: "Erreur serveur", error });
-    }
-});
+app.post('/api/books', async (req, res) => { try { const { isbn, title, totalCopies, ...rest } = req.body; const updatedBook = await Book.findOneAndUpdate({ isbn: isbn }, { $inc: { totalCopies: totalCopies || 1 }, $setOnInsert: { isbn, title, ...rest } }, { new: true, upsert: true, setDefaultsOnInsert: true }); res.status(201).json(updatedBook); } catch (error) { res.status(500).json({ message: "Erreur serveur", error }); } });
+app.post('/api/books/upload', upload.single('excelFile'), async (req, res) => { if (!req.file) { return res.status(400).json({ message: 'Aucun fichier uploadé.' }); } try { const workbook = xlsx.read(req.file.buffer, { type: 'buffer' }); const sheetName = workbook.SheetNames[0]; const worksheet = workbook.Sheets[sheetName]; const json = xlsx.utils.sheet_to_json(worksheet); const processedIsbnsInFile = new Set(); const newBooksPayload = []; for (const row of json) { const isbn = row['ISBN'] ? String(row['ISBN']).trim() : null; if (!isbn || !row['Title'] || processedIsbnsInFile.has(isbn)) continue; processedIsbnsInFile.add(isbn); newBooksPayload.push({ title: row['Title'], isbn: isbn, totalCopies: parseInt(row['QTY'], 10) || 1, subject: row['Subject'] || '', level: row['level'] || '', language: row['language'] || '', cornerName: row['Corner name'] || 'Non classé', cornerNumber: row['Corner number'] ? String(row['Corner number']) : '0', loanedCopies: 0 }); } const existingIsbnsInDb = new Set((await Book.find({ isbn: { $in: Array.from(processedIsbnsInFile) } }, 'isbn').lean()).map(b => b.isbn)); const booksToInsert = newBooksPayload.filter(book => !existingIsbnsInDb.has(book.isbn)); if (booksToInsert.length > 0) { await Book.insertMany(booksToInsert, { ordered: false }); } res.json({ message: "Importation terminée!", addedCount: booksToInsert.length, ignoredCount: json.length - booksToInsert.length }); } catch (error) { res.status(500).json({ message: "Erreur lors du traitement du fichier Excel.", error: error.message }); } });
+app.put('/api/books/:originalIsbn', async (req, res) => { try { const { originalIsbn } = req.params; const updatedBook = await Book.findOneAndUpdate({ isbn: originalIsbn }, req.body, { new: true }); if (!updatedBook) return res.status(404).json({ message: "Livre non trouvé" }); res.json(updatedBook); } catch (error) { res.status(500).json({ message: "Erreur serveur", error }); } });
+app.delete('/api/books/:isbn', async (req, res) => { try { const { isbn } = req.params; const result = await Book.deleteOne({ isbn: isbn }); if (result.deletedCount === 0) return res.status(404).json({ message: "Livre non trouvé" }); res.status(204).send(); } catch (error) { res.status(500).json({ message: "Erreur serveur", error }); } });
+app.get('/api/loans', async (req, res) => { try { const loans = await Loan.find({}); res.json(loans); } catch (error) { res.status(500).json({ message: "Erreur serveur", error }); } });
+app.post('/api/loans', async (req, res) => { try { const { isbn, studentName, studentClass, loanDate, returnDate } = req.body; const studentNameRegex = new RegExp(`^${studentName.trim()}$`, 'i'); const existingLoansCount = await Loan.countDocuments({ studentName: studentNameRegex }); if (existingLoansCount >= MAX_LOANS_PER_STUDENT) { return res.status(400).json({ message: `Cet élève a déjà atteint la limite de ${MAX_LOANS_PER_STUDENT} prêts.` }); } const book = await Book.findOne({ isbn: isbn }); if (!book) return res.status(404).json({ message: "Livre non trouvé" }); if (book.loanedCopies >= book.totalCopies) return res.status(400).json({ message: "Toutes les copies de ce livre sont déjà prêtées." }); book.loanedCopies++; await book.save(); const newLoan = await Loan.create({ isbn, studentName, studentClass, loanDate, returnDate }); res.status(201).json(newLoan); } catch (error) { res.status(500).json({ message: "Erreur serveur", error }); } });
+app.delete('/api/loans', async (req, res) => { try { const { isbn, studentName } = req.body; const loan = await Loan.findOneAndDelete({ isbn, studentName }); if (!loan) return res.status(404).json({ message: "Prêt non trouvé" }); const book = await Book.findOne({ isbn: isbn }); if (book) { book.loanedCopies = Math.max(0, book.loanedCopies - 1); await book.save(); await History.create({ isbn: book.isbn, bookTitle: book.title, studentName: loan.studentName, studentClass: loan.studentClass, loanDate: loan.loanDate, actualReturnDate: new Date() }); } res.status(204).send(); } catch (error) { res.status(500).json({ message: "Erreur serveur", error }); } });
+app.get('/api/history/book/:isbn', async (req, res) => { try { const history = await History.find({ isbn: req.params.isbn }).sort({ actualReturnDate: -1 }); res.json(history); } catch (error) { res.status(500).json({ message: "Erreur serveur", error }); } });
+app.get('/api/history/student/:studentName', async (req, res) => { try { const history = await History.find({ studentName: { $regex: new RegExp(req.params.studentName, 'i') } }).sort({ actualReturnDate: -1 }); res.json(history); } catch (error) { res.status(500).json({ message: "Erreur serveur", error }); } });
 
 app.listen(port, () => {
     console.log(`Serveur démarré sur http://localhost:${port}`);
