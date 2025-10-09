@@ -1,4 +1,4 @@
-/* TOUT VOTRE CSS EST ICI */
+/* ... (tout votre CSS existant) ... */
 @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap');
 :root { --primary-color: #005f73; --secondary-color: #0a9396; --accent-color: #ee9b00; --delete-color: #d90429; --return-color: #2a9d8f; --history-color: #0077b6; --background-gradient: linear-gradient(135deg, #e9d8a6 0%, #cae9ff 100%); --text-color: #001219; --card-bg-color: rgba(255, 255, 255, 0.95); --border-radius: 12px; --box-shadow: 0 8px 32px rgba(0, 95, 115, 0.2); }
 body { font-family: 'Tajawal', sans-serif; background: var(--background-gradient); color: var(--text-color); margin: 0; line-height: 1.7; overflow-x: hidden; }
@@ -75,33 +75,15 @@ hr { border: none; border-top: 1px solid #eee; margin: 1.5rem 0; }
 [dir="rtl"] .close-modal-btn { left: 1rem; right: auto; }
 footer { text-align: center; padding: 1.5rem; background-color: var(--primary-color); color: white; margin-top: 3rem; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideInUp { from { transform: translateY(50px); opacity: 0; } to { opacity: 1; } }
+@keyframes slideInUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 .animated { animation: slideInUp 0.5s ease-out forwards; opacity: 0; }
+.progress-bar-container { width: 100%; background-color: #e0e0e0; border-radius: 8px; margin-top: 1rem; overflow: hidden; }
+.progress-bar { width: 100%; height: 10px; background-color: var(--secondary-color); border-radius: 8px; animation: progress-animation 2s linear infinite; }
+@keyframes progress-animation { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 @media (max-width: 992px) { header { flex-direction: column; gap: 1rem; } }
 @media (max-width: 768px) { .columns { grid-template-columns: 1fr; } }
-/* NOUVEAUX STYLES POUR LA BARRE DE PROGRESSION */
-.progress-bar-container {
-    width: 100%;
-    background-color: #e0e0e0;
-    border-radius: 8px;
-    margin-top: 1rem;
-    overflow: hidden;
-}
 
-.progress-bar {
-    width: 100%;
-    height: 10px;
-    background-color: var(--secondary-color);
-    border-radius: 8px;
-    /* Animation d'une barre de chargement indéterminée */
-    animation: progress-animation 2s linear infinite;
-}
-
-@keyframes progress-animation {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
-}
-/* NOUVEAUX STYLES POUR L'ÉCRAN DE CHARGEMENT */
+/* STYLES POUR L'ÉCRAN DE CHARGEMENT */
 #loading-overlay {
     position: fixed;
     top: 0;
@@ -116,14 +98,12 @@ footer { text-align: center; padding: 1.5rem; background-color: var(--primary-co
     align-items: center;
     backdrop-filter: blur(5px);
 }
-
 .loading-text {
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--primary-color);
     margin-bottom: 20px;
 }
-
 .loading-progress-bar-container {
     width: 80%;
     max-width: 400px;
@@ -132,7 +112,6 @@ footer { text-align: center; padding: 1.5rem; background-color: var(--primary-co
     border-radius: 10px;
     overflow: hidden;
 }
-
 .loading-progress-bar {
     width: 100%;
     height: 100%;
