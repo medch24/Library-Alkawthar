@@ -131,6 +131,55 @@
                 </section>
 
                 <section class="card animated">
+                    <h2><i class="fas fa-book-medical"></i> إضافة كتاب يدوياً</h2>
+                    <form id="manual-book-form">
+                        <div class="form-group">
+                            <label for="manual-isbn">ISBN</label>
+                            <input type="text" id="manual-isbn" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="manual-title">عنوان الكتاب</label>
+                            <input type="text" id="manual-title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="manual-copies">عدد النسخ</label>
+                            <input type="number" id="manual-copies" min="1" value="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="manual-subject">المادة</label>
+                            <input type="text" id="manual-subject" placeholder="اختياري">
+                        </div>
+                        <div class="form-group">
+                            <label for="manual-level">المستوى</label>
+                            <input type="text" id="manual-level" placeholder="اختياري">
+                        </div>
+                        <div class="form-group">
+                            <label for="manual-language">اللغة</label>
+                            <input type="text" id="manual-language" placeholder="اختياري">
+                        </div>
+                        <div class="form-group">
+                            <label for="manual-corner-name">اسم الركن</label>
+                            <input type="text" id="manual-corner-name" placeholder="اختياري">
+                        </div>
+                        <div class="form-group">
+                            <label for="manual-corner-number">رقم الركن</label>
+                            <input type="text" id="manual-corner-number" placeholder="اختياري">
+                        </div>
+                        <button type="submit" class="btn btn-primary">إضافة الكتاب</button>
+                    </form>
+                </section>
+
+                <section class="card animated">
+                    <h2><i class="fas fa-file-upload"></i> رفع ملف Excel للكتب</h2>
+                    <div class="form-group">
+                        <label for="excel-file">اختر ملف Excel</label>
+                        <input type="file" id="excel-file" accept=".xlsx,.xls" required>
+                    </div>
+                    <button id="upload-excel-btn" class="btn btn-success">رفع الملف</button>
+                    <div id="upload-status" style="margin-top: 10px;"></div>
+                </section>
+
+                <section class="card animated">
                     <h2><i class="fas fa-search"></i> البحث في المخزون</h2>
                     <div class="form-group">
                         <input type="text" id="search-input" placeholder="ابحث بالعنوان أو ISBN...">
@@ -171,7 +220,7 @@
     </div>
 
     <script>
-        const API_BASE_URL = 'https://3005-iznkr1yjob21txfccaszw-c81df28e.sandbox.novita.ai';
+        const API_BASE_URL = 'https://3002-iznkr1yjob21txfccaszw-c81df28e.sandbox.novita.ai';
         let allBooks = [];
         let allLoans = [];
         let currentLoanType = 'students';
@@ -334,6 +383,77 @@
                     alert('تم تحميل ملف Excel بنجاح!');
                 } catch (error) {
                     alert('خطأ في تحميل ملف Excel');
+                }
+            });
+
+            // Manual book addition
+            document.getElementById('manual-book-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const bookData = {
+                    isbn: document.getElementById('manual-isbn').value,
+                    title: document.getElementById('manual-title').value,
+                    totalCopies: parseInt(document.getElementById('manual-copies').value),
+                    subject: document.getElementById('manual-subject').value || 'Non classé',
+                    level: document.getElementById('manual-level').value || 'undefined',
+                    language: document.getElementById('manual-language').value || 'Non spécifié',
+                    cornerName: document.getElementById('manual-corner-name').value || 'Non classé',
+                    cornerNumber: document.getElementById('manual-corner-number').value || '0',
+                    loanedCopies: 0
+                };
+                
+                try {
+                    const response = await fetch(API_BASE_URL + '/api/books', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(bookData)
+                    });
+                    
+                    if (response.ok) {
+                        document.getElementById('manual-book-form').reset();
+                        alert('تم إضافة الكتاب بنجاح!');
+                        await loadAllData();
+                    } else {
+                        const error = await response.json();
+                        alert('خطأ في إضافة الكتاب: ' + (error.message || 'خطأ غير معروف'));
+                    }
+                } catch (error) {
+                    alert('خطأ في إضافة الكتاب: ' + error.message);
+                }
+            });
+
+            // Excel file upload
+            document.getElementById('upload-excel-btn').addEventListener('click', async () => {
+                const fileInput = document.getElementById('excel-file');
+                const statusDiv = document.getElementById('upload-status');
+                
+                if (!fileInput.files[0]) {
+                    alert('يرجى اختيار ملف Excel أولاً');
+                    return;
+                }
+                
+                const formData = new FormData();
+                formData.append('excelFile', fileInput.files[0]);
+                
+                try {
+                    statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري رفع الملف...';
+                    
+                    const response = await fetch(API_BASE_URL + '/api/books/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        statusDiv.innerHTML = `<i class="fas fa-check-circle" style="color: green;"></i> تم رفع الملف بنجاح! تمت إضافة ${result.addedCount} كتاب`;
+                        fileInput.value = '';
+                        await loadAllData();
+                    } else {
+                        statusDiv.innerHTML = `<i class="fas fa-exclamation-circle" style="color: red;"></i> خطأ: ${result.message}`;
+                    }
+                } catch (error) {
+                    statusDiv.innerHTML = `<i class="fas fa-exclamation-circle" style="color: red;"></i> خطأ في رفع الملف: ${error.message}`;
                 }
             });
 
