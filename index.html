@@ -364,11 +364,6 @@
             const searchInput = document.getElementById('search-input');
             const modalOverlay = document.getElementById('modal-overlay');
             const loansModal = document.getElementById('loans-modal');
-            
-            // Vérifier la session
-            if (localStorage.getItem('isLoggedIn') === 'true') {
-                showDashboard();
-            }
 
             // FONCTIONS DE TRADUCTION ET BARRE DE PROGRESSION
             
@@ -423,9 +418,12 @@
                 });
             });
             
-            // Charger la langue préférée
+            // Charger la langue préférée après la définition des gestionnaires
             const savedLang = localStorage.getItem('preferred_language') || 'ar';
-            changeLanguage(savedLang);
+            // Attendre un peu pour s'assurer que le DOM est prêt
+            setTimeout(() => {
+                changeLanguage(savedLang);
+            }, 100);
             
             // FONCTIONS DE BARRE DE PROGRESSION
             
@@ -513,6 +511,11 @@
                 loadAllData();
             }
 
+            // Vérifier la session après définition de toutes les fonctions
+            if (localStorage.getItem('isLoggedIn') === 'true') {
+                showDashboard();
+            }
+
             // Charger toutes les données avec barre de progression
             async function loadAllData() {
                 try {
@@ -545,6 +548,11 @@
                     // Étape 4: Afficher les données
                     renderTable(allBooks);
                     updateProgress(3, 'data_loaded');
+                    
+                    // Mettre à jour les traductions après le rendu
+                    setTimeout(() => {
+                        updateTranslations();
+                    }, 100);
                     
                     console.log('Données chargées avec succès:', books.length, 'livres');
                 } catch (error) {
@@ -599,6 +607,9 @@
                 
                 // Ajouter les gestionnaires d'événements pour l'édition
                 addTableEventListeners();
+                
+                // Mettre à jour les traductions après le rendu du tableau
+                updateTranslations();
             }
 
             // Recherche
