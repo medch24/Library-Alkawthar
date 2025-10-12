@@ -42,6 +42,10 @@ hr { border: none; border-top: 1px solid #eee; margin: 1.5rem 0; }
 .btn:hover { background-color: var(--primary-color); transform: scale(1.02); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
 .btn-secondary { background-color: #94d2bd; }
 .btn-secondary:hover { background-color: #7abda6; }
+.btn-success { background-color: #198754; }
+.btn-success:hover { background-color: #146c43; }
+.stats-container + div { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; }
+.stats-container + div .btn { flex: 1; min-width: 200px; }
 .file-input { display: none; }
 .file-label { display: inline-block; text-align: center; cursor: pointer; margin-bottom: 1rem; width: 100%; }
 .stats-container { display: flex; justify-content: space-around; text-align: center; gap: 1rem; flex-wrap: wrap; }
