@@ -179,20 +179,29 @@
                     <div id="upload-status" style="margin-top: 10px;"></div>
                 </section>
 
-                <section class="card animated">
-                    <h2><i class="fas fa-search"></i> البحث في المخزون</h2>
+                <section class="card animated" style="width: 100%;">
+                    <h2><i class="fas fa-search"></i> البحث في المخزون وإدارة الكتب</h2>
                     <div class="form-group">
-                        <input type="text" id="search-input" placeholder="ابحث بالعنوان أو ISBN...">
+                        <input type="text" id="search-input" placeholder="ابحث بالعنوان أو ISBN أو المادة...">
+                        <button id="refresh-books-btn" class="btn btn-secondary" style="margin-left: 10px;">
+                            <i class="fas fa-sync-alt"></i> تحديث
+                        </button>
                     </div>
-                    <div class="table-container">
-                        <table id="books-table">
+                    <div class="table-container" style="overflow-x: auto; max-width: 100%;">
+                        <table id="books-table" style="width: 100%; min-width: 1200px;">
                             <thead>
                                 <tr>
-                                    <th>ISBN</th>
-                                    <th>العنوان</th>
-                                    <th>اسم الركن</th>
-                                    <th>رقم الركن</th>
-                                    <th>الإتاحة</th>
+                                    <th style="min-width: 130px;">ISBN</th>
+                                    <th style="min-width: 200px;">العنوان</th>
+                                    <th style="min-width: 100px;">إجمالي النسخ</th>
+                                    <th style="min-width: 100px;">النسخ المعارة</th>
+                                    <th style="min-width: 100px;">النسخ المتاحة</th>
+                                    <th style="min-width: 120px;">المادة</th>
+                                    <th style="min-width: 80px;">المستوى</th>
+                                    <th style="min-width: 80px;">اللغة</th>
+                                    <th style="min-width: 120px;">اسم الركن</th>
+                                    <th style="min-width: 100px;">رقم الركن</th>
+                                    <th style="min-width: 160px;">الإجراءات</th>
                                 </tr>
                             </thead>
                             <tbody id="books-table-body"></tbody>
@@ -290,23 +299,42 @@
                 document.getElementById('available-books-stat').textContent = totalCopies - loanedCopies;
             }
 
-            // Afficher le tableau des livres
+            // Afficher le tableau des livres - VERSION COMPLÈTE AVEC ÉDITION
             function renderTable(bookList) {
                 let tableHTML = '';
-                bookList.forEach(book => {
+                bookList.forEach((book, index) => {
                     const availableCopies = book.totalCopies - book.loanedCopies;
                     const availabilityClass = availableCopies > 0 ? 'status-available' : 'status-unavailable';
-                    const availabilityText = `${availableCopies} / ${book.totalCopies} متاح`;
+                    const availabilityText = `${availableCopies}`;
                     
-                    tableHTML += `<tr>
-                        <td>${book.isbn}</td>
-                        <td>${book.title}</td>
-                        <td>${book.cornerName || ''}</td>
-                        <td>${book.cornerNumber || ''}</td>
-                        <td><span class="${availabilityClass}">${availabilityText}</span></td>
+                    tableHTML += `<tr data-isbn="${book.isbn}">
+                        <td class="editable-cell" data-field="isbn" title="Double-cliquez pour modifier">${book.isbn}</td>
+                        <td class="editable-cell" data-field="title" title="Double-cliquez pour modifier">${book.title}</td>
+                        <td class="editable-cell" data-field="totalCopies" title="Double-cliquez pour modifier">${book.totalCopies}</td>
+                        <td style="background-color: #f0f0f0;">${book.loanedCopies}</td>
+                        <td class="${availabilityClass}" style="font-weight: bold;">${availabilityText}</td>
+                        <td class="editable-cell" data-field="subject" title="Double-cliquez pour modifier">${book.subject || 'Non classé'}</td>
+                        <td class="editable-cell" data-field="level" title="Double-cliquez pour modifier">${book.level || 'undefined'}</td>
+                        <td class="editable-cell" data-field="language" title="Double-cliquez pour modifier">${book.language || 'Non spécifié'}</td>
+                        <td class="editable-cell" data-field="cornerName" title="Double-cliquez pour modifier">${book.cornerName || 'Non classé'}</td>
+                        <td class="editable-cell" data-field="cornerNumber" title="Double-cliquez pour modifier">${book.cornerNumber || '0'}</td>
+                        <td class="action-buttons">
+                            <button class="btn-small btn-primary edit-book-btn" data-isbn="${book.isbn}" title="Modifier le livre">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-small btn-danger delete-book-btn" data-isbn="${book.isbn}" title="Supprimer le livre">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <button class="btn-small btn-info history-book-btn" data-isbn="${book.isbn}" title="Voir l'historique">
+                                <i class="fas fa-history"></i>
+                            </button>
+                        </td>
                     </tr>`;
                 });
                 document.getElementById('books-table-body').innerHTML = tableHTML;
+                
+                // Ajouter les gestionnaires d'événements pour l'édition
+                addTableEventListeners();
             }
 
             // Recherche
@@ -559,6 +587,191 @@
             document.querySelectorAll('.close-modal-btn').forEach(btn => 
                 btn.addEventListener('click', closeModal)
             );
+
+            // NOUVELLES FONCTIONS POUR L'ÉDITION ET LA SUPPRESSION
+
+            // Bouton de rafraîchissement des livres
+            document.getElementById('refresh-books-btn').addEventListener('click', async () => {
+                await loadAllData();
+                alert('تم تحديث البيانات بنجاح!');
+            });
+
+            // Ajouter les gestionnaires d'événements pour le tableau
+            function addTableEventListeners() {
+                // Édition en double-cliquant sur une cellule
+                document.querySelectorAll('.editable-cell').forEach(cell => {
+                    cell.addEventListener('dblclick', function() {
+                        editCell(this);
+                    });
+                });
+
+                // Boutons de modification
+                document.querySelectorAll('.edit-book-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const isbn = this.dataset.isbn;
+                        editBookInModal(isbn);
+                    });
+                });
+
+                // Boutons de suppression
+                document.querySelectorAll('.delete-book-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const isbn = this.dataset.isbn;
+                        deleteBook(isbn);
+                    });
+                });
+
+                // Boutons d'historique
+                document.querySelectorAll('.history-book-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const isbn = this.dataset.isbn;
+                        showBookHistory(isbn);
+                    });
+                });
+            }
+
+            // Fonction pour éditer une cellule
+            function editCell(cell) {
+                if (cell.classList.contains('editing')) return;
+                
+                const originalValue = cell.textContent.trim();
+                const field = cell.dataset.field;
+                const isbn = cell.parentElement.dataset.isbn;
+                
+                cell.classList.add('editing');
+                cell.innerHTML = `<input type="text" value="${originalValue}" data-original="${originalValue}">`;
+                
+                const input = cell.querySelector('input');
+                input.focus();
+                input.select();
+                
+                // Sauvegarder en appuyant sur Entrée
+                input.addEventListener('keydown', async function(e) {
+                    if (e.key === 'Enter') {
+                        await saveCell(cell, field, isbn, this.value);
+                    } else if (e.key === 'Escape') {
+                        cancelEdit(cell, originalValue);
+                    }
+                });
+                
+                // Sauvegarder en perdant le focus
+                input.addEventListener('blur', async function() {
+                    await saveCell(cell, field, isbn, this.value);
+                });
+            }
+
+            // Sauvegarder les modifications d'une cellule
+            async function saveCell(cell, field, isbn, newValue) {
+                const originalValue = cell.querySelector('input').dataset.original;
+                
+                if (newValue === originalValue) {
+                    cancelEdit(cell, originalValue);
+                    return;
+                }
+                
+                try {
+                    const updateData = {};
+                    updateData[field] = field === 'totalCopies' ? parseInt(newValue) || 1 : newValue;
+                    
+                    const response = await fetch(`${API_BASE_URL}/api/books/${isbn}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updateData)
+                    });
+                    
+                    if (response.ok) {
+                        cell.classList.remove('editing');
+                        cell.textContent = newValue;
+                        await loadAllData(); // Recharger pour mettre à jour les statistiques
+                        
+                        // Animation de succès
+                        cell.style.backgroundColor = '#d4edda';
+                        setTimeout(() => {
+                            cell.style.backgroundColor = '';
+                        }, 1000);
+                    } else {
+                        throw new Error('Erreur de sauvegarde');
+                    }
+                } catch (error) {
+                    alert('خطأ في حفظ التعديلات: ' + error.message);
+                    cancelEdit(cell, originalValue);
+                }
+            }
+
+            // Annuler l'édition
+            function cancelEdit(cell, originalValue) {
+                cell.classList.remove('editing');
+                cell.textContent = originalValue;
+            }
+
+            // Supprimer un livre
+            async function deleteBook(isbn) {
+                const book = allBooks.find(b => b.isbn === isbn);
+                if (!book) return;
+                
+                const confirmMessage = `هل أنت متأكد من حذف الكتاب؟\n\nISBN: ${isbn}\nالعنوان: ${book.title}\n\nلا يمكن التراجع عن هذا الإجراء!`;
+                
+                if (!confirm(confirmMessage)) return;
+                
+                // Vérifier s'il y a des prêts actifs
+                if (book.loanedCopies > 0) {
+                    alert(`لا يمكن حذف هذا الكتاب!\n\nيوجد ${book.loanedCopies} نسخة معارة حالياً.\nيجب إرجاع جميع النسخ أولاً.`);
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/books/${isbn}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        alert('تم حذف الكتاب بنجاح!');
+                        await loadAllData();
+                    } else {
+                        throw new Error('فشل في حذف الكتاب');
+                    }
+                } catch (error) {
+                    alert('خطأ في حذف الكتاب: ' + error.message);
+                }
+            }
+
+            // Afficher l'historique d'un livre
+            async function showBookHistory(isbn) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/history/book/${isbn}`);
+                    const history = await response.json();
+                    
+                    const book = allBooks.find(b => b.isbn === isbn);
+                    const bookTitle = book ? book.title : 'كتاب غير معروف';
+                    
+                    let historyHTML = `<h3>تاريخ الكتاب: ${bookTitle}</h3>`;
+                    historyHTML += `<p><strong>ISBN:</strong> ${isbn}</p>`;
+                    
+                    if (history.length === 0) {
+                        historyHTML += '<p>لا يوجد تاريخ إعارة لهذا الكتاب.</p>';
+                    } else {
+                        historyHTML += '<div style="max-height: 400px; overflow-y: auto;"><table style="width: 100%; border-collapse: collapse;">';
+                        historyHTML += '<thead><tr style="background: #f0f0f0;"><th style="padding: 8px; border: 1px solid #ddd;">اسم المستعير</th><th style="padding: 8px; border: 1px solid #ddd;">الصف/القسم</th><th style="padding: 8px; border: 1px solid #ddd;">النوع</th><th style="padding: 8px; border: 1px solid #ddd;">تاريخ الإعارة</th><th style="padding: 8px; border: 1px solid #ddd;">تاريخ الإرجاع</th></tr></thead><tbody>';
+                        
+                        history.forEach(h => {
+                            historyHTML += `<tr>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${h.studentName}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${h.studentClass || '-'}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${h.borrowerType === 'teacher' ? 'مدرس' : 'طالب'}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${new Date(h.loanDate).toLocaleDateString('ar-EG')}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${new Date(h.actualReturnDate).toLocaleDateString('ar-EG')}</td>
+                            </tr>`;
+                        });
+                        
+                        historyHTML += '</tbody></table></div>';
+                    }
+                    
+                    document.getElementById('loans-modal-content').innerHTML = historyHTML;
+                    openModal(loansModal);
+                } catch (error) {
+                    alert('خطأ في تحميل تاريخ الكتاب: ' + error.message);
+                }
+            }
         });
     </script>
 </body>
