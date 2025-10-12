@@ -4,8 +4,14 @@ const cors = require('cors');
 const multer = require('multer');
 const xlsx = require('xlsx');
 
+// Mode de développement avec données en mémoire si MongoDB n'est pas disponible
+let devMode = false;
+let mockBooks = [];
+let mockLoans = [];
+let mockHistory = [];
+
 const app = express();
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 3002;
 
 // --- CONFIGURATION ---
 const MAX_LOANS_PER_STUDENT = 3;
@@ -16,11 +22,67 @@ app.use(express.json());
 const upload = multer({ storage: multer.memoryStorage() });
 
 // --- Connexion à MongoDB ---
-mongoose.connect(process.env.MONGODB_URI, {
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/alkawthar-library';
+mongoose.connect(MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-}).then(() => console.log("MongoDB connecté avec succès"))
-  .catch(err => console.error("Erreur de connexion MongoDB:", err));
+}).then(() => {
+    console.log(`MongoDB connecté avec succès sur ${MONGODB_URI}`);
+    // Initialiser quelques données de test si la base est vide
+    initializeTestData();
+  })
+  .catch(err => {
+    console.error("Erreur de connexion MongoDB:", err);
+    console.log("Mode développement: MongoDB non disponible");
+  });
+
+// Fonction pour initialiser des données de test
+const initializeTestData = async () => {
+    try {
+        const bookCount = await Book.countDocuments();
+        if (bookCount === 0) {
+            await Book.insertMany([
+                {
+                    isbn: '978-0-7475-3269-9',
+                    title: 'Harry Potter and the Philosopher\'s Stone',
+                    totalCopies: 3,
+                    loanedCopies: 1,
+                    subject: 'Fiction',
+                    level: 'Grade 6',
+                    language: 'English',
+                    cornerName: 'Fantasy',
+                    cornerNumber: 'A1'
+                },
+                {
+                    isbn: '978-0-439-70818-8',
+                    title: 'Charlotte\'s Web',
+                    totalCopies: 2,
+                    loanedCopies: 0,
+                    subject: 'Fiction',
+                    level: 'Grade 4',
+                    language: 'English',
+                    cornerName: 'Children',
+                    cornerNumber: 'B2'
+                }
+            ]);
+            
+            await Loan.insertMany([
+                {
+                    isbn: '978-0-7475-3269-9',
+                    studentName: 'Miss Jana',
+                    studentClass: 'undefined',
+                    borrowerType: 'student',
+                    loanDate: new Date('2025-10-07'),
+                    returnDate: new Date('2025-10-14')
+                }
+            ]);
+            
+            console.log('Données de test initialisées');
+        }
+    } catch (error) {
+        console.log('Pas d\'initialisation des données de test:', error.message);
+    }
+};
 
 // --- Schémas Mongoose ---
 const BookSchema = new mongoose.Schema({ isbn: { type: String, required: true, unique: true, trim: true }, title: { type: String, required: true }, totalCopies: { type: Number, required: true, min: 1, default: 1 }, loanedCopies: { type: Number, default: 0 }, subject: String, level: String, language: String, cornerName: String, cornerNumber: String });
