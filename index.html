@@ -38,40 +38,65 @@
                 <h1>لوحة تحكم مكتبة الكوثر</h1>
             </div>
             <div class="header-controls">
+                <!-- Sélecteur de langue -->
+                <div class="language-selector">
+                    <button class="lang-btn active" data-lang="ar" title="العربية">
+                        <i class="fas fa-globe"></i> عربي
+                    </button>
+                    <button class="lang-btn" data-lang="fr" title="Français">
+                        <i class="fas fa-globe"></i> FR
+                    </button>
+                    <button class="lang-btn" data-lang="en" title="English">
+                        <i class="fas fa-globe"></i> EN
+                    </button>
+                </div>
                 <div class="header-user">
-                    <span>مدارس الكوثر العالمية</span>
+                    <span data-key="school_name">مدارس الكوثر العالمية</span>
                     <i class="fas fa-school"></i>
                 </div>
                 <button id="logout-btn" class="btn-logout">
                     <i class="fas fa-sign-out-alt"></i>
-                    <span>تسجيل الخروج</span>
+                    <span data-key="logout">تسجيل الخروج</span>
                 </button>
             </div>
         </header>
 
+        <!-- Barre de progression pour le chargement -->
+        <div id="loading-bar" class="loading-bar" style="display: none;">
+            <div class="loading-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <div class="loading-text">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span id="loading-text" data-key="loading_data">تحميل البيانات...</span>
+                </div>
+            </div>
+        </div>
+
         <main class="container">
             <section class="card stats-card animated">
-                <h2><i class="fas fa-chart-pie"></i> إحصائيات المكتبة</h2>
+                <h2><i class="fas fa-chart-pie"></i> <span data-key="library_stats">إحصائيات المكتبة</span></h2>
                 <div class="stats-container">
                     <div class="stat-item">
                         <i class="fas fa-book"></i>
                         <div>
                             <span id="total-books-stat">0</span>
-                            <p>إجمالي الكتب</p>
+                            <p data-key="total_books">إجمالي الكتب</p>
                         </div>
                     </div>
                     <div class="stat-item">
                         <i class="fas fa-hand-holding-heart"></i>
                         <div>
                             <span id="loaned-books-stat">0</span>
-                            <p>الكتب المعارة</p>
+                            <p data-key="loaned_books">الكتب المعارة</p>
                         </div>
                     </div>
                     <div class="stat-item">
                         <i class="fas fa-check-circle"></i>
                         <div>
                             <span id="available-books-stat">0</span>
-                            <p>الكتب المتاحة</p>
+                            <p data-key="available_books">الكتب المتاحة</p>
                         </div>
                     </div>
                 </div>
@@ -93,7 +118,7 @@
 
             <div class="columns">
                 <section class="card animated">
-                    <h2><i class="fas fa-plus-circle"></i> إدارة الإعارة</h2>
+                    <h2><i class="fas fa-plus-circle"></i> <span data-key="loan_management">إدارة الإعارة</span></h2>
                     <form id="loan-form">
                         <div class="form-group">
                             <label for="loan-isbn">ISBN الكتاب</label>
@@ -131,7 +156,7 @@
                 </section>
 
                 <section class="card animated">
-                    <h2><i class="fas fa-book-medical"></i> إضافة كتاب يدوياً</h2>
+                    <h2><i class="fas fa-book-medical"></i> <span data-key="add_book_manually">إضافة كتاب يدوياً</span></h2>
                     <form id="manual-book-form">
                         <div class="form-group">
                             <label for="manual-isbn">ISBN</label>
@@ -170,7 +195,7 @@
                 </section>
 
                 <section class="card animated">
-                    <h2><i class="fas fa-file-upload"></i> رفع ملف Excel للكتب</h2>
+                    <h2><i class="fas fa-file-upload"></i> <span data-key="upload_excel">رفع ملف Excel للكتب</span></h2>
                     <div class="form-group">
                         <label for="excel-file">اختر ملف Excel</label>
                         <input type="file" id="excel-file" accept=".xlsx,.xls" required>
@@ -179,36 +204,38 @@
                     <div id="upload-status" style="margin-top: 10px;"></div>
                 </section>
 
-                <section class="card animated" style="width: 100%;">
-                    <h2><i class="fas fa-search"></i> البحث في المخزون وإدارة الكتب</h2>
-                    <div class="form-group">
-                        <input type="text" id="search-input" placeholder="ابحث بالعنوان أو ISBN أو المادة...">
-                        <button id="refresh-books-btn" class="btn btn-secondary" style="margin-left: 10px;">
-                            <i class="fas fa-sync-alt"></i> تحديث
-                        </button>
-                    </div>
-                    <div class="table-container" style="overflow-x: auto; max-width: 100%;">
-                        <table id="books-table" style="width: 100%; min-width: 1200px;">
-                            <thead>
-                                <tr>
-                                    <th style="min-width: 130px;">ISBN</th>
-                                    <th style="min-width: 200px;">العنوان</th>
-                                    <th style="min-width: 100px;">إجمالي النسخ</th>
-                                    <th style="min-width: 100px;">النسخ المعارة</th>
-                                    <th style="min-width: 100px;">النسخ المتاحة</th>
-                                    <th style="min-width: 120px;">المادة</th>
-                                    <th style="min-width: 80px;">المستوى</th>
-                                    <th style="min-width: 80px;">اللغة</th>
-                                    <th style="min-width: 120px;">اسم الركن</th>
-                                    <th style="min-width: 100px;">رقم الركن</th>
-                                    <th style="min-width: 160px;">الإجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody id="books-table-body"></tbody>
-                        </table>
-                    </div>
-                </section>
             </div>
+
+            <!-- Section du tableau sur toute la largeur -->
+            <section class="card animated full-width-section">
+                <h2><i class="fas fa-search"></i> <span data-key="inventory_search">البحث في المخزون وإدارة الكتب</span></h2>
+                <div class="form-group">
+                    <input type="text" id="search-input" placeholder="ابحث بالعنوان أو ISBN أو المادة..." data-key-placeholder="search_placeholder">
+                    <button id="refresh-books-btn" class="btn btn-secondary" style="margin-left: 10px;">
+                        <i class="fas fa-sync-alt"></i> <span data-key="refresh">تحديث</span>
+                    </button>
+                </div>
+                <div class="table-container" style="overflow-x: auto; max-width: 100%;">
+                    <table id="books-table" style="width: 100%; min-width: 1400px;">
+                        <thead>
+                            <tr>
+                                <th style="min-width: 140px;" data-key="isbn">ISBN</th>
+                                <th style="min-width: 250px;" data-key="title">العنوان</th>
+                                <th style="min-width: 120px;" data-key="total_copies">إجمالي النسخ</th>
+                                <th style="min-width: 120px;" data-key="loaned_copies">النسخ المعارة</th>
+                                <th style="min-width: 120px;" data-key="available_copies">النسخ المتاحة</th>
+                                <th style="min-width: 140px;" data-key="subject">المادة</th>
+                                <th style="min-width: 100px;" data-key="level">المستوى</th>
+                                <th style="min-width: 100px;" data-key="language">اللغة</th>
+                                <th style="min-width: 140px;" data-key="corner_name">اسم الركن</th>
+                                <th style="min-width: 120px;" data-key="corner_number">رقم الركن</th>
+                                <th style="min-width: 180px;" data-key="actions">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="books-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
         </main>
 
         <footer>
@@ -233,6 +260,101 @@
         let allBooks = [];
         let allLoans = [];
         let currentLoanType = 'students';
+        let currentLanguage = 'ar';
+
+        // Dictionnaire des traductions
+        const translations = {
+            ar: {
+                school_name: 'مدارس الكوثر العالمية',
+                logout: 'تسجيل الخروج',
+                library_stats: 'إحصائيات المكتبة',
+                total_books: 'إجمالي الكتب',
+                loaned_books: 'الكتب المعارة',
+                available_books: 'الكتب المتاحة',
+                inventory_search: 'البحث في المخزون وإدارة الكتب',
+                search_placeholder: 'ابحث بالعنوان أو ISBN أو المادة...',
+                refresh: 'تحديث',
+                loading_data: 'تحميل البيانات...',
+                isbn: 'ISBN',
+                title: 'العنوان',
+                total_copies: 'إجمالي النسخ',
+                loaned_copies: 'النسخ المعارة',
+                available_copies: 'النسخ المتاحة',
+                subject: 'المادة',
+                level: 'المستوى',
+                language: 'اللغة',
+                corner_name: 'اسم الركن',
+                corner_number: 'رقم الركن',
+                actions: 'الإجراءات',
+                loading_books: 'جاري تحميل الكتب...',
+                loading_loans: 'جاري تحميل الإعارات...',
+                loading_stats: 'جاري حساب الإحصائيات...',
+                data_loaded: 'تم تحميل البيانات بنجاح!',
+                loan_management: 'إدارة الإعارة',
+                add_book_manually: 'إضافة كتاب يدوياً',
+                upload_excel: 'رفع ملف Excel للكتب'
+            },
+            fr: {
+                school_name: 'Écoles Internationales Al-Kawthar',
+                logout: 'Se déconnecter',
+                library_stats: 'Statistiques de la bibliothèque',
+                total_books: 'Total des livres',
+                loaned_books: 'Livres prêtés',
+                available_books: 'Livres disponibles',
+                inventory_search: 'Recherche et gestion de l\'inventaire',
+                search_placeholder: 'Rechercher par titre, ISBN ou matière...',
+                refresh: 'Actualiser',
+                loading_data: 'Chargement des données...',
+                isbn: 'ISBN',
+                title: 'Titre',
+                total_copies: 'Copies totales',
+                loaned_copies: 'Copies prêtées',
+                available_copies: 'Copies disponibles',
+                subject: 'Matière',
+                level: 'Niveau',
+                language: 'Langue',
+                corner_name: 'Nom du coin',
+                corner_number: 'Numéro du coin',
+                actions: 'Actions',
+                loading_books: 'Chargement des livres...',
+                loading_loans: 'Chargement des prêts...',
+                loading_stats: 'Calcul des statistiques...',
+                data_loaded: 'Données chargées avec succès!',
+                loan_management: 'Gestion des prêts',
+                add_book_manually: 'Ajouter un livre manuellement',
+                upload_excel: 'Télécharger fichier Excel'
+            },
+            en: {
+                school_name: 'Al-Kawthar International Schools',
+                logout: 'Logout',
+                library_stats: 'Library Statistics',
+                total_books: 'Total Books',
+                loaned_books: 'Loaned Books',
+                available_books: 'Available Books',
+                inventory_search: 'Inventory Search & Management',
+                search_placeholder: 'Search by title, ISBN or subject...',
+                refresh: 'Refresh',
+                loading_data: 'Loading data...',
+                isbn: 'ISBN',
+                title: 'Title',
+                total_copies: 'Total Copies',
+                loaned_copies: 'Loaned Copies',
+                available_copies: 'Available Copies',
+                subject: 'Subject',
+                level: 'Level',
+                language: 'Language',
+                corner_name: 'Corner Name',
+                corner_number: 'Corner Number',
+                actions: 'Actions',
+                loading_books: 'Loading books...',
+                loading_loans: 'Loading loans...',
+                loading_stats: 'Calculating statistics...',
+                data_loaded: 'Data loaded successfully!',
+                loan_management: 'Loan Management',
+                add_book_manually: 'Add Book Manually',
+                upload_excel: 'Upload Excel File'
+            }
+        };
 
         document.addEventListener('DOMContentLoaded', () => {
             const loginPage = document.getElementById('login-page');
@@ -246,6 +368,124 @@
             // Vérifier la session
             if (localStorage.getItem('isLoggedIn') === 'true') {
                 showDashboard();
+            }
+
+            // FONCTIONS DE TRADUCTION ET BARRE DE PROGRESSION
+            
+            // Fonction pour changer la langue
+            function changeLanguage(lang) {
+                currentLanguage = lang;
+                localStorage.setItem('preferred_language', lang);
+                
+                // Changer la direction du document
+                if (lang === 'ar') {
+                    document.documentElement.setAttribute('dir', 'rtl');
+                    document.documentElement.setAttribute('lang', 'ar');
+                } else {
+                    document.documentElement.setAttribute('dir', 'ltr');
+                    document.documentElement.setAttribute('lang', lang);
+                }
+                
+                // Mettre à jour tous les éléments traduits
+                updateTranslations();
+                
+                // Mettre à jour les boutons de langue
+                document.querySelectorAll('.lang-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.lang === lang);
+                });
+            }
+            
+            // Fonction pour mettre à jour les traductions
+            function updateTranslations() {
+                const currentTranslations = translations[currentLanguage];
+                
+                // Mettre à jour les éléments avec data-key
+                document.querySelectorAll('[data-key]').forEach(element => {
+                    const key = element.getAttribute('data-key');
+                    if (currentTranslations[key]) {
+                        element.textContent = currentTranslations[key];
+                    }
+                });
+                
+                // Mettre à jour les placeholders
+                document.querySelectorAll('[data-key-placeholder]').forEach(element => {
+                    const key = element.getAttribute('data-key-placeholder');
+                    if (currentTranslations[key]) {
+                        element.placeholder = currentTranslations[key];
+                    }
+                });
+            }
+            
+            // Gestionnaires d'événements pour les boutons de langue
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    changeLanguage(btn.dataset.lang);
+                });
+            });
+            
+            // Charger la langue préférée
+            const savedLang = localStorage.getItem('preferred_language') || 'ar';
+            changeLanguage(savedLang);
+            
+            // FONCTIONS DE BARRE DE PROGRESSION
+            
+            let loadingSteps = [];
+            let currentStep = 0;
+            
+            function showLoadingBar(steps) {
+                loadingSteps = steps;
+                currentStep = 0;
+                const loadingBar = document.getElementById('loading-bar');
+                const progressFill = document.getElementById('progress-fill');
+                const loadingText = document.getElementById('loading-text');
+                
+                loadingBar.style.display = 'block';
+                loadingBar.classList.add('show');
+                progressFill.style.width = '0%';
+                
+                if (steps.length > 0) {
+                    updateLoadingText(steps[0]);
+                }
+            }
+            
+            function updateProgress(stepIndex, stepText) {
+                if (stepIndex >= loadingSteps.length) return;
+                
+                currentStep = stepIndex;
+                const progressPercent = ((stepIndex + 1) / loadingSteps.length) * 100;
+                const progressFill = document.getElementById('progress-fill');
+                
+                progressFill.style.width = progressPercent + '%';
+                
+                if (stepText) {
+                    updateLoadingText(stepText);
+                }
+                
+                // Si c'est la dernière étape, cacher la barre après un délai
+                if (stepIndex === loadingSteps.length - 1) {
+                    setTimeout(() => {
+                        hideLoadingBar();
+                    }, 1000);
+                }
+            }
+            
+            function updateLoadingText(text) {
+                const loadingTextElement = document.getElementById('loading-text');
+                // Utiliser la traduction si disponible
+                const currentTranslations = translations[currentLanguage];
+                const translatedText = currentTranslations[text] || text;
+                loadingTextElement.querySelector('span').textContent = translatedText;
+            }
+            
+            function hideLoadingBar() {
+                const loadingBar = document.getElementById('loading-bar');
+                loadingBar.classList.remove('show');
+                loadingBar.classList.add('hide');
+                
+                setTimeout(() => {
+                    loadingBar.style.display = 'none';
+                    loadingBar.classList.remove('hide');
+                }, 500);
             }
 
             // Connexion
@@ -273,20 +513,44 @@
                 loadAllData();
             }
 
-            // Charger toutes les données
+            // Charger toutes les données avec barre de progression
             async function loadAllData() {
                 try {
-                    const [books, loans] = await Promise.all([
-                        fetch(API_BASE_URL + '/api/books').then(r => r.json()),
-                        fetch(API_BASE_URL + '/api/loans').then(r => r.json())
-                    ]);
+                    // Afficher la barre de progression
+                    showLoadingBar(['loading_books', 'loading_loans', 'loading_stats', 'data_loaded']);
+                    
+                    // Étape 1: Charger les livres
+                    updateProgress(0, 'loading_books');
+                    const booksResponse = await fetch(API_BASE_URL + '/api/books');
+                    const books = await booksResponse.json();
                     allBooks = books;
+                    
+                    // Petit délai pour voir la progression
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    
+                    // Étape 2: Charger les prêts
+                    updateProgress(1, 'loading_loans');
+                    const loansResponse = await fetch(API_BASE_URL + '/api/loans');
+                    const loans = await loansResponse.json();
                     allLoans = loans;
+                    
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    
+                    // Étape 3: Calculer les statistiques
+                    updateProgress(2, 'loading_stats');
                     updateStats();
+                    
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    
+                    // Étape 4: Afficher les données
                     renderTable(allBooks);
+                    updateProgress(3, 'data_loaded');
+                    
                     console.log('Données chargées avec succès:', books.length, 'livres');
                 } catch (error) {
                     console.error('Erreur lors du chargement des données:', error);
+                    hideLoadingBar();
+                    alert('خطأ في تحميل البيانات: ' + error.message);
                 }
             }
 
