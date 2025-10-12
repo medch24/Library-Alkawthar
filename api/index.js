@@ -163,6 +163,26 @@ const initializeMockData = () => {
     ];
     
     console.log('Données de test en mémoire initialisées');
+    // Synchroniser les loanedCopies avec les prêts actifs
+    syncLoanedCopies();
+};
+
+// Fonction pour synchroniser les loanedCopies avec les prêts réels
+const syncLoanedCopies = () => {
+    if (devMode) {
+        // Créer un compteur des prêts par ISBN
+        const loanCounts = {};
+        mockLoans.forEach(loan => {
+            loanCounts[loan.isbn] = (loanCounts[loan.isbn] || 0) + 1;
+        });
+        
+        // Mettre à jour les loanedCopies dans mockBooks
+        mockBooks.forEach(book => {
+            book.loanedCopies = loanCounts[book.isbn] || 0;
+        });
+        
+        console.log('Synchronisation des loanedCopies terminée');
+    }
 };
 
 // Fonction pour initialiser des données de test
@@ -221,6 +241,57 @@ const HistorySchema = new mongoose.Schema({ isbn: { type: String, required: true
 const Book = mongoose.model('Book', BookSchema);
 const Loan = mongoose.model('Loan', LoanSchema);
 const History = mongoose.model('History', HistorySchema);
+
+// --- SYNCHRONISATION ET STATISTIQUES ---
+// Endpoint pour synchroniser les loanedCopies avec les prêts actifs
+app.post('/api/sync-loans', async (req, res) => {
+    try {
+        if (devMode) {
+            syncLoanedCopies();
+            res.json({ message: 'Synchronisation terminée (mode développement)' });
+        } else {
+            // Pour MongoDB, recalculer les loanedCopies basé sur les prêts actifs
+            const books = await Book.find({});
+            for (const book of books) {
+                const activeLoansCount = await Loan.countDocuments({ isbn: book.isbn });
+                book.loanedCopies = activeLoansCount;
+                await book.save();
+            }
+            res.json({ message: 'Synchronisation terminée (MongoDB)' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Erreur lors de la synchronisation', error });
+    }
+});
+
+// Endpoint pour les statistiques
+app.get('/api/statistics', async (req, res) => {
+    try {
+        let totalCopies = 0;
+        let loanedCopies = 0;
+        
+        if (devMode) {
+            totalCopies = mockBooks.reduce((sum, book) => sum + (book.totalCopies || 0), 0);
+            loanedCopies = mockBooks.reduce((sum, book) => sum + (book.loanedCopies || 0), 0);
+        } else {
+            const books = await Book.find({});
+            totalCopies = books.reduce((sum, book) => sum + (book.totalCopies || 0), 0);
+            loanedCopies = books.reduce((sum, book) => sum + (book.loanedCopies || 0), 0);
+        }
+        
+        const availableCopies = totalCopies - loanedCopies;
+        
+        res.json({
+            totalCopies,
+            loanedCopies,
+            availableCopies,
+            totalBooks: devMode ? mockBooks.length : await Book.countDocuments(),
+            activeLoans: devMode ? mockLoans.length : await Loan.countDocuments()
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Erreur lors du calcul des statistiques', error });
+    }
+});
 
 // --- NOUVELLES ROUTES ---
 app.get('/api/loans/students', async (req, res) => {
