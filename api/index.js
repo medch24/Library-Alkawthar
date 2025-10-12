@@ -33,8 +33,137 @@ mongoose.connect(MONGODB_URI, {
   })
   .catch(err => {
     console.error("Erreur de connexion MongoDB:", err);
-    console.log("Mode développement: MongoDB non disponible");
+    console.log("Mode développement: MongoDB non disponible, utilisation de données en mémoire");
+    devMode = true;
+    initializeMockData();
   });
+
+// Initialiser des données en mémoire pour les tests
+const initializeMockData = () => {
+    mockBooks = [
+        {
+            isbn: '978-0-7475-3269-9',
+            title: 'OXFORD Treetops the Canterville Ghost',
+            totalCopies: 3,
+            loanedCopies: 1,
+            subject: 'Fiction',
+            level: 'undefined',
+            language: 'English',
+            cornerName: 'Fantasy',
+            cornerNumber: 'A1'
+        },
+        {
+            isbn: '978-2-8104-1234-5', 
+            title: 'LE PETIT LAROUSSE ILLUSTRE 2017',
+            totalCopies: 2,
+            loanedCopies: 1,
+            subject: 'Reference',
+            level: 'undefined', 
+            language: 'French',
+            cornerName: 'Reference',
+            cornerNumber: 'B2'
+        },
+        {
+            isbn: '978-0-439-70818-8',
+            title: 'Charlotte\'s Web',
+            totalCopies: 5,
+            loanedCopies: 0,
+            subject: 'Fiction',
+            level: 'Grade 4',
+            language: 'English', 
+            cornerName: 'Children',
+            cornerNumber: 'C3'
+        },
+        {
+            isbn: '978-1-4012-1234-5',
+            title: 'Mathematics Grade 6',
+            totalCopies: 10,
+            loanedCopies: 3,
+            subject: 'Mathematics',
+            level: 'Grade 6',
+            language: 'English',
+            cornerName: 'Math',
+            cornerNumber: 'M1'
+        },
+        {
+            isbn: '978-2-2101-5678-9',
+            title: 'Sciences Physiques 3ème',
+            totalCopies: 8,
+            loanedCopies: 2,
+            subject: 'Sciences',
+            level: '3ème',
+            language: 'French',
+            cornerName: 'Sciences',
+            cornerNumber: 'S1'
+        }
+    ];
+    
+    mockLoans = [
+        {
+            isbn: '978-0-7475-3269-9',
+            studentName: 'Miss Jana',
+            studentClass: 'undefined',
+            borrowerType: 'student',
+            loanDate: new Date('2025-10-07'),
+            returnDate: new Date('2025-10-14')
+        },
+        {
+            isbn: '978-2-8104-1234-5',
+            studentName: 'Miss Nour Hnich',
+            studentClass: 'undefined', 
+            borrowerType: 'student',
+            loanDate: new Date('2025-09-30'),
+            returnDate: new Date('2025-10-31')
+        },
+        {
+            isbn: '978-1-4012-1234-5',
+            studentName: 'Ahmed Ali',
+            studentClass: '6A',
+            borrowerType: 'student',
+            loanDate: new Date('2025-10-01'),
+            returnDate: new Date('2025-10-15')
+        },
+        {
+            isbn: '978-1-4012-1234-5',
+            studentName: 'Sarah Mohamed',
+            studentClass: '6B',
+            borrowerType: 'student', 
+            loanDate: new Date('2025-10-05'),
+            returnDate: new Date('2025-10-19')
+        },
+        {
+            isbn: '978-2-2101-5678-9',
+            studentName: 'Prof. Martin Dupont',
+            studentClass: 'Physique',
+            borrowerType: 'teacher',
+            loanDate: new Date('2025-10-01'),
+            returnDate: new Date('2025-11-01')
+        }
+    ];
+    
+    mockHistory = [
+        {
+            isbn: '978-0-439-70818-8',
+            bookTitle: 'Charlotte\'s Web',
+            studentName: 'Fatima Hassan',
+            studentClass: '4A',
+            borrowerType: 'student',
+            loanDate: new Date('2025-09-01'),
+            actualReturnDate: new Date('2025-09-15')
+        },
+        {
+            isbn: '978-1-4012-1234-5',
+            bookTitle: 'Mathematics Grade 6', 
+            studentName: 'Prof. Lisa Smith',
+            studentClass: 'Mathematics',
+            borrowerType: 'teacher',
+            loanDate: new Date('2025-08-20'),
+            actualReturnDate: new Date('2025-09-20')
+        }
+    ];
+    
+    console.log('Données de test en mémoire initialisées');
+};
 
 // Fonction pour initialiser des données de test
 const initializeTestData = async () => {
@@ -96,8 +225,13 @@ const History = mongoose.model('History', HistorySchema);
 // --- NOUVELLES ROUTES ---
 app.get('/api/loans/students', async (req, res) => {
     try {
-        const studentLoans = await Loan.find({ borrowerType: 'student' });
-        res.json(studentLoans);
+        if (devMode) {
+            const studentLoans = mockLoans.filter(loan => loan.borrowerType === 'student');
+            res.json(studentLoans);
+        } else {
+            const studentLoans = await Loan.find({ borrowerType: 'student' });
+            res.json(studentLoans);
+        }
     } catch (error) {
         res.status(500).json({ message: "Erreur serveur", error });
     }
@@ -105,8 +239,13 @@ app.get('/api/loans/students', async (req, res) => {
 
 app.get('/api/loans/teachers', async (req, res) => {
     try {
-        const teacherLoans = await Loan.find({ borrowerType: 'teacher' });
-        res.json(teacherLoans);
+        if (devMode) {
+            const teacherLoans = mockLoans.filter(loan => loan.borrowerType === 'teacher');
+            res.json(teacherLoans);
+        } else {
+            const teacherLoans = await Loan.find({ borrowerType: 'teacher' });
+            res.json(teacherLoans);
+        }
     } catch (error) {
         res.status(500).json({ message: "Erreur serveur", error });
     }
@@ -175,11 +314,15 @@ app.get('/api/export/excel', async (req, res) => {
 
 // --- ROUTES API ---
 
-// Renvoie TOUS les livres de la base de données
+// Renvoie TOUS les livres de la base de données ou en mémoire
 app.get('/api/books', async (req, res) => {
     try {
-        const books = await Book.find({});
-        res.json(books);
+        if (devMode) {
+            res.json(mockBooks);
+        } else {
+            const books = await Book.find({});
+            res.json(books);
+        }
     } catch (error) {
         res.status(500).json({ message: "Erreur serveur", error });
     }
@@ -189,11 +332,11 @@ app.post('/api/books', async (req, res) => { try { const { isbn, title, totalCop
 app.post('/api/books/upload', upload.single('excelFile'), async (req, res) => { if (!req.file) { return res.status(400).json({ message: 'Aucun fichier uploadé.' }); } try { const workbook = xlsx.read(req.file.buffer, { type: 'buffer' }); const sheetName = workbook.SheetNames[0]; const worksheet = workbook.Sheets[sheetName]; const json = xlsx.utils.sheet_to_json(worksheet); const booksToProcess = []; const duplicateCounter = new Map(); for (const row of json) { const isbn = row['ISBN'] ? String(row['ISBN']).trim() : null; const title = row['Title'] ? row['Title'].trim() : null; if (!isbn || !title) continue; let finalTitle = title; let finalIsbn = isbn; const existingWithSameIsbn = await Book.findOne({ isbn: isbn }); const existingWithSameTitle = await Book.findOne({ title: title }); if (existingWithSameIsbn || existingWithSameTitle) { const key = `${isbn}_${title}`; const count = duplicateCounter.get(key) || 1; duplicateCounter.set(key, count + 1); finalTitle = `${title} (${count + 1})`; finalIsbn = `${isbn}-(${count + 1})`; } booksToProcess.push({ title: finalTitle, isbn: finalIsbn, totalCopies: parseInt(row['QTY'], 10) || 1, subject: row['Subject'] || '', level: row['level'] || '', language: row['language'] || '', cornerName: row['Corner name'] || 'Non classé', cornerNumber: row['Corner number'] ? String(row['Corner number']) : '0', loanedCopies: 0 }); } if (booksToProcess.length > 0) { await Book.insertMany(booksToProcess, { ordered: false }); } res.json({ message: "Importation terminée!", addedCount: booksToProcess.length, ignoredCount: json.length - booksToProcess.length }); } catch (error) { res.status(500).json({ message: "Erreur lors du traitement du fichier Excel.", error: error.message }); } });
 app.put('/api/books/:originalIsbn', async (req, res) => { try { const { originalIsbn } = req.params; const updatedBook = await Book.findOneAndUpdate({ isbn: originalIsbn }, req.body, { new: true }); if (!updatedBook) return res.status(404).json({ message: "Livre non trouvé" }); res.json(updatedBook); } catch (error) { res.status(500).json({ message: "Erreur serveur", error }); } });
 app.delete('/api/books/:isbn', async (req, res) => { try { const { isbn } = req.params; const result = await Book.deleteOne({ isbn: isbn }); if (result.deletedCount === 0) return res.status(404).json({ message: "Livre non trouvé" }); res.status(204).send(); } catch (error) { res.status(500).json({ message: "Erreur serveur", error }); } });
-app.get('/api/loans', async (req, res) => { try { const loans = await Loan.find({}); res.json(loans); } catch (error) { res.status(500).json({ message: "Erreur serveur", error }); } });
-app.post('/api/loans', async (req, res) => { try { const { isbn, studentName, studentClass, borrowerType = 'student', loanDate, returnDate } = req.body; const studentNameRegex = new RegExp(`^${studentName.trim()}$`, 'i'); const existingLoansCount = await Loan.countDocuments({ studentName: studentNameRegex }); const maxLoans = borrowerType === 'teacher' ? 10 : MAX_LOANS_PER_STUDENT; if (existingLoansCount >= maxLoans) { return res.status(400).json({ message: `Cet ${borrowerType === 'teacher' ? 'enseignant' : 'élève'} a déjà atteint la limite de ${maxLoans} prêts.` }); } const book = await Book.findOne({ isbn: isbn }); if (!book) return res.status(404).json({ message: "Livre non trouvé" }); if (book.loanedCopies >= book.totalCopies) return res.status(400).json({ message: "Toutes les copies de ce livre sont déjà prêtées." }); book.loanedCopies++; await book.save(); const newLoan = await Loan.create({ isbn, studentName, studentClass, borrowerType, loanDate, returnDate }); res.status(201).json(newLoan); } catch (error) { res.status(500).json({ message: "Erreur serveur", error }); } });
-app.delete('/api/loans', async (req, res) => { try { const { isbn, studentName } = req.body; const loan = await Loan.findOneAndDelete({ isbn, studentName }); if (!loan) return res.status(404).json({ message: "Prêt non trouvé" }); const book = await Book.findOne({ isbn: isbn }); if (book) { book.loanedCopies = Math.max(0, book.loanedCopies - 1); await book.save(); await History.create({ isbn: book.isbn, bookTitle: book.title, studentName: loan.studentName, studentClass: loan.studentClass, borrowerType: loan.borrowerType || 'student', loanDate: loan.loanDate, actualReturnDate: new Date() }); } res.status(204).send(); } catch (error) { res.status(500).json({ message: "Erreur serveur", error }); } });
-app.get('/api/history/book/:isbn', async (req, res) => { try { const history = await History.find({ isbn: req.params.isbn }).sort({ actualReturnDate: -1 }); res.json(history); } catch (error) { res.status(500).json({ message: "Erreur serveur", error }); } });
-app.get('/api/history/student/:studentName', async (req, res) => { try { const history = await History.find({ studentName: { $regex: new RegExp(req.params.studentName, 'i') } }).sort({ actualReturnDate: -1 }); res.json(history); } catch (error) { res.status(500).json({ message: "Erreur serveur", error }); } });
+app.get('/api/loans', async (req, res) => { try { if (devMode) { res.json(mockLoans); } else { const loans = await Loan.find({}); res.json(loans); } } catch (error) { res.status(500).json({ message: "Erreur serveur", error }); } });
+app.post('/api/loans', async (req, res) => { try { const { isbn, studentName, studentClass, borrowerType = 'student', loanDate, returnDate } = req.body; if (devMode) { const existingLoansCount = mockLoans.filter(loan => loan.studentName.toLowerCase() === studentName.toLowerCase()).length; const maxLoans = borrowerType === 'teacher' ? 10 : MAX_LOANS_PER_STUDENT; if (existingLoansCount >= maxLoans) { return res.status(400).json({ message: `Cet ${borrowerType === 'teacher' ? 'enseignant' : 'élève'} a déjà atteint la limite de ${maxLoans} prêts.` }); } const book = mockBooks.find(b => b.isbn === isbn); if (!book) return res.status(404).json({ message: "Livre non trouvé" }); if (book.loanedCopies >= book.totalCopies) return res.status(400).json({ message: "Toutes les copies de ce livre sont déjà prêtées." }); book.loanedCopies++; const newLoan = { isbn, studentName, studentClass, borrowerType, loanDate: new Date(loanDate), returnDate: new Date(returnDate) }; mockLoans.push(newLoan); res.status(201).json(newLoan); } else { const studentNameRegex = new RegExp(`^${studentName.trim()}$`, 'i'); const existingLoansCount = await Loan.countDocuments({ studentName: studentNameRegex }); const maxLoans = borrowerType === 'teacher' ? 10 : MAX_LOANS_PER_STUDENT; if (existingLoansCount >= maxLoans) { return res.status(400).json({ message: `Cet ${borrowerType === 'teacher' ? 'enseignant' : 'élève'} a déjà atteint la limite de ${maxLoans} prêts.` }); } const book = await Book.findOne({ isbn: isbn }); if (!book) return res.status(404).json({ message: "Livre non trouvé" }); if (book.loanedCopies >= book.totalCopies) return res.status(400).json({ message: "Toutes les copies de ce livre sont déjà prêtées." }); book.loanedCopies++; await book.save(); const newLoan = await Loan.create({ isbn, studentName, studentClass, borrowerType, loanDate, returnDate }); res.status(201).json(newLoan); } } catch (error) { res.status(500).json({ message: "Erreur serveur", error }); } });
+app.delete('/api/loans', async (req, res) => { try { const { isbn, studentName } = req.body; if (devMode) { const loanIndex = mockLoans.findIndex(loan => loan.isbn === isbn && loan.studentName === studentName); if (loanIndex === -1) return res.status(404).json({ message: "Prêt non trouvé" }); const loan = mockLoans[loanIndex]; mockLoans.splice(loanIndex, 1); const book = mockBooks.find(b => b.isbn === isbn); if (book) { book.loanedCopies = Math.max(0, book.loanedCopies - 1); mockHistory.push({ isbn: book.isbn, bookTitle: book.title, studentName: loan.studentName, studentClass: loan.studentClass, borrowerType: loan.borrowerType || 'student', loanDate: loan.loanDate, actualReturnDate: new Date() }); } res.status(204).send(); } else { const loan = await Loan.findOneAndDelete({ isbn, studentName }); if (!loan) return res.status(404).json({ message: "Prêt non trouvé" }); const book = await Book.findOne({ isbn: isbn }); if (book) { book.loanedCopies = Math.max(0, book.loanedCopies - 1); await book.save(); await History.create({ isbn: book.isbn, bookTitle: book.title, studentName: loan.studentName, studentClass: loan.studentClass, borrowerType: loan.borrowerType || 'student', loanDate: loan.loanDate, actualReturnDate: new Date() }); } res.status(204).send(); } } catch (error) { res.status(500).json({ message: "Erreur serveur", error }); } });
+app.get('/api/history/book/:isbn', async (req, res) => { try { if (devMode) { const history = mockHistory.filter(h => h.isbn === req.params.isbn).sort((a, b) => new Date(b.actualReturnDate) - new Date(a.actualReturnDate)); res.json(history); } else { const history = await History.find({ isbn: req.params.isbn }).sort({ actualReturnDate: -1 }); res.json(history); } } catch (error) { res.status(500).json({ message: "Erreur serveur", error }); } });
+app.get('/api/history/student/:studentName', async (req, res) => { try { if (devMode) { const searchName = req.params.studentName.toLowerCase(); const history = mockHistory.filter(h => h.studentName.toLowerCase().includes(searchName)).sort((a, b) => new Date(b.actualReturnDate) - new Date(a.actualReturnDate)); res.json(history); } else { const history = await History.find({ studentName: { $regex: new RegExp(req.params.studentName, 'i') } }).sort({ actualReturnDate: -1 }); res.json(history); } } catch (error) { res.status(500).json({ message: "Erreur serveur", error }); } });
 
 app.listen(port, () => {
     console.log(`Serveur démarré sur http://localhost:${port}`);
