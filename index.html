@@ -69,7 +69,7 @@
                 </div>
                 <div class="loading-text">
                     <i class="fas fa-spinner fa-spin"></i>
-                    <span id="loading-text" data-key="loading_data">تحميل البيانات...</span>
+                    <span id="loading-text-span" data-key="loading_data">تحميل البيانات...</span>
                 </div>
             </div>
         </div>
@@ -393,20 +393,34 @@
             // Fonction pour mettre à jour les traductions
             function updateTranslations() {
                 const currentTranslations = translations[currentLanguage];
+                if (!currentTranslations) {
+                    console.warn('No translations found for language:', currentLanguage);
+                    return;
+                }
                 
                 // Mettre à jour les éléments avec data-key
                 document.querySelectorAll('[data-key]').forEach(element => {
+                    if (!element) return;
                     const key = element.getAttribute('data-key');
-                    if (currentTranslations[key]) {
-                        element.textContent = currentTranslations[key];
+                    if (key && currentTranslations[key]) {
+                        try {
+                            element.textContent = currentTranslations[key];
+                        } catch (error) {
+                            console.warn('Error updating text for element with key:', key, error);
+                        }
                     }
                 });
                 
                 // Mettre à jour les placeholders
                 document.querySelectorAll('[data-key-placeholder]').forEach(element => {
+                    if (!element) return;
                     const key = element.getAttribute('data-key-placeholder');
-                    if (currentTranslations[key]) {
-                        element.placeholder = currentTranslations[key];
+                    if (key && currentTranslations[key]) {
+                        try {
+                            element.placeholder = currentTranslations[key];
+                        } catch (error) {
+                            console.warn('Error updating placeholder for element with key:', key, error);
+                        }
                     }
                 });
             }
@@ -435,25 +449,26 @@
                 currentStep = 0;
                 const loadingBar = document.getElementById('loading-bar');
                 const progressFill = document.getElementById('progress-fill');
-                const loadingText = document.getElementById('loading-text');
                 
-                loadingBar.style.display = 'block';
-                loadingBar.classList.add('show');
-                progressFill.style.width = '0%';
+                if (loadingBar) loadingBar.style.display = 'block';
+                if (loadingBar) loadingBar.classList.add('show');
+                if (progressFill) progressFill.style.width = '0%';
                 
-                if (steps.length > 0) {
+                if (steps && steps.length > 0) {
                     updateLoadingText(steps[0]);
                 }
             }
             
             function updateProgress(stepIndex, stepText) {
-                if (stepIndex >= loadingSteps.length) return;
+                if (!loadingSteps || stepIndex >= loadingSteps.length) return;
                 
                 currentStep = stepIndex;
                 const progressPercent = ((stepIndex + 1) / loadingSteps.length) * 100;
                 const progressFill = document.getElementById('progress-fill');
                 
-                progressFill.style.width = progressPercent + '%';
+                if (progressFill) {
+                    progressFill.style.width = progressPercent + '%';
+                }
                 
                 if (stepText) {
                     updateLoadingText(stepText);
@@ -468,15 +483,19 @@
             }
             
             function updateLoadingText(text) {
-                const loadingTextElement = document.getElementById('loading-text');
-                // Utiliser la traduction si disponible
-                const currentTranslations = translations[currentLanguage];
-                const translatedText = currentTranslations[text] || text;
-                loadingTextElement.querySelector('span').textContent = translatedText;
+                const loadingTextSpan = document.getElementById('loading-text-span');
+                if (loadingTextSpan) {
+                    // Utiliser la traduction si disponible
+                    const currentTranslations = translations[currentLanguage];
+                    const translatedText = currentTranslations[text] || text;
+                    loadingTextSpan.textContent = translatedText;
+                }
             }
             
             function hideLoadingBar() {
                 const loadingBar = document.getElementById('loading-bar');
+                if (!loadingBar) return;
+                
                 loadingBar.classList.remove('show');
                 loadingBar.classList.add('hide');
                 
@@ -519,23 +538,34 @@
             // Charger toutes les données avec barre de progression
             async function loadAllData() {
                 try {
+                    console.log('Démarrage du chargement des données...');
                     // Afficher la barre de progression
                     showLoadingBar(['loading_books', 'loading_loans', 'loading_stats', 'data_loaded']);
                     
                     // Étape 1: Charger les livres
                     updateProgress(0, 'loading_books');
+                    console.log('Chargement des livres depuis:', API_BASE_URL + '/api/books');
                     const booksResponse = await fetch(API_BASE_URL + '/api/books');
+                    if (!booksResponse.ok) {
+                        throw new Error(`HTTP Error: ${booksResponse.status} - ${booksResponse.statusText}`);
+                    }
                     const books = await booksResponse.json();
-                    allBooks = books;
+                    allBooks = Array.isArray(books) ? books : [];
+                    console.log('Livres chargés:', allBooks.length);
                     
                     // Petit délai pour voir la progression
                     await new Promise(resolve => setTimeout(resolve, 300));
                     
                     // Étape 2: Charger les prêts
                     updateProgress(1, 'loading_loans');
+                    console.log('Chargement des prêts depuis:', API_BASE_URL + '/api/loans');
                     const loansResponse = await fetch(API_BASE_URL + '/api/loans');
+                    if (!loansResponse.ok) {
+                        throw new Error(`HTTP Error: ${loansResponse.status} - ${loansResponse.statusText}`);
+                    }
                     const loans = await loansResponse.json();
-                    allLoans = loans;
+                    allLoans = Array.isArray(loans) ? loans : [];
+                    console.log('Prêts chargés:', allLoans.length);
                     
                     await new Promise(resolve => setTimeout(resolve, 300));
                     
@@ -546,19 +576,32 @@
                     await new Promise(resolve => setTimeout(resolve, 300));
                     
                     // Étape 4: Afficher les données
+                    console.log('Rendu du tableau...');
                     renderTable(allBooks);
                     updateProgress(3, 'data_loaded');
                     
                     // Mettre à jour les traductions après le rendu
                     setTimeout(() => {
+                        console.log('Mise à jour des traductions...');
                         updateTranslations();
-                    }, 100);
+                    }, 200);
                     
-                    console.log('Données chargées avec succès:', books.length, 'livres');
+                    console.log('Données chargées avec succès:', allBooks.length, 'livres,', allLoans.length, 'prêts');
                 } catch (error) {
                     console.error('Erreur lors du chargement des données:', error);
                     hideLoadingBar();
-                    alert('خطأ في تحميل البيانات: ' + error.message);
+                    
+                    // Message d'erreur plus informatif
+                    let errorMessage = 'خطأ في تحميل البيانات';
+                    if (error.message.includes('fetch')) {
+                        errorMessage += ' - مشكلة في الاتصال بالخادم';
+                    } else if (error.message.includes('HTTP Error')) {
+                        errorMessage += ' - خطأ في الخادم: ' + error.message;
+                    } else {
+                        errorMessage += ': ' + error.message;
+                    }
+                    
+                    alert(errorMessage);
                 }
             }
 
@@ -573,43 +616,80 @@
 
             // Afficher le tableau des livres - VERSION COMPLÈTE AVEC ÉDITION
             function renderTable(bookList) {
+                const tableBody = document.getElementById('books-table-body');
+                if (!tableBody) {
+                    console.error('Element books-table-body not found');
+                    return;
+                }
+                
+                if (!Array.isArray(bookList)) {
+                    console.warn('bookList is not an array:', bookList);
+                    bookList = [];
+                }
+                
                 let tableHTML = '';
                 bookList.forEach((book, index) => {
-                    const availableCopies = book.totalCopies - book.loanedCopies;
+                    if (!book || typeof book !== 'object') {
+                        console.warn('Invalid book object at index', index, ':', book);
+                        return;
+                    }
+                    
+                    const totalCopies = parseInt(book.totalCopies) || 0;
+                    const loanedCopies = parseInt(book.loanedCopies) || 0;
+                    const availableCopies = totalCopies - loanedCopies;
                     const availabilityClass = availableCopies > 0 ? 'status-available' : 'status-unavailable';
                     const availabilityText = `${availableCopies}`;
                     
-                    tableHTML += `<tr data-isbn="${book.isbn}">
-                        <td class="editable-cell" data-field="isbn" title="Double-cliquez pour modifier">${book.isbn}</td>
-                        <td class="editable-cell" data-field="title" title="Double-cliquez pour modifier">${book.title}</td>
-                        <td class="editable-cell" data-field="totalCopies" title="Double-cliquez pour modifier">${book.totalCopies}</td>
-                        <td style="background-color: #f0f0f0;">${book.loanedCopies}</td>
+                    // Escape HTML content to prevent XSS
+                    const escapeHtml = (text) => {
+                        const div = document.createElement('div');
+                        div.textContent = text || '';
+                        return div.innerHTML;
+                    };
+                    
+                    tableHTML += `<tr data-isbn="${escapeHtml(book.isbn)}">
+                        <td class="editable-cell" data-field="isbn" title="Double-cliquez pour modifier">${escapeHtml(book.isbn || '')}</td>
+                        <td class="editable-cell" data-field="title" title="Double-cliquez pour modifier">${escapeHtml(book.title || '')}</td>
+                        <td class="editable-cell" data-field="totalCopies" title="Double-cliquez pour modifier">${totalCopies}</td>
+                        <td style="background-color: #f0f0f0;">${loanedCopies}</td>
                         <td class="${availabilityClass}" style="font-weight: bold;">${availabilityText}</td>
-                        <td class="editable-cell" data-field="subject" title="Double-cliquez pour modifier">${book.subject || 'Non classé'}</td>
-                        <td class="editable-cell" data-field="level" title="Double-cliquez pour modifier">${book.level || 'undefined'}</td>
-                        <td class="editable-cell" data-field="language" title="Double-cliquez pour modifier">${book.language || 'Non spécifié'}</td>
-                        <td class="editable-cell" data-field="cornerName" title="Double-cliquez pour modifier">${book.cornerName || 'Non classé'}</td>
-                        <td class="editable-cell" data-field="cornerNumber" title="Double-cliquez pour modifier">${book.cornerNumber || '0'}</td>
+                        <td class="editable-cell" data-field="subject" title="Double-cliquez pour modifier">${escapeHtml(book.subject || 'Non classé')}</td>
+                        <td class="editable-cell" data-field="level" title="Double-cliquez pour modifier">${escapeHtml(book.level || 'undefined')}</td>
+                        <td class="editable-cell" data-field="language" title="Double-cliquez pour modifier">${escapeHtml(book.language || 'Non spécifié')}</td>
+                        <td class="editable-cell" data-field="cornerName" title="Double-cliquez pour modifier">${escapeHtml(book.cornerName || 'Non classé')}</td>
+                        <td class="editable-cell" data-field="cornerNumber" title="Double-cliquez pour modifier">${escapeHtml(book.cornerNumber || '0')}</td>
                         <td class="action-buttons">
-                            <button class="btn-small btn-primary edit-book-btn" data-isbn="${book.isbn}" title="Modifier le livre">
+                            <button class="btn-small btn-primary edit-book-btn" data-isbn="${escapeHtml(book.isbn || '')}" title="Modifier le livre">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn-small btn-danger delete-book-btn" data-isbn="${book.isbn}" title="Supprimer le livre">
+                            <button class="btn-small btn-danger delete-book-btn" data-isbn="${escapeHtml(book.isbn || '')}" title="Supprimer le livre">
                                 <i class="fas fa-trash"></i>
                             </button>
-                            <button class="btn-small btn-info history-book-btn" data-isbn="${book.isbn}" title="Voir l'historique">
+                            <button class="btn-small btn-info history-book-btn" data-isbn="${escapeHtml(book.isbn || '')}" title="Voir l'historique">
                                 <i class="fas fa-history"></i>
                             </button>
                         </td>
                     </tr>`;
                 });
-                document.getElementById('books-table-body').innerHTML = tableHTML;
+                
+                tableBody.innerHTML = tableHTML;
+                console.log('Table rendered with', bookList.length, 'books');
                 
                 // Ajouter les gestionnaires d'événements pour l'édition
-                addTableEventListeners();
+                try {
+                    addTableEventListeners();
+                } catch (error) {
+                    console.error('Error adding table event listeners:', error);
+                }
                 
                 // Mettre à jour les traductions après le rendu du tableau
-                updateTranslations();
+                setTimeout(() => {
+                    try {
+                        updateTranslations();
+                    } catch (error) {
+                        console.error('Error updating translations after table render:', error);
+                    }
+                }, 100);
             }
 
             // Recherche
