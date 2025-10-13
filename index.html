@@ -74,6 +74,23 @@
             </div>
         </div>
 
+        <!-- Overdue Notifications Alert -->
+        <div id="overdue-notifications" class="overdue-notifications" style="display: none;">
+            <div class="alert-container">
+                <div class="alert-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="alert-content">
+                    <h3 data-key="overdue_books_title">كتب متأخرة في الإرجاع</h3>
+                    <div id="overdue-list"></div>
+                    <button id="dismiss-alert" class="btn-dismiss">
+                        <i class="fas fa-times"></i>
+                        <span data-key="dismiss">إخفاء التنبيه</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <main class="container">
             <section class="card stats-card animated">
                 <h2><i class="fas fa-chart-pie"></i> <span data-key="library_stats">إحصائيات المكتبة</span></h2>
@@ -142,6 +159,11 @@
                         <div class="form-group">
                             <label for="student-class">الفصل/المادة</label>
                             <input type="text" id="student-class" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="loan-copies">عدد النسخ المستعارة</label>
+                            <input type="number" id="loan-copies" min="1" value="1" required>
+                            <small class="form-help-text">عدد النسخ المتاحة: <span id="available-copies-display">-</span></small>
                         </div>
                         <div class="form-group">
                             <label for="loan-date">تاريخ الإعارة</label>
@@ -292,7 +314,9 @@
                 data_loaded: 'تم تحميل البيانات بنجاح!',
                 loan_management: 'إدارة الإعارة',
                 add_book_manually: 'إضافة كتاب يدوياً',
-                upload_excel: 'رفع ملف Excel للكتب'
+                upload_excel: 'رفع ملف Excel للكتب',
+                overdue_books_title: 'كتب متأخرة في الإرجاع',
+                dismiss: 'إخفاء التنبيه'
             },
             fr: {
                 school_name: 'Écoles Internationales Al-Kawthar',
@@ -322,7 +346,9 @@
                 data_loaded: 'Données chargées avec succès!',
                 loan_management: 'Gestion des prêts',
                 add_book_manually: 'Ajouter un livre manuellement',
-                upload_excel: 'Télécharger fichier Excel'
+                upload_excel: 'Télécharger fichier Excel',
+                overdue_books_title: 'Livres en retard',
+                dismiss: 'Masquer l\'alerte'
             },
             en: {
                 school_name: 'Al-Kawthar International Schools',
@@ -352,7 +378,9 @@
                 data_loaded: 'Data loaded successfully!',
                 loan_management: 'Loan Management',
                 add_book_manually: 'Add Book Manually',
-                upload_excel: 'Upload Excel File'
+                upload_excel: 'Upload Excel File',
+                overdue_books_title: 'Overdue Books',
+                dismiss: 'Dismiss Alert'
             }
         };
 
@@ -580,6 +608,9 @@
                     renderTable(allBooks);
                     updateProgress(3, 'data_loaded');
                     
+                    // Vérifier et afficher les livres en retard
+                    checkOverdueBooks();
+                    
                     // Mettre à jour les traductions après le rendu
                     setTimeout(() => {
                         console.log('Mise à jour des traductions...');
@@ -613,6 +644,77 @@
                 document.getElementById('loaned-books-stat').textContent = loanedCopies;
                 document.getElementById('available-books-stat').textContent = totalCopies - loanedCopies;
             }
+
+            // Vérifier les livres en retard
+            function checkOverdueBooks() {
+                const currentDate = new Date();
+                currentDate.setHours(0, 0, 0, 0); // Reset time to compare dates only
+                
+                const overdueLoans = allLoans.filter(loan => {
+                    const returnDate = new Date(loan.returnDate);
+                    returnDate.setHours(0, 0, 0, 0);
+                    return returnDate < currentDate;
+                });
+                
+                const overdueNotifications = document.getElementById('overdue-notifications');
+                const overdueList = document.getElementById('overdue-list');
+                
+                if (overdueLoans.length > 0) {
+                    let overdueHTML = '<div class="overdue-items">';
+                    
+                    overdueLoans.forEach(loan => {
+                        const book = allBooks.find(b => b.isbn === loan.isbn);
+                        const bookTitle = book ? book.title : 'عنوان غير محدد';
+                        const daysOverdue = Math.floor((currentDate - new Date(loan.returnDate)) / (1000 * 60 * 60 * 24));
+                        const borrowerTypeAr = loan.borrowerType === 'teacher' ? 'المدرس' : 'الطالب';
+                        
+                        overdueHTML += `
+                            <div class="overdue-item">
+                                <div class="overdue-info">
+                                    <strong>${loan.studentName}</strong> (${borrowerTypeAr})
+                                    <br>
+                                    <span class="book-title">${bookTitle}</span>
+                                    <br>
+                                    <span class="overdue-days">متأخر ${daysOverdue} يوم</span>
+                                    <span class="due-date">(الموعد المحدد: ${new Date(loan.returnDate).toLocaleDateString('ar-EG')})</span>
+                                </div>
+                                <div class="overdue-actions">
+                                    <button class="btn-small btn-warning contact-borrower" data-name="${loan.studentName}" data-type="${loan.borrowerType}">
+                                        <i class="fas fa-phone"></i> تواصل
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    overdueHTML += '</div>';
+                    overdueList.innerHTML = overdueHTML;
+                    overdueNotifications.style.display = 'block';
+                    
+                    // Add event listeners for contact buttons
+                    document.querySelectorAll('.contact-borrower').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const name = this.dataset.name;
+                            const type = this.dataset.type;
+                            const typeAr = type === 'teacher' ? 'المدرس' : 'الطالب';
+                            alert(`يرجى التواصل مع ${typeAr}: ${name}
+لتذكيره بإرجاع الكتاب المتأخر.`);
+                        });
+                    });
+                } else {
+                    overdueNotifications.style.display = 'none';
+                }
+            }
+            
+            // Add dismiss alert event listener after DOM is ready
+            setTimeout(() => {
+                const dismissButton = document.getElementById('dismiss-alert');
+                if (dismissButton) {
+                    dismissButton.addEventListener('click', () => {
+                        document.getElementById('overdue-notifications').style.display = 'none';
+                    });
+                }
+            }, 1000);
 
             // Afficher le tableau des livres - VERSION COMPLÈTE AVEC ÉDITION
             function renderTable(bookList) {
@@ -703,22 +805,64 @@
                 renderTable(filteredBooks);
             });
 
-            // Mise à jour du titre du livre lors de la saisie ISBN
+            // Mise à jour du titre du livre et des copies disponibles lors de la saisie ISBN
             document.getElementById('loan-isbn').addEventListener('input', (e) => {
                 const book = allBooks.find(b => b.isbn === e.target.value.trim());
-                document.getElementById('loan-book-title').textContent = book ? book.title : '-';
+                const bookTitleElement = document.getElementById('loan-book-title');
+                const availableCopiesDisplay = document.getElementById('available-copies-display');
+                const loanCopiesInput = document.getElementById('loan-copies');
+                
+                if (book) {
+                    const availableCopies = (book.totalCopies || 0) - (book.loanedCopies || 0);
+                    bookTitleElement.textContent = book.title;
+                    availableCopiesDisplay.textContent = availableCopies;
+                    loanCopiesInput.max = availableCopies;
+                    loanCopiesInput.value = Math.min(1, availableCopies);
+                    
+                    if (availableCopies === 0) {
+                        loanCopiesInput.disabled = true;
+                        availableCopiesDisplay.style.color = 'red';
+                    } else {
+                        loanCopiesInput.disabled = false;
+                        availableCopiesDisplay.style.color = 'green';
+                    }
+                } else {
+                    bookTitleElement.textContent = '-';
+                    availableCopiesDisplay.textContent = '-';
+                    loanCopiesInput.max = '';
+                    loanCopiesInput.value = 1;
+                    loanCopiesInput.disabled = false;
+                    availableCopiesDisplay.style.color = '';
+                }
             });
 
-            // Gestion des prêts
+            // Gestion des prêts avec support pour multiples copies
             loanForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                
+                const isbn = document.getElementById('loan-isbn').value.trim();
+                const requestedCopies = parseInt(document.getElementById('loan-copies').value) || 1;
+                const book = allBooks.find(b => b.isbn === isbn);
+                
+                if (!book) {
+                    alert('الكتاب غير موجود!');
+                    return;
+                }
+                
+                const availableCopies = (book.totalCopies || 0) - (book.loanedCopies || 0);
+                if (requestedCopies > availableCopies) {
+                    alert(`عدد النسخ المطلوبة (${requestedCopies}) أكبر من المتاح (${availableCopies})!`);
+                    return;
+                }
+                
                 const loanData = {
-                    isbn: document.getElementById('loan-isbn').value.trim(),
+                    isbn: isbn,
                     studentName: document.getElementById('student-name').value,
                     studentClass: document.getElementById('student-class').value,
                     borrowerType: document.getElementById('borrower-type').value,
                     loanDate: document.getElementById('loan-date').value,
-                    returnDate: document.getElementById('return-date').value
+                    returnDate: document.getElementById('return-date').value,
+                    copiesCount: requestedCopies
                 };
                 
                 try {
@@ -729,7 +873,11 @@
                     });
                     loanForm.reset();
                     document.getElementById('loan-book-title').textContent = '-';
-                    alert('تم إعارة الكتاب بنجاح!');
+                    document.getElementById('available-copies-display').textContent = '-';
+                    document.getElementById('loan-copies').value = 1;
+                    document.getElementById('loan-copies').disabled = false;
+                    document.getElementById('available-copies-display').style.color = '';
+                    alert(`تم إعارة ${requestedCopies} نسخة من الكتاب بنجاح!`);
                     await loadAllData();
                 } catch (error) {
                     alert('خطأ في إعارة الكتاب');
