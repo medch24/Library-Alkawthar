@@ -775,3 +775,248 @@ footer { text-align: center; padding: 1.5rem; background-color: var(--primary-co
         justify-content: center;
     }
 }
+
+/* ===== STYLES POUR LES NOUVELLES FONCTIONNALITÉS ===== */
+
+/* Container pour l'input ISBN avec bouton scan */
+.isbn-input-container {
+    display: flex;
+    gap: 0.5rem;
+    align-items: stretch;
+}
+
+.isbn-input-container input {
+    flex: 1;
+}
+
+.btn-scan {
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    cursor: pointer;
+    font-size: 1.1rem;
+    min-width: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-scan:hover {
+    background: #cc8800;
+    transform: scale(1.05);
+}
+
+/* Styles pour les contrôles de recherche et pagination */
+.search-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.search-controls input {
+    flex: 1;
+    min-width: 200px;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    justify-content: center;
+    padding: 1rem 0;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+.pagination-controls button {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--secondary-color);
+    background: white;
+    color: var(--secondary-color);
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.pagination-controls button:hover:not(:disabled) {
+    background: var(--secondary-color);
+    color: white;
+}
+
+.pagination-controls button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Styles améliorés pour le tableau */
+.book-row {
+    transition: background-color 0.2s ease;
+}
+
+.book-row:hover {
+    background-color: rgba(0, 95, 115, 0.05);
+}
+
+.editable-cell.modified {
+    background-color: #fff3cd !important;
+    border: 2px solid #ffc107;
+    position: relative;
+}
+
+.editable-cell.modified::after {
+    content: "●";
+    color: #ffc107;
+    font-weight: bold;
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 8px;
+}
+
+.loaned-copies-cell {
+    text-align: center;
+    font-weight: bold;
+}
+
+.loaned-copies-badge {
+    background: var(--delete-color);
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.no-loans {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.availability-cell {
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Styles pour le modal de scan de code-barres */
+.barcode-modal {
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.barcode-scanner-container {
+    position: relative;
+    text-align: center;
+    margin: 1rem 0;
+}
+
+.scanner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    border: 2px solid var(--accent-color);
+    border-radius: 8px;
+}
+
+.scanner-line {
+    position: absolute;
+    top: 50%;
+    left: 10%;
+    right: 10%;
+    height: 2px;
+    background: var(--accent-color);
+    animation: scanLine 2s linear infinite;
+    box-shadow: 0 0 10px var(--accent-color);
+}
+
+@keyframes scanLine {
+    0%, 100% {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    50% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.barcode-controls {
+    text-align: center;
+    margin: 1rem 0;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.barcode-controls .btn {
+    width: auto;
+    padding: 0.8rem 1.5rem;
+    flex: none;
+}
+
+.barcode-result {
+    background: rgba(40, 167, 69, 0.1);
+    border: 2px solid #28a745;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    margin: 1rem 0;
+}
+
+.barcode-result p {
+    margin: 0 0 1rem 0;
+    color: #155724;
+    font-weight: bold;
+}
+
+.barcode-help {
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    margin-top: 1rem;
+}
+
+.barcode-help i {
+    color: var(--secondary-color);
+    margin-left: 0.5rem;
+}
+
+/* Responsive amélioré pour mobile */
+@media (max-width: 768px) {
+    .search-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-controls input {
+        min-width: auto;
+    }
+    
+    .isbn-input-container {
+        flex-direction: row;
+    }
+    
+    .barcode-controls {
+        flex-direction: column;
+    }
+    
+    .pagination-controls {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+}
+
+/* Styles pour les animations de chargement */
+.loading-changes {
+    opacity: 0.7;
+    pointer-events: none;
+}
