@@ -256,7 +256,7 @@
                             <i class="fas fa-sync-alt"></i> <span data-key="refresh">تحديث</span>
                         </button>
                         <button id="save-all-changes-btn" class="btn btn-success" style="display: none;">
-                            <i class="fas fa-save"></i> <span>حفظ جميع التغييرات</span>
+                            <i class="fas fa-save"></i> <span data-key="save_all_changes">حفظ جميع التغييرات</span>
                         </button>
                     </div>
                     <div class="pagination-controls" id="pagination-controls" style="display: none;">
@@ -301,11 +301,11 @@
     <div id="modal-overlay" class="modal-overlay" style="display:none;">
         <div id="loans-modal" class="modal">
             <button class="close-modal-btn">&times;</button>
-            <h2 id="loans-modal-title">قائمة الكتب المعارة</h2>
+            <h2 id="loans-modal-title" data-key="books_loaned_list">قائمة الكتب المعارة</h2>
             <div class="form-group">
-                <input type="text" id="loan-search-input" placeholder="ابحث بالاسم، العنوان، أو امسح ISBN...">
+                <input type="text" id="loan-search-input" placeholder="ابحث بالاسم، العنوان، أو امسح ISBN..." data-key-placeholder="search_in_loans">
             </div>
-            <div id="loans-modal-content" class="table-container"></div>
+            <div id="loans-modal-content" class="table-container" style="width: 100%; overflow-x: auto; direction: inherit;"></div>
         </div>
     </div>
 
@@ -327,6 +327,16 @@
                 </button>
                 <button id="stop-camera-btn" class="btn btn-secondary" style="display: none;">
                     <i class="fas fa-stop"></i> إيقاف المسح
+                </button>
+                <button id="manual-input-btn" class="btn btn-success">
+                    <i class="fas fa-keyboard"></i> إدخال يدوي
+                </button>
+            </div>
+            
+            <div id="manual-barcode-input" style="display: none; margin: 1rem 0;">
+                <input type="text" id="manual-barcode-field" placeholder="أدخل الرمز يدوياً..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                <button id="use-manual-barcode-btn" class="btn btn-success" style="margin-top: 8px;">
+                    <i class="fas fa-check"></i> استخدام الرمز
                 </button>
             </div>
             <div id="barcode-result" class="barcode-result" style="display: none;">
@@ -367,6 +377,10 @@
                 inventory_search: 'البحث في المخزون وإدارة الكتب',
                 search_placeholder: 'ابحث بالعنوان أو ISBN أو المادة...',
                 refresh: 'تحديث',
+                scan_barcode: 'مسح الباركود',
+                save_all_changes: 'حفظ جميع التغييرات',
+                books_loaned_list: 'قائمة الكتب المعارة',
+                search_in_loans: 'ابحث في الإعارات...',
                 loading_data: 'تحميل البيانات...',
                 isbn: 'ISBN',
                 title: 'العنوان',
@@ -400,6 +414,10 @@
                 inventory_search: 'Recherche et gestion de l\'inventaire',
                 search_placeholder: 'Rechercher par titre, ISBN ou matière...',
                 refresh: 'Actualiser',
+                scan_barcode: 'Scanner code-barres',
+                save_all_changes: 'Sauvegarder tous les changements',
+                books_loaned_list: 'Liste des livres prêtés',
+                search_in_loans: 'Rechercher dans les prêts...',
                 loading_data: 'Chargement des données...',
                 isbn: 'ISBN',
                 title: 'Titre',
@@ -433,6 +451,10 @@
                 inventory_search: 'Inventory Search & Management',
                 search_placeholder: 'Search by title, ISBN or subject...',
                 refresh: 'Refresh',
+                scan_barcode: 'Scan Barcode',
+                save_all_changes: 'Save All Changes',
+                books_loaned_list: 'Loaned Books List',
+                search_in_loans: 'Search in loans...',
                 loading_data: 'Loading data...',
                 isbn: 'ISBN',
                 title: 'Title',
@@ -508,6 +530,19 @@
                             element.textContent = currentTranslations[key];
                         } catch (error) {
                             console.warn('Error updating text for element with key:', key, error);
+                        }
+                    }
+                });
+                
+                // Mettre à jour les placeholders
+                document.querySelectorAll('[data-key-placeholder]').forEach(element => {
+                    if (!element) return;
+                    const key = element.getAttribute('data-key-placeholder');
+                    if (key && currentTranslations[key]) {
+                        try {
+                            element.placeholder = currentTranslations[key];
+                        } catch (error) {
+                            console.warn('Error updating placeholder for element with key:', key, error);
                         }
                     }
                 });
@@ -1128,6 +1163,9 @@
                 
                 const loanData = {
                     isbn: isbn,
+                    title: book.title,
+                    subject: book.subject || 'Non classé',
+                    language: book.language || 'Non spécifié',
                     studentName: document.getElementById('student-name').value,
                     studentClass: document.getElementById('student-class').value,
                     borrowerType: document.getElementById('borrower-type').value,
@@ -1282,17 +1320,17 @@
                     const nameLabel = loanType === 'teachers' ? 'اسم المدرس' : 'اسم الطالب';
                     const classLabel = loanType === 'teachers' ? 'المادة' : 'الفصل';
                     
-                    let tableHTML = `<table id="loans-table">
+                    let tableHTML = `<table id="loans-table" style="width: 100%; text-align: right; direction: rtl; border-collapse: collapse;">
                         <thead>
                             <tr>
-                                <th>${nameLabel}</th>
-                                <th>${classLabel}</th>
-                                <th>عنوان الكتاب</th>
-                                <th>عدد النسخ</th>
-                                <th>تاريخ الإعارة</th>
-                                <th>تاريخ التسليم</th>
-                                <th>أيام التأخير</th>
-                                <th>إجراء</th>
+                                <th style="text-align: right; padding: 12px; background: var(--primary-color); color: white;">${nameLabel}</th>
+                                <th style="text-align: right; padding: 12px; background: var(--primary-color); color: white;">${classLabel}</th>
+                                <th style="text-align: right; padding: 12px; background: var(--primary-color); color: white;">عنوان الكتاب</th>
+                                <th style="text-align: center; padding: 12px; background: var(--primary-color); color: white;">عدد النسخ</th>
+                                <th style="text-align: center; padding: 12px; background: var(--primary-color); color: white;">تاريخ الإعارة</th>
+                                <th style="text-align: center; padding: 12px; background: var(--primary-color); color: white;">تاريخ التسليم</th>
+                                <th style="text-align: center; padding: 12px; background: var(--primary-color); color: white;">أيام التأخير</th>
+                                <th style="text-align: center; padding: 12px; background: var(--primary-color); color: white;">إجراء</th>
                             </tr>
                         </thead>
                         <tbody>`;
@@ -1652,15 +1690,20 @@
                             const code = jsQR(imageData.data, imageData.width, imageData.height);
                             if (code && code.data) {
                                 scannedCode = code.data;
+                                console.log('Code détecté:', scannedCode);
                                 barcodeValue.textContent = scannedCode;
                                 barcodeResult.style.display = 'block';
                                 stopScanning();
                                 return;
                             }
+                        } else {
+                            console.error('jsQR library not loaded');
                         }
                         
-                        // Essayer aussi de détecter comme code-barres simple
-                        // Si jsQR échoue, on peut accepter l'input manuel
+                        // Debugging info
+                        if (video.videoWidth > 0 && video.videoHeight > 0) {
+                            console.log('Video dimensions:', video.videoWidth, 'x', video.videoHeight);
+                        }
                         
                         animationId = requestAnimationFrame(scan);
                     }
@@ -1690,6 +1733,36 @@
                         document.getElementById('loan-isbn').dispatchEvent(new Event('input'));
                         barcodeModal.style.display = 'none';
                         stopScanning();
+                    }
+                });
+                
+                // Gestion de l'input manuel
+                const manualInputBtn = document.getElementById('manual-input-btn');
+                const manualBarcodeInput = document.getElementById('manual-barcode-input');
+                const manualBarcodeField = document.getElementById('manual-barcode-field');
+                const useManualBarcodeBtn = document.getElementById('use-manual-barcode-btn');
+                
+                manualInputBtn.addEventListener('click', () => {
+                    manualBarcodeInput.style.display = manualBarcodeInput.style.display === 'none' ? 'block' : 'none';
+                    if (manualBarcodeInput.style.display === 'block') {
+                        manualBarcodeField.focus();
+                    }
+                });
+                
+                useManualBarcodeBtn.addEventListener('click', () => {
+                    const manualCode = manualBarcodeField.value.trim();
+                    if (manualCode) {
+                        scannedCode = manualCode;
+                        barcodeValue.textContent = scannedCode;
+                        barcodeResult.style.display = 'block';
+                        manualBarcodeInput.style.display = 'none';
+                        manualBarcodeField.value = '';
+                    }
+                });
+                
+                manualBarcodeField.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        useManualBarcodeBtn.click();
                     }
                 });
                 
