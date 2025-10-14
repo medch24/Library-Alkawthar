@@ -117,6 +117,13 @@
                             <p data-key="available_books">الكتب المتاحة</p>
                         </div>
                     </div>
+                    <div class="stat-item">
+                        <i class="fas fa-exchange-alt"></i>
+                        <div>
+                            <span id="copies-loaned-stat">0</span>
+                            <p data-key="copies_loaned">عدد النسخ المعارة</p>
+                        </div>
+                    </div>
                 </div>
                 <div style="margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
                     <button id="view-student-loans-btn" class="btn btn-secondary">
@@ -239,7 +246,12 @@
                 <h2><i class="fas fa-search"></i> <span data-key="inventory_search">البحث في المخزون وإدارة الكتب</span></h2>
                 <div class="form-group">
                     <div class="search-controls">
-                        <input type="text" id="search-input" placeholder="ابحث بالعنوان أو ISBN أو المادة..." data-key-placeholder="search_placeholder">
+                        <div class="search-input-container">
+                            <input type="text" id="search-input" placeholder="ابحث بالعنوان أو ISBN أو المادة..." data-key-placeholder="search_placeholder">
+                            <button id="scan-search-barcode-btn" class="btn-scan" title="مسح الباركود للبحث">
+                                <i class="fas fa-camera"></i>
+                            </button>
+                        </div>
                         <button id="refresh-books-btn" class="btn btn-secondary">
                             <i class="fas fa-sync-alt"></i> <span data-key="refresh">تحديث</span>
                         </button>
@@ -257,8 +269,8 @@
                         </button>
                     </div>
                 </div>
-                <div class="table-container" style="overflow-x: auto; width: 100%;">
-                    <table id="books-table" style="width: 100%; min-width: 1600px;">
+                <div class="table-container" style="overflow-x: auto; width: 100vw; margin-left: calc(-50vw + 50%); padding: 0 2rem;">
+                    <table id="books-table" style="width: 100%; min-width: 1800px; table-layout: fixed;">
                         <thead>
                             <tr>
                                 <th style="min-width: 140px;" data-key="isbn">ISBN</th>
@@ -351,6 +363,7 @@
                 total_books: 'إجمالي الكتب',
                 loaned_books: 'الكتب المعارة',
                 available_books: 'الكتب المتاحة',
+                copies_loaned: 'عدد النسخ المعارة',
                 inventory_search: 'البحث في المخزون وإدارة الكتب',
                 search_placeholder: 'ابحث بالعنوان أو ISBN أو المادة...',
                 refresh: 'تحديث',
@@ -383,6 +396,7 @@
                 total_books: 'Total des livres',
                 loaned_books: 'Livres prêtés',
                 available_books: 'Livres disponibles',
+                copies_loaned: 'Nombre de copies prêtées',
                 inventory_search: 'Recherche et gestion de l\'inventaire',
                 search_placeholder: 'Rechercher par titre, ISBN ou matière...',
                 refresh: 'Actualiser',
@@ -415,6 +429,7 @@
                 total_books: 'Total Books',
                 loaned_books: 'Loaned Books',
                 available_books: 'Available Books',
+                copies_loaned: 'Copies Loaned',
                 inventory_search: 'Inventory Search & Management',
                 search_placeholder: 'Search by title, ISBN or subject...',
                 refresh: 'Refresh',
@@ -721,6 +736,7 @@
                         document.getElementById('total-books-stat').textContent = stats.totalCopies || 0;
                         document.getElementById('loaned-books-stat').textContent = stats.loanedCopies || 0;
                         document.getElementById('available-books-stat').textContent = stats.availableCopies || 0;
+                        document.getElementById('copies-loaned-stat').textContent = stats.loanedCopies || 0;
                     }
                 } catch (error) {
                     console.error('Erreur lors du chargement des statistiques:', error);
@@ -736,6 +752,7 @@
                 document.getElementById('total-books-stat').textContent = totalCopies;
                 document.getElementById('loaned-books-stat').textContent = loanedCopies;
                 document.getElementById('available-books-stat').textContent = totalCopies - loanedCopies;
+                document.getElementById('copies-loaned-stat').textContent = loanedCopies;
             }
             
             // Contrôles de pagination
@@ -755,7 +772,7 @@
                 }
             }
 
-            // Vérifier les livres en retard
+            // Vérifier les livres en retard avec différents niveaux de criticité
             function checkOverdueBooks() {
                 const currentDate = new Date();
                 currentDate.setHours(0, 0, 0, 0); // Reset time to compare dates only
@@ -766,38 +783,127 @@
                     return returnDate < currentDate;
                 });
                 
+                // Catégoriser par niveau de retard
+                const criticalOverdue = overdueLoans.filter(loan => {
+                    const returnDate = new Date(loan.returnDate);
+                    const daysDiff = Math.floor((currentDate - returnDate) / (1000 * 60 * 60 * 24));
+                    return daysDiff >= 7; // 7 jours ou plus
+                });
+                
+                const moderateOverdue = overdueLoans.filter(loan => {
+                    const returnDate = new Date(loan.returnDate);
+                    const daysDiff = Math.floor((currentDate - returnDate) / (1000 * 60 * 60 * 24));
+                    return daysDiff >= 3 && daysDiff < 7; // 3-6 jours
+                });
+                
+                const recentOverdue = overdueLoans.filter(loan => {
+                    const returnDate = new Date(loan.returnDate);
+                    const daysDiff = Math.floor((currentDate - returnDate) / (1000 * 60 * 60 * 24));
+                    return daysDiff > 0 && daysDiff < 3; // 1-2 jours
+                });
+                
                 const overdueNotifications = document.getElementById('overdue-notifications');
                 const overdueList = document.getElementById('overdue-list');
                 
                 if (overdueLoans.length > 0) {
-                    let overdueHTML = '<div class="overdue-items">';
+                    let overdueHTML = '';
                     
-                    overdueLoans.forEach(loan => {
-                        const book = allBooks.find(b => b.isbn === loan.isbn);
-                        const bookTitle = book ? book.title : 'عنوان غير محدد';
-                        const daysOverdue = Math.floor((currentDate - new Date(loan.returnDate)) / (1000 * 60 * 60 * 24));
-                        const borrowerTypeAr = loan.borrowerType === 'teacher' ? 'المدرس' : 'الطالب';
+                    // Section critique (7+ jours)
+                    if (criticalOverdue.length > 0) {
+                        overdueHTML += '<div class="overdue-section critical-overdue">';
+                        overdueHTML += `<h4><i class="fas fa-exclamation-triangle"></i> تأخير خطير (${criticalOverdue.length} كتاب)</h4>`;
                         
-                        overdueHTML += `
-                            <div class="overdue-item">
-                                <div class="overdue-info">
-                                    <strong>${loan.studentName}</strong> (${borrowerTypeAr})
-                                    <br>
-                                    <span class="book-title">${bookTitle}</span>
-                                    <br>
-                                    <span class="overdue-days">متأخر ${daysOverdue} يوم</span>
-                                    <span class="due-date">(الموعد المحدد: ${new Date(loan.returnDate).toLocaleDateString('ar-EG')})</span>
+                        criticalOverdue.forEach(loan => {
+                            const book = allBooks.find(b => b.isbn === loan.isbn);
+                            const bookTitle = book ? book.title : 'عنوان غير محدد';
+                            const daysOverdue = Math.floor((currentDate - new Date(loan.returnDate)) / (1000 * 60 * 60 * 24));
+                            const borrowerTypeAr = loan.borrowerType === 'teacher' ? 'المدرس' : 'الطالب';
+                            
+                            overdueHTML += `
+                                <div class="overdue-item critical">
+                                    <div class="overdue-info">
+                                        <strong>${loan.studentName}</strong> (${borrowerTypeAr})
+                                        <br>
+                                        <span class="book-title">${bookTitle}</span>
+                                        <br>
+                                        <span class="overdue-days critical">متأخر ${daysOverdue} يوم</span>
+                                        <span class="due-date">(الموعد المحدد: ${new Date(loan.returnDate).toLocaleDateString('ar-EG')})</span>
+                                    </div>
+                                    <div class="overdue-actions">
+                                        <button class="btn-small btn-danger contact-borrower" data-name="${loan.studentName}" data-type="${loan.borrowerType}">
+                                            <i class="fas fa-phone"></i> تواصل عاجل
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="overdue-actions">
-                                    <button class="btn-small btn-warning contact-borrower" data-name="${loan.studentName}" data-type="${loan.borrowerType}">
-                                        <i class="fas fa-phone"></i> تواصل
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                    });
+                            `;
+                        });
+                        overdueHTML += '</div>';
+                    }
                     
-                    overdueHTML += '</div>';
+                    // Section modérée (3-6 jours)
+                    if (moderateOverdue.length > 0) {
+                        overdueHTML += '<div class="overdue-section moderate-overdue">';
+                        overdueHTML += `<h4><i class="fas fa-clock"></i> تأخير متوسط (${moderateOverdue.length} كتاب)</h4>`;
+                        
+                        moderateOverdue.forEach(loan => {
+                            const book = allBooks.find(b => b.isbn === loan.isbn);
+                            const bookTitle = book ? book.title : 'عنوان غير محدد';
+                            const daysOverdue = Math.floor((currentDate - new Date(loan.returnDate)) / (1000 * 60 * 60 * 24));
+                            const borrowerTypeAr = loan.borrowerType === 'teacher' ? 'المدرس' : 'الطالب';
+                            
+                            overdueHTML += `
+                                <div class="overdue-item moderate">
+                                    <div class="overdue-info">
+                                        <strong>${loan.studentName}</strong> (${borrowerTypeAr})
+                                        <br>
+                                        <span class="book-title">${bookTitle}</span>
+                                        <br>
+                                        <span class="overdue-days moderate">متأخر ${daysOverdue} يوم</span>
+                                        <span class="due-date">(الموعد المحدد: ${new Date(loan.returnDate).toLocaleDateString('ar-EG')})</span>
+                                    </div>
+                                    <div class="overdue-actions">
+                                        <button class="btn-small btn-warning contact-borrower" data-name="${loan.studentName}" data-type="${loan.borrowerType}">
+                                            <i class="fas fa-phone"></i> تذكير
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        overdueHTML += '</div>';
+                    }
+                    
+                    // Section récente (1-2 jours)
+                    if (recentOverdue.length > 0) {
+                        overdueHTML += '<div class="overdue-section recent-overdue">';
+                        overdueHTML += `<h4><i class="fas fa-info-circle"></i> تأخير حديث (${recentOverdue.length} كتاب)</h4>`;
+                        
+                        recentOverdue.forEach(loan => {
+                            const book = allBooks.find(b => b.isbn === loan.isbn);
+                            const bookTitle = book ? book.title : 'عنوان غير محدد';
+                            const daysOverdue = Math.floor((currentDate - new Date(loan.returnDate)) / (1000 * 60 * 60 * 24));
+                            const borrowerTypeAr = loan.borrowerType === 'teacher' ? 'المدرس' : 'الطالب';
+                            
+                            overdueHTML += `
+                                <div class="overdue-item recent">
+                                    <div class="overdue-info">
+                                        <strong>${loan.studentName}</strong> (${borrowerTypeAr})
+                                        <br>
+                                        <span class="book-title">${bookTitle}</span>
+                                        <br>
+                                        <span class="overdue-days recent">متأخر ${daysOverdue} يوم</span>
+                                        <span class="due-date">(الموعد المحدد: ${new Date(loan.returnDate).toLocaleDateString('ar-EG')})</span>
+                                    </div>
+                                    <div class="overdue-actions">
+                                        <button class="btn-small btn-info contact-borrower" data-name="${loan.studentName}" data-type="${loan.borrowerType}">
+                                            <i class="fas fa-phone"></i> تواصل
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        overdueHTML += '</div>';
+                    }
+                    
                     overdueList.innerHTML = overdueHTML;
                     overdueNotifications.style.display = 'block';
                     
@@ -1151,8 +1257,10 @@
                                 <th>${nameLabel}</th>
                                 <th>${classLabel}</th>
                                 <th>عنوان الكتاب</th>
+                                <th>عدد النسخ</th>
                                 <th>تاريخ الإعارة</th>
                                 <th>تاريخ التسليم</th>
+                                <th>أيام التأخير</th>
                                 <th>إجراء</th>
                             </tr>
                         </thead>
@@ -1160,12 +1268,43 @@
                     
                     loans.forEach(loan => {
                         const book = allBooks.find(b => b.isbn === loan.isbn) || { title: 'عنوان غير محدد' };
+                        const copiesCount = loan.copiesCount || 1;
+                        
+                        // Calculer les jours de retard
+                        const currentDate = new Date();
+                        const returnDate = new Date(loan.returnDate);
+                        const daysOverdue = Math.floor((currentDate - returnDate) / (1000 * 60 * 60 * 24));
+                        
+                        let overdueClass = '';
+                        let overdueText = '';
+                        if (daysOverdue > 0) {
+                            if (daysOverdue >= 7) {
+                                overdueClass = 'critical';
+                                overdueText = `متأخر ${daysOverdue} يوم`;
+                            } else if (daysOverdue >= 3) {
+                                overdueClass = 'moderate';
+                                overdueText = `متأخر ${daysOverdue} يوم`;
+                            } else {
+                                overdueClass = 'recent';
+                                overdueText = `متأخر ${daysOverdue} يوم`;
+                            }
+                        } else if (daysOverdue === 0) {
+                            overdueText = 'مطلوب اليوم';
+                            overdueClass = 'today';
+                        } else {
+                            const daysLeft = Math.abs(daysOverdue);
+                            overdueText = `${daysLeft} يوم متبقي`;
+                            overdueClass = 'future';
+                        }
+                        
                         tableHTML += `<tr>
                             <td>${loan.studentName}</td>
                             <td>${loan.studentClass || '-'}</td>
                             <td>${book.title}</td>
-                            <td>${new Date(loan.loanDate).toLocaleDateString()}</td>
-                            <td>${new Date(loan.returnDate).toLocaleDateString()}</td>
+                            <td><span class="copies-badge">${copiesCount}</span></td>
+                            <td>${new Date(loan.loanDate).toLocaleDateString('ar-EG')}</td>
+                            <td>${new Date(loan.returnDate).toLocaleDateString('ar-EG')}</td>
+                            <td><span class="overdue-status ${overdueClass}">${overdueText}</span></td>
                             <td>
                                 <button class="btn-action btn-return" data-isbn="${loan.isbn}" data-student="${loan.studentName}">
                                     <i class="fas fa-undo"></i> إرجاع
@@ -1655,9 +1794,37 @@
                 window.editCell = editCellOptimized;
             }
             
+            // Scanner de code-barres pour la recherche
+            function initializeSearchScanner() {
+                const searchScanBtn = document.getElementById('scan-search-barcode-btn');
+                
+                searchScanBtn.addEventListener('click', () => {
+                    // Réutiliser le même modal de scan, mais rediriger le résultat vers la recherche
+                    const barcodeModal = document.getElementById('barcode-modal-overlay');
+                    barcodeModal.style.display = 'flex';
+                    
+                    // Modifier temporairement le comportement du bouton d'utilisation
+                    const useBarcodeBtn = document.getElementById('use-barcode-btn');
+                    const originalHandler = useBarcodeBtn.onclick;
+                    
+                    useBarcodeBtn.onclick = () => {
+                        const scannedCode = document.getElementById('barcode-value').textContent;
+                        if (scannedCode) {
+                            document.getElementById('search-input').value = scannedCode;
+                            // Déclencher la recherche
+                            document.getElementById('search-input').dispatchEvent(new Event('input'));
+                            barcodeModal.style.display = 'none';
+                            // Restaurer le gestionnaire original
+                            useBarcodeBtn.onclick = originalHandler;
+                        }
+                    };
+                });
+            }
+            
             // Initialiser les nouvelles fonctionnalités
             initializeBarcodeScanner();
             initializeBatchEditing();
+            initializeSearchScanner();
             
         });
     </script>

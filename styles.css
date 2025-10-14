@@ -75,11 +75,13 @@ hr { border: none; border-top: 1px solid #eee; margin: 1.5rem 0; }
 /* MODIFICATION CLÉ ICI */
 .modal {
     background: white;
-    padding: 0; /* Padding déplacé vers l'intérieur */
+    padding: 2rem;
     border-radius: var(--border-radius);
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    width: 90%;
-    max-width: 600px; /* Réduit pour les petits écrans */
+    width: 95vw;
+    max-width: 1200px; /* Élargi pour afficher plus d'informations */
+    max-height: 90vh;
+    overflow-y: auto;
     position: relative;
     animation: slideInUp 0.4s;
     max-height: 90vh;
@@ -650,10 +652,113 @@ footer { text-align: center; padding: 1.5rem; background-color: var(--primary-co
     font-weight: 600;
 }
 
+.overdue-section {
+    margin-bottom: 1rem;
+    border-left: 4px solid;
+    padding-left: 1rem;
+}
+
+.overdue-section h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.critical-overdue {
+    border-left-color: #ff1744;
+}
+
+.critical-overdue h4 {
+    color: #ff1744;
+}
+
+.moderate-overdue {
+    border-left-color: #ff9800;
+}
+
+.moderate-overdue h4 {
+    color: #ff9800;
+}
+
+.recent-overdue {
+    border-left-color: #2196f3;
+}
+
+.recent-overdue h4 {
+    color: #2196f3;
+}
+
 .overdue-days {
-    color: #ffeb3b;
     font-weight: 700;
     font-size: 0.9rem;
+}
+
+.overdue-days.critical {
+    color: #ff1744;
+    animation: blink 1s infinite;
+}
+
+.overdue-days.moderate {
+    color: #ff9800;
+}
+
+.overdue-days.recent {
+    color: #2196f3;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.5; }
+}
+
+/* Styles pour les statuts de retard dans les modals */
+.overdue-status {
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.overdue-status.critical {
+    background-color: #ffebee;
+    color: #d32f2f;
+    border: 1px solid #d32f2f;
+}
+
+.overdue-status.moderate {
+    background-color: #fff8e1;
+    color: #f57c00;
+    border: 1px solid #f57c00;
+}
+
+.overdue-status.recent {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    border: 1px solid #1976d2;
+}
+
+.overdue-status.today {
+    background-color: #e8f5e8;
+    color: #388e3c;
+    border: 1px solid #388e3c;
+}
+
+.overdue-status.future {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+    border: 1px solid #7b1fa2;
+}
+
+.copies-badge {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: bold;
 }
 
 .due-date {
@@ -817,9 +922,16 @@ footer { text-align: center; padding: 1.5rem; background-color: var(--primary-co
     margin-bottom: 1rem;
 }
 
-.search-controls input {
+.search-input-container {
+    display: flex;
     flex: 1;
     min-width: 200px;
+    gap: 0.5rem;
+    align-items: stretch;
+}
+
+.search-input-container input {
+    flex: 1;
 }
 
 .pagination-controls {
@@ -990,6 +1102,40 @@ footer { text-align: center; padding: 1.5rem; background-color: var(--primary-co
     margin-left: 0.5rem;
 }
 
+/* Amélioration pour l'affichage pleine largeur */
+.full-width-section {
+    width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+    padding: 2rem !important;
+    box-sizing: border-box;
+}
+
+.full-width-section .table-container {
+    width: 100% !important;
+    max-width: none !important;
+    overflow-x: auto;
+}
+
+#books-table th,
+#books-table td {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    padding: 0.8rem 0.5rem;
+}
+
+/* Largeurs optimisées pour les colonnes */
+#books-table th:nth-child(1) { width: 12%; } /* ISBN */
+#books-table th:nth-child(2) { width: 20%; } /* Title */
+#books-table th:nth-child(3) { width: 8%; }  /* Total Copies */
+#books-table th:nth-child(4) { width: 8%; }  /* Loaned Copies */
+#books-table th:nth-child(5) { width: 8%; }  /* Available Copies */
+#books-table th:nth-child(6) { width: 12%; } /* Subject */
+#books-table th:nth-child(7) { width: 8%; }  /* Level */
+#books-table th:nth-child(8) { width: 8%; }  /* Language */
+#books-table th:nth-child(9) { width: 10%; } /* Corner Name */
+#books-table th:nth-child(10) { width: 8%; } /* Corner Number */
+#books-table th:nth-child(11) { width: 8%; } /* Actions */
+
 /* Responsive amélioré pour mobile */
 @media (max-width: 768px) {
     .search-controls {
@@ -1013,6 +1159,35 @@ footer { text-align: center; padding: 1.5rem; background-color: var(--primary-co
         flex-wrap: wrap;
         gap: 0.5rem;
     }
+}
+
+/* Styles pour les modals élargis */
+.modal .table-container {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 1rem;
+}
+
+.modal table {
+    width: 100%;
+    min-width: 900px;
+    border-collapse: collapse;
+}
+
+.modal table th,
+.modal table td {
+    padding: 0.8rem;
+    text-align: right;
+    border-bottom: 1px solid #eee;
+    white-space: nowrap;
+}
+
+.modal table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 /* Styles pour les animations de chargement */
