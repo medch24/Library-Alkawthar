@@ -326,7 +326,8 @@ const LoanSchema = new mongoose.Schema({
     studentClass: { type: String, required: true }, 
     borrowerType: { type: String, enum: ['student', 'teacher'], default: 'student' }, 
     loanDate: { type: Date, required: true }, 
-    returnDate: { type: Date, required: true } 
+    returnDate: { type: Date, required: true },
+    copiesCount: { type: Number, default: 1, min: 1 }
 });
 
 const HistorySchema = new mongoose.Schema({ 
@@ -336,7 +337,8 @@ const HistorySchema = new mongoose.Schema({
     studentClass: { type: String }, 
     borrowerType: { type: String, enum: ['student', 'teacher'], default: 'student' }, 
     loanDate: { type: Date, required: true }, 
-    actualReturnDate: { type: Date, default: Date.now } 
+    actualReturnDate: { type: Date, default: Date.now },
+    copiesCount: { type: Number, default: 1, min: 1 }
 });
 
 const Book = mongoose.model('Book', BookSchema);
@@ -498,13 +500,74 @@ app.get('/api/export/excel', async (req, res) => {
     }
 });
 
-// --- ROUTES LIVRES ---
+// --- ROUTES LIVRES OPTIMISÉES AVEC PAGINATION ---
 app.get('/api/books', async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 50;
+        const search = req.query.search || '';
+        const skip = (page - 1) * limit;
+        
+        if (devMode) {
+            let filteredBooks = mockBooks;
+            if (search) {
+                const searchLower = search.toLowerCase();
+                filteredBooks = mockBooks.filter(book => 
+                    book.title.toLowerCase().includes(searchLower) ||
+                    book.isbn.toLowerCase().includes(searchLower) ||
+                    (book.subject && book.subject.toLowerCase().includes(searchLower))
+                );
+            }
+            
+            const totalCount = filteredBooks.length;
+            const paginatedBooks = filteredBooks.slice(skip, skip + limit);
+            
+            res.json({
+                books: paginatedBooks,
+                pagination: {
+                    current: page,
+                    pages: Math.ceil(totalCount / limit),
+                    total: totalCount,
+                    limit: limit
+                }
+            });
+        } else {
+            const searchQuery = search ? {
+                $or: [
+                    { title: { $regex: search, $options: 'i' } },
+                    { isbn: { $regex: search, $options: 'i' } },
+                    { subject: { $regex: search, $options: 'i' } }
+                ]
+            } : {};
+            
+            const totalCount = await Book.countDocuments(searchQuery);
+            const books = await Book.find(searchQuery)
+                .skip(skip)
+                .limit(limit)
+                .lean(); // Utiliser lean() pour des performances améliorées
+            
+            res.json({
+                books: books,
+                pagination: {
+                    current: page,
+                    pages: Math.ceil(totalCount / limit),
+                    total: totalCount,
+                    limit: limit
+                }
+            });
+        }
+    } catch (error) {
+        res.status(500).json({ message: "Erreur serveur", error });
+    }
+});
+
+// Route pour obtenir tous les livres sans pagination (pour compatibilité)
+app.get('/api/books/all', async (req, res) => {
     try {
         if (devMode) {
             res.json(mockBooks);
         } else {
-            const books = await Book.find({});
+            const books = await Book.find({}).lean();
             res.json(books);
         }
     } catch (error) {
@@ -706,7 +769,7 @@ app.get('/api/loans', async (req, res) => {
 
 app.post('/api/loans', async (req, res) => {
     try {
-        const { isbn, studentName, studentClass, borrowerType = 'student', loanDate, returnDate } = req.body;
+        const { isbn, studentName, studentClass, borrowerType = 'student', loanDate, returnDate, copiesCount = 1 } = req.body;
         
         if (devMode) {
             const existingLoansCount = mockLoans.filter(loan => 
@@ -723,18 +786,22 @@ app.post('/api/loans', async (req, res) => {
             const book = mockBooks.find(b => b.isbn === isbn);
             if (!book) return res.status(404).json({ message: "Livre non trouvé" });
             
-            if (book.loanedCopies >= book.totalCopies) {
-                return res.status(400).json({ message: "Toutes les copies de ce livre sont déjà prêtées." });
+            const availableCopies = book.totalCopies - book.loanedCopies;
+            if (copiesCount > availableCopies) {
+                return res.status(400).json({ 
+                    message: `Pas assez de copies disponibles. Demandé: ${copiesCount}, Disponible: ${availableCopies}` 
+                });
             }
             
-            book.loanedCopies++;
+            book.loanedCopies += copiesCount;
             const newLoan = {
                 isbn,
                 studentName,
                 studentClass,
                 borrowerType,
                 loanDate: new Date(loanDate),
-                returnDate: new Date(returnDate)
+                returnDate: new Date(returnDate),
+                copiesCount: copiesCount
             };
             mockLoans.push(newLoan);
             res.status(201).json(newLoan);
@@ -752,11 +819,14 @@ app.post('/api/loans', async (req, res) => {
             const book = await Book.findOne({ isbn: isbn });
             if (!book) return res.status(404).json({ message: "Livre non trouvé" });
             
-            if (book.loanedCopies >= book.totalCopies) {
-                return res.status(400).json({ message: "Toutes les copies de ce livre sont déjà prêtées." });
+            const availableCopies = book.totalCopies - book.loanedCopies;
+            if (copiesCount > availableCopies) {
+                return res.status(400).json({ 
+                    message: `Pas assez de copies disponibles. Demandé: ${copiesCount}, Disponible: ${availableCopies}` 
+                });
             }
             
-            book.loanedCopies++;
+            book.loanedCopies += copiesCount;
             await book.save();
             
             const newLoan = await Loan.create({
@@ -765,7 +835,8 @@ app.post('/api/loans', async (req, res) => {
                 studentClass,
                 borrowerType,
                 loanDate,
-                returnDate
+                returnDate,
+                copiesCount: copiesCount
             });
             res.status(201).json(newLoan);
         }
@@ -789,7 +860,8 @@ app.delete('/api/loans', async (req, res) => {
             
             const book = mockBooks.find(b => b.isbn === isbn);
             if (book) {
-                book.loanedCopies = Math.max(0, book.loanedCopies - 1);
+                const returnedCopies = loan.copiesCount || 1;
+                book.loanedCopies = Math.max(0, book.loanedCopies - returnedCopies);
                 mockHistory.push({
                     isbn: book.isbn,
                     bookTitle: book.title,
@@ -797,7 +869,8 @@ app.delete('/api/loans', async (req, res) => {
                     studentClass: loan.studentClass,
                     borrowerType: loan.borrowerType || 'student',
                     loanDate: loan.loanDate,
-                    actualReturnDate: new Date()
+                    actualReturnDate: new Date(),
+                    copiesCount: returnedCopies
                 });
             }
             res.status(204).send();
@@ -807,7 +880,8 @@ app.delete('/api/loans', async (req, res) => {
             
             const book = await Book.findOne({ isbn: isbn });
             if (book) {
-                book.loanedCopies = Math.max(0, book.loanedCopies - 1);
+                const returnedCopies = loan.copiesCount || 1;
+                book.loanedCopies = Math.max(0, book.loanedCopies - returnedCopies);
                 await book.save();
                 
                 await History.create({
@@ -817,13 +891,85 @@ app.delete('/api/loans', async (req, res) => {
                     studentClass: loan.studentClass,
                     borrowerType: loan.borrowerType || 'student',
                     loanDate: loan.loanDate,
-                    actualReturnDate: new Date()
+                    actualReturnDate: new Date(),
+                    copiesCount: returnedCopies
                 });
             }
             res.status(204).send();
         }
     } catch (error) {
         res.status(500).json({ message: "Erreur serveur", error });
+    }
+});
+
+// --- ROUTES BATCH POUR OPTIMISATION ---
+app.post('/api/books/batch-update', async (req, res) => {
+    try {
+        const { updates } = req.body; // Array of { isbn, updateData }
+        
+        if (!Array.isArray(updates) || updates.length === 0) {
+            return res.status(400).json({ message: 'Updates array is required' });
+        }
+        
+        const results = [];
+        const errors = [];
+        
+        if (devMode) {
+            for (const update of updates) {
+                try {
+                    const bookIndex = mockBooks.findIndex(book => book.isbn === update.isbn);
+                    if (bookIndex !== -1) {
+                        mockBooks[bookIndex] = { ...mockBooks[bookIndex], ...update.updateData };
+                        results.push({ isbn: update.isbn, success: true });
+                    } else {
+                        errors.push({ isbn: update.isbn, error: 'Book not found' });
+                    }
+                } catch (error) {
+                    errors.push({ isbn: update.isbn, error: error.message });
+                }
+            }
+        } else {
+            // Utiliser une transaction pour MongoDB
+            const session = await mongoose.startSession();
+            try {
+                session.startTransaction();
+                
+                for (const update of updates) {
+                    try {
+                        const result = await Book.findOneAndUpdate(
+                            { isbn: update.isbn },
+                            update.updateData,
+                            { new: true, session }
+                        );
+                        
+                        if (result) {
+                            results.push({ isbn: update.isbn, success: true });
+                        } else {
+                            errors.push({ isbn: update.isbn, error: 'Book not found' });
+                        }
+                    } catch (error) {
+                        errors.push({ isbn: update.isbn, error: error.message });
+                    }
+                }
+                
+                await session.commitTransaction();
+            } catch (error) {
+                await session.abortTransaction();
+                throw error;
+            } finally {
+                session.endSession();
+            }
+        }
+        
+        res.json({
+            successful: results.length,
+            failed: errors.length,
+            results: results,
+            errors: errors
+        });
+        
+    } catch (error) {
+        res.status(500).json({ message: 'Batch update failed', error: error.message });
     }
 });
 
