@@ -902,6 +902,66 @@ app.delete('/api/loans', async (req, res) => {
     }
 });
 
+// Extension de la date de retour d'un prêt
+app.put('/api/loans/extend', async (req, res) => {
+    try {
+        const { isbn, studentName, newReturnDate } = req.body;
+        
+        if (!isbn || !studentName || !newReturnDate) {
+            return res.status(400).json({ message: "ISBN, nom étudiant et nouvelle date requis" });
+        }
+        
+        if (devMode) {
+            const loanIndex = mockLoans.findIndex(loan => 
+                loan.isbn === isbn && loan.studentName === studentName
+            );
+            
+            if (loanIndex === -1) {
+                return res.status(404).json({ message: "Prêt non trouvé" });
+            }
+            
+            // Vérifier que la nouvelle date est dans le futur
+            const newDate = new Date(newReturnDate);
+            const currentDate = new Date();
+            
+            if (newDate <= currentDate) {
+                return res.status(400).json({ message: "La nouvelle date doit être dans le futur" });
+            }
+            
+            mockLoans[loanIndex].returnDate = newReturnDate;
+            res.json({ 
+                message: "Date de retour mise à jour avec succès",
+                loan: mockLoans[loanIndex]
+            });
+        } else {
+            const loan = await Loan.findOne({ isbn, studentName });
+            
+            if (!loan) {
+                return res.status(404).json({ message: "Prêt non trouvé" });
+            }
+            
+            // Vérifier que la nouvelle date est dans le futur
+            const newDate = new Date(newReturnDate);
+            const currentDate = new Date();
+            
+            if (newDate <= currentDate) {
+                return res.status(400).json({ message: "La nouvelle date doit être dans le futur" });
+            }
+            
+            loan.returnDate = newReturnDate;
+            await loan.save();
+            
+            res.json({ 
+                message: "Date de retour mise à jour avec succès",
+                loan: loan
+            });
+        }
+    } catch (error) {
+        console.error('Error extending loan:', error);
+        res.status(500).json({ message: "Erreur serveur", error });
+    }
+});
+
 // --- ROUTES BATCH POUR OPTIMISATION ---
 app.post('/api/books/batch-update', async (req, res) => {
     try {

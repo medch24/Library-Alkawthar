@@ -272,6 +272,47 @@ footer { text-align: center; padding: 1.5rem; background-color: var(--primary-co
     margin-top: 1rem;
 }
 
+/* Correction spécifique pour l'alignement des modals de prêts */
+#loans-modal {
+    direction: inherit !important;
+}
+
+#loans-modal-content {
+    width: 100% !important;
+    overflow-x: auto !important;
+}
+
+#loans-table {
+    width: 100% !important;
+    margin: 0 auto !important;
+    direction: rtl !important;
+}
+
+[dir="rtl"] #loans-table {
+    text-align: right !important;
+}
+
+[dir="ltr"] #loans-table {
+    text-align: left !important;
+    direction: ltr !important;
+}
+
+[dir="rtl"] #loans-table th,
+[dir="rtl"] #loans-table td {
+    text-align: right !important;
+}
+
+[dir="ltr"] #loans-table th,
+[dir="ltr"] #loans-table td {
+    text-align: left !important;
+}
+
+/* Actions toujours centrées */
+#loans-table th:last-child,
+#loans-table td:last-child {
+    text-align: center !important;
+}
+
 /* Styles pour le tableau étendu et l'édition */
 .table-container {
     max-width: 100%;
@@ -366,6 +407,21 @@ footer { text-align: center; padding: 1.5rem; background-color: var(--primary-co
 .btn-small.btn-primary {
     background: var(--secondary-color);
     color: white;
+}
+
+.btn-extend {
+    background-color: #28a745 !important;
+    margin-left: 4px;
+}
+
+.btn-extend:hover {
+    background-color: #218838 !important;
+}
+
+[dir="rtl"] .btn-extend {
+    margin-right: 4px;
+    margin-left: 0;
+}
 }
 
 .btn-small.btn-primary:hover {
