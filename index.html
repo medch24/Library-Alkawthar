@@ -330,7 +330,7 @@
     </div>
 
     <script>
-        const API_BASE_URL = 'https://3002-iznkr1yjob21txfccaszw-c81df28e.sandbox.novita.ai';
+        const API_BASE_URL = 'https://3002-i6n7m0hxton37bk711m1i-dfc00ec5.sandbox.novita.ai';
         let allBooks = [];
         let allLoans = [];
         let currentLoanType = 'students';
@@ -1456,7 +1456,7 @@
                         // Commencer le scan
                         scanForBarcode();
                     } catch (error) {
-                        console.error('Erreur d\\'accès à la caméra:', error);
+                        console.error('Erreur d\'accès à la caméra:', error);
                         alert('لا يمكن الوصول إلى الكاميرا. تأكد من إعطاء الإذن للموقع.');
                     }
                 });
@@ -1545,7 +1545,7 @@
                     const isbn = cell.parentElement.dataset.isbn;
                     
                     cell.classList.add('editing');
-                    cell.innerHTML = `<input type=\"text\" value=\"${originalValue}\" data-original=\"${originalValue}\">`;
+                    cell.innerHTML = `<input type="text" value="${originalValue}" data-original="${originalValue}">`;
                     
                     const input = cell.querySelector('input');
                     input.focus();
