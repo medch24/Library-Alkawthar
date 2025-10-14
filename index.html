@@ -1046,18 +1046,46 @@
             });
 
             // Mise à jour du titre du livre et des copies disponibles lors de la saisie ISBN
-            document.getElementById('loan-isbn').addEventListener('input', (e) => {
-                const book = allBooks.find(b => b.isbn === e.target.value.trim());
+            document.getElementById('loan-isbn').addEventListener('input', async (e) => {
+                const isbn = e.target.value.trim();
                 const bookTitleElement = document.getElementById('loan-book-title');
                 const availableCopiesDisplay = document.getElementById('available-copies-display');
                 const loanCopiesInput = document.getElementById('loan-copies');
                 
+                // Reset les champs d'abord
+                bookTitleElement.textContent = '-';
+                availableCopiesDisplay.textContent = '-';
+                
+                if (!isbn) return;
+                
+                // Chercher le livre dans les données locales d'abord
+                let book = allBooks.find(b => b.isbn === isbn);
+                
+                // Si le livre n'est pas trouvé localement, faire une requête à l'API
+                if (!book && isbn.length >= 10) { // ISBN minimum length
+                    try {
+                        console.log(`Recherche du livre ISBN: ${isbn} via API...`);
+                        const response = await fetch(`${API_BASE_URL}/api/books?search=${encodeURIComponent(isbn)}&limit=1`);
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.books && data.books.length > 0) {
+                                book = data.books.find(b => b.isbn === isbn);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Erreur lors de la recherche du livre:', error);
+                    }
+                }
+                
                 if (book) {
                     const availableCopies = (book.totalCopies || 0) - (book.loanedCopies || 0);
                     bookTitleElement.textContent = book.title;
+                    bookTitleElement.style.color = 'var(--primary-color)';
                     availableCopiesDisplay.textContent = availableCopies;
                     loanCopiesInput.max = availableCopies;
                     loanCopiesInput.value = Math.min(1, availableCopies);
+                    
+                    console.log(`Livre trouvé: ${book.title}, copies disponibles: ${availableCopies}`);
                     
                     if (availableCopies === 0) {
                         loanCopiesInput.disabled = true;
@@ -1066,6 +1094,9 @@
                         loanCopiesInput.disabled = false;
                         availableCopiesDisplay.style.color = 'green';
                     }
+                } else if (isbn.length >= 10) {
+                    bookTitleElement.textContent = 'كتاب غير موجود';
+                    bookTitleElement.style.color = 'red';
                 } else {
                     bookTitleElement.textContent = '-';
                     availableCopiesDisplay.textContent = '-';
@@ -1824,6 +1855,7 @@
             // Initialiser les nouvelles fonctionnalités
             initializeBarcodeScanner();
             initializeBatchEditing();
+            initializeSearchScanner();
             initializeSearchScanner();
             
         });
