@@ -3,12 +3,59 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const multer = require('multer');
 const xlsx = require('xlsx');
+const fs = require('fs');
+const path = require('path');
 
 // Mode de développement avec données en mémoire si MongoDB n'est pas disponible
 let devMode = false;
 let mockBooks = [];
 let mockLoans = [];
 let mockHistory = [];
+
+// Persistance des données en mode développement
+const DATA_DIR = path.join(__dirname, 'data');
+const BOOKS_FILE = path.join(DATA_DIR, 'books.json');
+const LOANS_FILE = path.join(DATA_DIR, 'loans.json');
+const HISTORY_FILE = path.join(DATA_DIR, 'history.json');
+
+// Créer le dossier data s'il n'existe pas
+if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+// Fonctions de persistance
+function saveDevData() {
+    if (devMode) {
+        try {
+            fs.writeFileSync(BOOKS_FILE, JSON.stringify(mockBooks, null, 2));
+            fs.writeFileSync(LOANS_FILE, JSON.stringify(mockLoans, null, 2));
+            fs.writeFileSync(HISTORY_FILE, JSON.stringify(mockHistory, null, 2));
+            console.log('Données sauvegardées en mode développement');
+        } catch (error) {
+            console.error('Erreur lors de la sauvegarde:', error);
+        }
+    }
+}
+
+function loadDevData() {
+    if (devMode) {
+        try {
+            if (fs.existsSync(BOOKS_FILE)) {
+                mockBooks = JSON.parse(fs.readFileSync(BOOKS_FILE, 'utf8'));
+            }
+            if (fs.existsSync(LOANS_FILE)) {
+                mockLoans = JSON.parse(fs.readFileSync(LOANS_FILE, 'utf8'));
+            }
+            if (fs.existsSync(HISTORY_FILE)) {
+                mockHistory = JSON.parse(fs.readFileSync(HISTORY_FILE, 'utf8'));
+            }
+            console.log('Données chargées depuis les fichiers');
+        } catch (error) {
+            console.error('Erreur lors du chargement:', error);
+            console.log('Initialisation avec des données par défaut');
+        }
+    }
+}
 
 const app = express();
 const port = process.env.PORT || 3002;
@@ -40,6 +87,11 @@ mongoose.connect(MONGODB_URI, {
 
 // Initialiser des données en mémoire pour les tests - DONNÉES ORIGINALES RESTAURÉES
 const initializeMockData = () => {
+    // D'abord essayer de charger les données existantes
+    loadDevData();
+    
+    // Si aucune donnée n'existe, initialiser avec des données par défaut
+    if (mockBooks.length === 0) {
     // DONNÉES RESTAURÉES DES VERSIONS PRÉCÉDENTES + DONNÉES RÉELLES
     mockBooks = [
         {
@@ -236,9 +288,13 @@ const initializeMockData = () => {
         }
     ];
     
-    console.log('Données de test en mémoire initialisées');
+        console.log('Données de test en mémoire initialisées');
+    }
+    
     // Synchroniser les loanedCopies avec les prêts actifs
     syncLoanedCopies();
+    // Sauvegarder les données après initialisation
+    saveDevData();
 };
 
 // Fonction pour synchroniser les loanedCopies avec les prêts réels
@@ -596,6 +652,7 @@ app.post('/api/books', async (req, res) => {
                     ...rest
                 };
                 mockBooks.push(newBook);
+                saveDevData();
                 res.status(201).json(newBook);
             }
         } else {
@@ -684,6 +741,7 @@ app.post('/api/books/upload', upload.single('excelFile'), async (req, res) => {
             if (devMode) {
                 // Ajouter aux données en mémoire
                 mockBooks.push(...booksToProcess);
+                saveDevData();
                 console.log(`${booksToProcess.length} livres ajoutés en mode développement`);
             } else {
                 // Ajouter à MongoDB
@@ -742,6 +800,7 @@ app.delete('/api/books/:isbn', async (req, res) => {
             
             // Supprimer le livre
             mockBooks.splice(bookIndex, 1);
+            saveDevData();
             res.status(204).send();
         } else {
             const result = await Book.deleteOne({ isbn: isbn });
@@ -804,6 +863,7 @@ app.post('/api/loans', async (req, res) => {
                 copiesCount: copiesCount
             };
             mockLoans.push(newLoan);
+            saveDevData();
             res.status(201).json(newLoan);
         } else {
             const studentNameRegex = new RegExp(`^${studentName.trim()}$`, 'i');
@@ -873,6 +933,7 @@ app.delete('/api/loans', async (req, res) => {
                     copiesCount: returnedCopies
                 });
             }
+            saveDevData();
             res.status(204).send();
         } else {
             const loan = await Loan.findOneAndDelete({ isbn, studentName });
@@ -929,6 +990,7 @@ app.put('/api/loans/extend', async (req, res) => {
             }
             
             mockLoans[loanIndex].returnDate = newReturnDate;
+            saveDevData();
             res.json({ 
                 message: "Date de retour mise à jour avec succès",
                 loan: mockLoans[loanIndex]

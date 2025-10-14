@@ -326,7 +326,7 @@
                     <p id="extend-book-title">-</p>
                 </div>
                 <div class="form-group">
-                    <label>تاريخ الإرجاع الحالي</label>
+                    <label data-key="current_return_date">تاريخ الإرجاع الحالي</label>
                     <p id="extend-current-date">-</p>
                 </div>
                 <div class="form-group">
@@ -396,6 +396,26 @@
         let pendingChanges = [];
         let barcodeStream = null;
         let barcodeScanner = null;
+        
+        // Fonction pour formater les dates selon la langue courante
+        function formatDateByLanguage(date, language = currentLanguage) {
+            const d = new Date(date);
+            switch (language) {
+                case 'ar':
+                    return d.toLocaleDateString('fr-FR'); // Utilise les chiffres français même en arabe
+                case 'fr':
+                    return d.toLocaleDateString('fr-FR');
+                case 'en':
+                    return d.toLocaleDateString('en-US');
+                default:
+                    return d.toLocaleDateString('fr-FR');
+            }
+        }
+        
+        // Fonction pour obtenir le texte traduit
+        function getTranslatedText(key) {
+            return translations[currentLanguage] && translations[currentLanguage][key] || key;
+        }
 
         // Dictionnaire des traductions
         const translations = {
@@ -419,6 +439,18 @@
                 extend_return_date: 'تمديد فترة الارجاع',
                 new_return_date: 'تاريخ الإرجاع الجديد',
                 extend_loan: 'تمديد الإعارة',
+                current_return_date: 'تاريخ الإرجاع الحالي',
+                return_book: 'إرجاع',
+                book_returned_success: 'تم إرجاع الكتاب بنجاح!',
+                return_error: 'خطأ في إرجاع الكتاب',
+                cannot_delete_loaned: 'لا يمكن حذف هذا الكتاب!',
+                copies_currently_loaned: 'نسخة معارة حالياً',
+                must_return_all_copies: 'يجب إرجاع جميع النسخ أولاً',
+                borrower_name: 'اسم المستعير',
+                class_section: 'الصف/القسم',
+                loan_type: 'النوع',
+                loan_date_col: 'تاريخ الإعارة',
+                return_date_col: 'تاريخ الإرجاع',
                 loading_data: 'تحميل البيانات...',
                 isbn: 'ISBN',
                 title: 'العنوان',
@@ -461,6 +493,18 @@
                 extend_return_date: 'Prolonger la date de retour',
                 new_return_date: 'Nouvelle date de retour',
                 extend_loan: 'Prolonger le prêt',
+                current_return_date: 'Date de retour actuelle',
+                return_book: 'Retourner',
+                book_returned_success: 'Livre retourné avec succès!',
+                return_error: 'Erreur lors du retour',
+                cannot_delete_loaned: 'Impossible de supprimer ce livre!',
+                copies_currently_loaned: 'copies actuellement prêtées',
+                must_return_all_copies: 'Toutes les copies doivent être retournées d\'abord',
+                borrower_name: 'Nom de l\'emprunteur',
+                class_section: 'Classe/Section',
+                loan_type: 'Type',
+                loan_date_col: 'Date de prêt',
+                return_date_col: 'Date de retour',
                 loading_data: 'Chargement des données...',
                 isbn: 'ISBN',
                 title: 'Titre',
@@ -503,6 +547,18 @@
                 extend_return_date: 'Extend Return Date',
                 new_return_date: 'New Return Date',
                 extend_loan: 'Extend Loan',
+                current_return_date: 'Current Return Date',
+                return_book: 'Return',
+                book_returned_success: 'Book returned successfully!',
+                return_error: 'Error returning book',
+                cannot_delete_loaned: 'Cannot delete this book!',
+                copies_currently_loaned: 'copies currently on loan',
+                must_return_all_copies: 'All copies must be returned first',
+                borrower_name: 'Borrower Name',
+                class_section: 'Class/Section',
+                loan_type: 'Type',
+                loan_date_col: 'Loan Date',
+                return_date_col: 'Return Date',
                 loading_data: 'Loading data...',
                 isbn: 'ISBN',
                 title: 'Title',
@@ -910,7 +966,7 @@
                                         <span class="book-title">${bookTitle}</span>
                                         <br>
                                         <span class="overdue-days critical">متأخر ${daysOverdue} يوم</span>
-                                        <span class="due-date">(الموعد المحدد: ${new Date(loan.returnDate).toLocaleDateString('ar-EG')})</span>
+                                        <span class="due-date">(الموعد المحدد: ${formatDateByLanguage(loan.returnDate)})</span>
                                     </div>
                                     <div class="overdue-actions">
                                         <button class="btn-small btn-danger contact-borrower" data-name="${loan.studentName}" data-type="${loan.borrowerType}">
@@ -942,7 +998,7 @@
                                         <span class="book-title">${bookTitle}</span>
                                         <br>
                                         <span class="overdue-days moderate">متأخر ${daysOverdue} يوم</span>
-                                        <span class="due-date">(الموعد المحدد: ${new Date(loan.returnDate).toLocaleDateString('ar-EG')})</span>
+                                        <span class="due-date">(الموعد المحدد: ${formatDateByLanguage(loan.returnDate)})</span>
                                     </div>
                                     <div class="overdue-actions">
                                         <button class="btn-small btn-warning contact-borrower" data-name="${loan.studentName}" data-type="${loan.borrowerType}">
@@ -974,7 +1030,7 @@
                                         <span class="book-title">${bookTitle}</span>
                                         <br>
                                         <span class="overdue-days recent">متأخر ${daysOverdue} يوم</span>
-                                        <span class="due-date">(الموعد المحدد: ${new Date(loan.returnDate).toLocaleDateString('ar-EG')})</span>
+                                        <span class="due-date">(الموعد المحدد: ${formatDateByLanguage(loan.returnDate)})</span>
                                     </div>
                                     <div class="overdue-actions">
                                         <button class="btn-small btn-info contact-borrower" data-name="${loan.studentName}" data-type="${loan.borrowerType}">
@@ -1419,12 +1475,12 @@
                             <td>${loan.studentClass || '-'}</td>
                             <td>${book.title}</td>
                             <td><span class="copies-badge">${copiesCount}</span></td>
-                            <td>${new Date(loan.loanDate).toLocaleDateString('ar-EG')}</td>
-                            <td>${new Date(loan.returnDate).toLocaleDateString('ar-EG')}</td>
+                            <td>${formatDateByLanguage(loan.loanDate)}</td>
+                            <td>${formatDateByLanguage(loan.returnDate)}</td>
                             <td><span class="overdue-status ${overdueClass}">${overdueText}</span></td>
                             <td>
                                 <button class="btn-action btn-return" data-isbn="${loan.isbn}" data-student="${loan.studentName}">
-                                    <i class="fas fa-undo"></i> إرجاع
+                                    <i class="fas fa-undo"></i> <span data-key="return_book">إرجاع</span>
                                 </button>
                                 <button class="btn-action btn-extend" data-isbn="${loan.isbn}" data-student="${loan.studentName}" data-current-date="${loan.returnDate}">
                                     <i class="fas fa-calendar-plus"></i> تمديد
@@ -1476,9 +1532,9 @@
                         body: JSON.stringify({ isbn, studentName })
                     });
                     await loadAllData();
-                    alert('تم إرجاع الكتاب بنجاح!');
+                    alert(getTranslatedText('book_returned_success'));
                 } catch (error) {
-                    alert('خطأ في إرجاع الكتاب');
+                    alert(getTranslatedText('return_error'));
                 }
             }
 
@@ -1628,7 +1684,7 @@
                 
                 // Vérifier s'il y a des prêts actifs
                 if (book.loanedCopies > 0) {
-                    alert(`لا يمكن حذف هذا الكتاب!\n\nيوجد ${book.loanedCopies} نسخة معارة حالياً.\nيجب إرجاع جميع النسخ أولاً.`);
+                    alert(`${getTranslatedText('cannot_delete_loaned')}\n\n${book.loanedCopies} ${getTranslatedText('copies_currently_loaned')}.\n${getTranslatedText('must_return_all_copies')}.`);
                     return;
                 }
                 
@@ -1664,15 +1720,15 @@
                         historyHTML += '<p>لا يوجد تاريخ إعارة لهذا الكتاب.</p>';
                     } else {
                         historyHTML += '<div style="max-height: 400px; overflow-y: auto;"><table style="width: 100%; border-collapse: collapse;">';
-                        historyHTML += '<thead><tr style="background: #f0f0f0;"><th style="padding: 8px; border: 1px solid #ddd;">اسم المستعير</th><th style="padding: 8px; border: 1px solid #ddd;">الصف/القسم</th><th style="padding: 8px; border: 1px solid #ddd;">النوع</th><th style="padding: 8px; border: 1px solid #ddd;">تاريخ الإعارة</th><th style="padding: 8px; border: 1px solid #ddd;">تاريخ الإرجاع</th></tr></thead><tbody>';
+                        historyHTML += `<thead><tr style="background: #f0f0f0;"><th style="padding: 8px; border: 1px solid #ddd;">${getTranslatedText('borrower_name')}</th><th style="padding: 8px; border: 1px solid #ddd;">${getTranslatedText('class_section')}</th><th style="padding: 8px; border: 1px solid #ddd;">${getTranslatedText('loan_type')}</th><th style="padding: 8px; border: 1px solid #ddd;">${getTranslatedText('loan_date_col')}</th><th style="padding: 8px; border: 1px solid #ddd;">${getTranslatedText('return_date_col')}</th></tr></thead><tbody>`;
                         
                         history.forEach(h => {
                             historyHTML += `<tr>
                                 <td style="padding: 8px; border: 1px solid #ddd;">${h.studentName}</td>
                                 <td style="padding: 8px; border: 1px solid #ddd;">${h.studentClass || '-'}</td>
                                 <td style="padding: 8px; border: 1px solid #ddd;">${h.borrowerType === 'teacher' ? 'مدرس' : 'طالب'}</td>
-                                <td style="padding: 8px; border: 1px solid #ddd;">${new Date(h.loanDate).toLocaleDateString('ar-EG')}</td>
-                                <td style="padding: 8px; border: 1px solid #ddd;">${new Date(h.actualReturnDate).toLocaleDateString('ar-EG')}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${formatDateByLanguage(h.loanDate)}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${formatDateByLanguage(h.actualReturnDate)}</td>
                             </tr>`;
                         });
                         
@@ -2036,7 +2092,7 @@
                 // Remplir les informations
                 borrowerNameEl.textContent = loan.studentName;
                 bookTitleEl.textContent = book.title || loan.title || 'Titre non disponible';
-                currentDateEl.textContent = new Date(loan.returnDate).toLocaleDateString('ar-EG');
+                currentDateEl.textContent = formatDateByLanguage(loan.returnDate);
                 
                 // Définir la date minimum comme demain
                 const tomorrow = new Date();

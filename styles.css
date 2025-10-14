@@ -22,20 +22,46 @@ body { font-family: 'Tajawal', sans-serif; background: var(--background-gradient
 
 [dir="rtl"] #books-table th,
 [dir="rtl"] #books-table td {
-    text-align: right;
+    text-align: right !important;
 }
 
-/* Centrage et alignement parfait */
+[dir="ltr"] #books-table th,
+[dir="ltr"] #books-table td {
+    text-align: left !important;
+}
+
+/* Centrage et alignement parfait - FORCE FULL WIDTH */
 .full-width-section {
+    width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+    padding: 2rem !important;
+    box-sizing: border-box !important;
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
 .full-width-section .table-container {
-    display: flex;
-    justify-content: center;
-    width: 100%;
+    width: 100% !important;
+    max-width: none !important;
+    overflow-x: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Force le tableau principal à prendre toute la largeur */
+#books-table {
+    width: 100% !important;
+    min-width: 1800px !important;
+    table-layout: fixed !important;
+    margin: 0 auto !important;
+}
+
+/* Headers et cellules alignés selon la direction */
+#books-table th, #books-table td {
+    padding: 12px 8px !important;
+    border-bottom: 1px solid #e0e0e0 !important;
+    vertical-align: middle !important;
 }
 .input-group input { width: 100%; padding: 1rem 1rem 1rem 2.5rem; border: 2px solid #ddd; border-radius: var(--border-radius); font-size: 1rem; }
 [dir="rtl"] .input-group input { padding: 1rem 2.5rem 1rem 1rem; }
