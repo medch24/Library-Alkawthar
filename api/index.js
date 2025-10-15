@@ -68,6 +68,9 @@ app.use(cors());
 app.use(express.json());
 const upload = multer({ storage: multer.memoryStorage() });
 
+// Serve static files from public directory
+app.use(express.static(path.join(__dirname, '..', 'public')));
+
 // --- Connexion à MongoDB ---
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/alkawthar-library';
 mongoose.connect(MONGODB_URI, {
