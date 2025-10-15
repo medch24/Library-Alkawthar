@@ -130,15 +130,15 @@
                 <div style="margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
                     <button id="view-student-loans-btn" class="btn btn-secondary">
                         <i class="fas fa-user-graduate"></i> 
-                        <span>عرض الطلاب المستعيرين</span>
+                        <span data-key="view_student_borrowers">عرض الطلاب المستعيرين</span>
                     </button>
                     <button id="view-teacher-loans-btn" class="btn btn-secondary">
                         <i class="fas fa-user-tie"></i> 
-                        <span>عرض المدرسين المستعيرين</span>
+                        <span data-key="view_teacher_borrowers">عرض المدرسين المستعيرين</span>
                     </button>
                     <button id="export-excel-btn" class="btn btn-success">
                         <i class="fas fa-file-excel"></i> 
-                        <span>تحميل بيانات Excel</span>
+                        <span data-key="export_excel_data">تحميل بيانات Excel</span>
                     </button>
                 </div>
             </section>
@@ -271,8 +271,8 @@
                         </button>
                     </div>
                 </div>
-                <div class="table-container" style="overflow-x: auto; width: 100vw; margin-left: calc(-50vw + 50%); padding: 0 2rem;">
-                    <table id="books-table" style="width: 100%; min-width: 1800px; table-layout: fixed;">
+                <div class="table-container" style="overflow-x: auto; width: 100%; max-width: 1200px; margin: 0 auto; padding: 0;">
+                    <table id="books-table" style="width: 100%; min-width: 1200px; table-layout: fixed; margin: 0 auto;">
                         <thead>
                             <tr>
                                 <th style="min-width: 140px;" data-key="isbn">ISBN</th>
@@ -477,7 +477,13 @@
                 add_book_manually: 'إضافة كتاب يدوياً',
                 upload_excel: 'رفع ملف Excel للكتب',
                 overdue_books_title: 'كتب متأخرة في الإرجاع',
-                dismiss: 'إخفاء التنبيه'
+                dismiss: 'إخفاء التنبيه',
+                borrower_type: 'نوع المستعير',
+                student: 'طالب',
+                teacher: 'مدرس/ة',
+                view_student_borrowers: 'عرض الطلاب المستعيرين',
+                view_teacher_borrowers: 'عرض المدرسين المستعيرين',
+                export_excel_data: 'تحميل بيانات Excel'
             },
             fr: {
                 school_name: 'Écoles Internationales Al-Kawthar',
@@ -537,7 +543,13 @@
                 add_book_manually: 'Ajouter un livre manuellement',
                 upload_excel: 'Télécharger fichier Excel',
                 overdue_books_title: 'Livres en retard',
-                dismiss: 'Masquer l\'alerte'
+                dismiss: 'Masquer l\'alerte',
+                borrower_type: 'Type d\'emprunteur',
+                student: 'Étudiant',
+                teacher: 'Enseignant',
+                view_student_borrowers: 'Voir les étudiants emprunteurs',
+                view_teacher_borrowers: 'Voir les enseignants emprunteurs',
+                export_excel_data: 'Télécharger données Excel'
             },
             en: {
                 school_name: 'Al-Kawthar International Schools',
@@ -597,7 +609,13 @@
                 add_book_manually: 'Add Book Manually',
                 upload_excel: 'Upload Excel File',
                 overdue_books_title: 'Overdue Books',
-                dismiss: 'Dismiss Alert'
+                dismiss: 'Dismiss Alert',
+                borrower_type: 'Borrower Type',
+                student: 'Student',
+                teacher: 'Teacher',
+                view_student_borrowers: 'View Student Borrowers',
+                view_teacher_borrowers: 'View Teacher Borrowers',
+                export_excel_data: 'Download Excel Data'
             }
         };
 
@@ -1492,13 +1510,27 @@
                                         }
                                     }
                                 }
+                                
+                                // Si toujours pas trouvé, essayer une recherche directe par ISBN
+                                if (!book) {
+                                    const directResponse = await fetch(`${API_BASE_URL}/api/books/${encodeURIComponent(loan.isbn)}`);
+                                    if (directResponse.ok) {
+                                        const directBook = await directResponse.json();
+                                        if (directBook && directBook.isbn === loan.isbn) {
+                                            book = directBook;
+                                            if (!allBooks.find(b => b.isbn === book.isbn)) {
+                                                allBooks.push(book);
+                                            }
+                                        }
+                                    }
+                                }
                             } catch (error) {
                                 console.error('Erreur lors de la recherche du livre:', error);
                             }
                         }
                         
-                        // Utiliser le titre du livre ou un titre par défaut traduit
-                        const bookTitle = book ? book.title : getTranslatedText('book_not_found');
+                        // Utiliser le titre du livre, le titre depuis loan, ou un titre par défaut traduit
+                        let bookTitle = book ? book.title : (loan.title || getTranslatedText('book_not_found'));
                         const isbn = loan.isbn || '-';
                         const copiesCount = loan.copiesCount || 1;
                         
