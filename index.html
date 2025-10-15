@@ -271,8 +271,8 @@
                         </button>
                     </div>
                 </div>
-                <div class="table-container" style="overflow-x: auto; width: 100%; max-width: 1200px; margin: 0 auto; padding: 0;">
-                    <table id="books-table" style="width: 100%; min-width: 1200px; table-layout: fixed; margin: 0 auto;">
+                <div class="table-container" style="overflow-x: auto; width: 100%; padding: 0; display: flex; justify-content: center;">
+                    <table id="books-table" style="width: 100%; max-width: 1400px; min-width: 1200px; table-layout: fixed; margin: 0 auto;">
                         <thead>
                             <tr>
                                 <th style="min-width: 140px;" data-key="isbn">ISBN</th>
@@ -1490,36 +1490,47 @@
                     
                     // Pour chaque prêt, récupérer les informations du livre
                     for (const loan of loans) {
-                        let book = allBooks.find(b => b.isbn === loan.isbn);
+                        // PRIORITÉ 1: Utiliser le titre depuis le loan si disponible
+                        let bookTitle = loan.title || loan.bookTitle || null;
                         
-                        // Si le livre n'est pas trouvé localement, faire un appel API
-                        if (!book && loan.isbn) {
+                        // PRIORITÉ 2: Chercher dans allBooks localement
+                        if (!bookTitle) {
+                            const book = allBooks.find(b => b.isbn === loan.isbn);
+                            if (book && book.title) {
+                                bookTitle = book.title;
+                            }
+                        }
+                        
+                        // PRIORITÉ 3: Si toujours pas de titre ET qu'on a un ISBN, chercher via API
+                        if (!bookTitle && loan.isbn) {
                             try {
-                                console.log(`Recherche du livre ISBN: ${loan.isbn} via API pour l'affichage des prêts...`);
-                                const response = await fetch(`${API_BASE_URL}/api/books?search=${encodeURIComponent(loan.isbn)}&limit=1`);
-                                if (response.ok) {
-                                    const data = await response.json();
-                                    if (data.books && data.books.length > 0) {
-                                        const foundBook = data.books.find(b => b.isbn === loan.isbn);
-                                        if (foundBook) {
-                                            book = foundBook;
-                                            // Ajouter le livre à la liste locale pour les prochaines utilisations
-                                            if (!allBooks.find(b => b.isbn === book.isbn)) {
-                                                allBooks.push(book);
-                                            }
+                                console.log(`Recherche du livre ISBN: ${loan.isbn} via API...`);
+                                
+                                // Recherche directe par ISBN d'abord (plus précise)
+                                const directResponse = await fetch(`${API_BASE_URL}/api/books/${encodeURIComponent(loan.isbn)}`);
+                                if (directResponse.ok) {
+                                    const directBook = await directResponse.json();
+                                    if (directBook && directBook.title) {
+                                        bookTitle = directBook.title;
+                                        // Ajouter à allBooks pour les prochaines utilisations
+                                        if (!allBooks.find(b => b.isbn === directBook.isbn)) {
+                                            allBooks.push(directBook);
                                         }
                                     }
                                 }
                                 
-                                // Si toujours pas trouvé, essayer une recherche directe par ISBN
-                                if (!book) {
-                                    const directResponse = await fetch(`${API_BASE_URL}/api/books/${encodeURIComponent(loan.isbn)}`);
-                                    if (directResponse.ok) {
-                                        const directBook = await directResponse.json();
-                                        if (directBook && directBook.isbn === loan.isbn) {
-                                            book = directBook;
-                                            if (!allBooks.find(b => b.isbn === book.isbn)) {
-                                                allBooks.push(book);
+                                // Si pas trouvé, essayer la recherche générale
+                                if (!bookTitle) {
+                                    const searchResponse = await fetch(`${API_BASE_URL}/api/books?search=${encodeURIComponent(loan.isbn)}&limit=5`);
+                                    if (searchResponse.ok) {
+                                        const data = await searchResponse.json();
+                                        if (data.books && data.books.length > 0) {
+                                            const foundBook = data.books.find(b => b.isbn === loan.isbn);
+                                            if (foundBook && foundBook.title) {
+                                                bookTitle = foundBook.title;
+                                                if (!allBooks.find(b => b.isbn === foundBook.isbn)) {
+                                                    allBooks.push(foundBook);
+                                                }
                                             }
                                         }
                                     }
@@ -1529,8 +1540,12 @@
                             }
                         }
                         
-                        // Utiliser le titre du livre, le titre depuis loan, ou un titre par défaut traduit
-                        let bookTitle = book ? book.title : (loan.title || getTranslatedText('book_not_found'));
+                        // PRIORITÉ 4: Fallback final
+                        if (!bookTitle) {
+                            bookTitle = getTranslatedText('book_not_found');
+                            console.warn(`Aucun titre trouvé pour ISBN: ${loan.isbn}`, loan);
+                        }
+                        
                         const isbn = loan.isbn || '-';
                         const copiesCount = loan.copiesCount || 1;
                         

@@ -30,29 +30,33 @@ body { font-family: 'Tajawal', sans-serif; background: var(--background-gradient
     text-align: left !important;
 }
 
-/* Centrage et alignement parfait - FORCE FULL WIDTH */
+/* Centrage parfait du tableau principal */
 .full-width-section {
-    width: 100vw !important;
-    margin-left: calc(-50vw + 50%) !important;
+    width: 100% !important;
+    margin: 0 auto !important;
     padding: 2rem !important;
     box-sizing: border-box !important;
     display: flex;
     flex-direction: column;
     align-items: center;
+    text-align: center;
 }
 
 .full-width-section .table-container {
     width: 100% !important;
-    max-width: none !important;
+    max-width: 1400px !important;
     overflow-x: auto !important;
     padding: 0 !important;
-    margin: 0 !important;
+    margin: 0 auto !important;
+    display: flex;
+    justify-content: center;
 }
 
-/* Force le tableau principal à prendre toute la largeur */
+/* Force le tableau principal à être centré */
 #books-table {
     width: 100% !important;
-    min-width: 1800px !important;
+    max-width: 1400px !important;
+    min-width: 1200px !important;
     table-layout: fixed !important;
     margin: 0 auto !important;
 }
