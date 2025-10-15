@@ -463,6 +463,12 @@
                 corner_name: 'اسم الركن',
                 corner_number: 'رقم الركن',
                 actions: 'الإجراءات',
+                teacher_name: 'اسم المدرس',
+                student_name: 'اسم الطالب',
+                book_title: 'عنوان الكتاب',
+                copies_count: 'عدد النسخ',
+                overdue_days: 'أيام التأخير',
+                book_not_found: 'كتاب غير موجود',
                 loading_books: 'جاري تحميل الكتب...',
                 loading_loans: 'جاري تحميل الإعارات...',
                 loading_stats: 'جاري حساب الإحصائيات...',
@@ -517,6 +523,12 @@
                 corner_name: 'Nom du coin',
                 corner_number: 'Numéro du coin',
                 actions: 'Actions',
+                teacher_name: 'Nom de l\'enseignant',
+                student_name: 'Nom de l\'étudiant',
+                book_title: 'Titre du livre',
+                copies_count: 'Nombre de copies',
+                overdue_days: 'Jours de retard',
+                book_not_found: 'Livre introuvable',
                 loading_books: 'Chargement des livres...',
                 loading_loans: 'Chargement des prêts...',
                 loading_stats: 'Calcul des statistiques...',
@@ -571,6 +583,12 @@
                 corner_name: 'Corner Name',
                 corner_number: 'Corner Number',
                 actions: 'Actions',
+                teacher_name: 'Teacher Name',
+                student_name: 'Student Name',
+                book_title: 'Book Title',
+                copies_count: 'Number of Copies',
+                overdue_days: 'Overdue Days',
+                book_not_found: 'Book not found',
                 loading_books: 'Loading books...',
                 loading_loans: 'Loading loans...',
                 loading_stats: 'Calculating statistics...',
@@ -1234,7 +1252,7 @@
                         availableCopiesDisplay.style.color = 'green';
                     }
                 } else if (isbn.length >= 10) {
-                    bookTitleElement.textContent = 'كتاب غير موجود';
+                    bookTitleElement.textContent = getTranslatedText('book_not_found');
                     bookTitleElement.style.color = 'red';
                 } else {
                     bookTitleElement.textContent = '-';
@@ -1255,7 +1273,9 @@
                 const book = allBooks.find(b => b.isbn === isbn);
                 
                 if (!book) {
-                    alert('الكتاب غير موجود!');
+                    const alertText = currentLanguage === 'ar' ? 'الكتاب غير موجود!' :
+                                    currentLanguage === 'fr' ? 'Livre introuvable!' : 'Book not found!';
+                    alert(alertText);
                     return;
                 }
                 
@@ -1401,7 +1421,7 @@
                 }
             });
 
-            // Afficher les prêts
+            // Afficher les prêts - Version corrigée
             async function displayLoans(loanType) {
                 const loansModalContent = document.getElementById('loans-modal-content');
                 const loansModalTitle = document.getElementById('loans-modal-title');
@@ -1417,30 +1437,69 @@
                     }
                     
                     if (loans.length === 0) {
-                        loansModalContent.innerHTML = '<p style="text-align: center; padding: 1rem;">لا توجد نتائج مطابقة.</p>';
+                        const noResultsText = currentLanguage === 'ar' ? 'لا توجد نتائج مطابقة.' : 
+                                            currentLanguage === 'fr' ? 'Aucun résultat correspondant.' : 'No matching results.';
+                        loansModalContent.innerHTML = `<p style="text-align: center; padding: 1rem;">${noResultsText}</p>`;
                         return;
                     }
                     
-                    const nameLabel = loanType === 'teachers' ? 'اسم المدرس' : 'اسم الطالب';
-                    const classLabel = loanType === 'teachers' ? 'المادة' : 'الفصل';
+                    // Labels traduits selon le type et la langue
+                    const nameLabel = loanType === 'teachers' ? 
+                        getTranslatedText('teacher_name') : getTranslatedText('student_name');
+                    const classLabel = loanType === 'teachers' ? 
+                        getTranslatedText('subject') : getTranslatedText('class_section');
                     
-                    let tableHTML = `<table id="loans-table" style="width: 100%; text-align: right; direction: rtl; border-collapse: collapse;">
+                    // Direction et alignement selon la langue
+                    const isRtl = currentLanguage === 'ar';
+                    const direction = isRtl ? 'rtl' : 'ltr';
+                    const textAlign = isRtl ? 'right' : 'left';
+                    
+                    let tableHTML = `<table id="loans-table" style="width: 100%; text-align: ${textAlign}; direction: ${direction}; border-collapse: collapse;">
                         <thead>
                             <tr>
-                                <th style="text-align: right; padding: 12px; background: var(--primary-color); color: white;">${nameLabel}</th>
-                                <th style="text-align: right; padding: 12px; background: var(--primary-color); color: white;">${classLabel}</th>
-                                <th style="text-align: right; padding: 12px; background: var(--primary-color); color: white;">عنوان الكتاب</th>
-                                <th style="text-align: center; padding: 12px; background: var(--primary-color); color: white;">عدد النسخ</th>
-                                <th style="text-align: center; padding: 12px; background: var(--primary-color); color: white;">تاريخ الإعارة</th>
-                                <th style="text-align: center; padding: 12px; background: var(--primary-color); color: white;">تاريخ التسليم</th>
-                                <th style="text-align: center; padding: 12px; background: var(--primary-color); color: white;">أيام التأخير</th>
-                                <th style="text-align: center; padding: 12px; background: var(--primary-color); color: white;">إجراء</th>
+                                <th style="text-align: ${textAlign}; padding: 12px; background: var(--primary-color); color: white;">${nameLabel}</th>
+                                <th style="text-align: ${textAlign}; padding: 12px; background: var(--primary-color); color: white;">${classLabel}</th>
+                                <th style="text-align: center; padding: 12px; background: var(--primary-color); color: white;">${getTranslatedText('isbn')}</th>
+                                <th style="text-align: ${textAlign}; padding: 12px; background: var(--primary-color); color: white;">${getTranslatedText('book_title')}</th>
+                                <th style="text-align: center; padding: 12px; background: var(--primary-color); color: white;">${getTranslatedText('copies_count')}</th>
+                                <th style="text-align: center; padding: 12px; background: var(--primary-color); color: white;">${getTranslatedText('loan_date_col')}</th>
+                                <th style="text-align: center; padding: 12px; background: var(--primary-color); color: white;">${getTranslatedText('return_date_col')}</th>
+                                <th style="text-align: center; padding: 12px; background: var(--primary-color); color: white;">${getTranslatedText('overdue_days')}</th>
+                                <th style="text-align: center; padding: 12px; background: var(--primary-color); color: white;">${getTranslatedText('actions')}</th>
                             </tr>
                         </thead>
                         <tbody>`;
                     
-                    loans.forEach(loan => {
-                        const book = allBooks.find(b => b.isbn === loan.isbn) || { title: 'عنوان غير محدد' };
+                    // Pour chaque prêt, récupérer les informations du livre
+                    for (const loan of loans) {
+                        let book = allBooks.find(b => b.isbn === loan.isbn);
+                        
+                        // Si le livre n'est pas trouvé localement, faire un appel API
+                        if (!book && loan.isbn) {
+                            try {
+                                console.log(`Recherche du livre ISBN: ${loan.isbn} via API pour l'affichage des prêts...`);
+                                const response = await fetch(`${API_BASE_URL}/api/books?search=${encodeURIComponent(loan.isbn)}&limit=1`);
+                                if (response.ok) {
+                                    const data = await response.json();
+                                    if (data.books && data.books.length > 0) {
+                                        const foundBook = data.books.find(b => b.isbn === loan.isbn);
+                                        if (foundBook) {
+                                            book = foundBook;
+                                            // Ajouter le livre à la liste locale pour les prochaines utilisations
+                                            if (!allBooks.find(b => b.isbn === book.isbn)) {
+                                                allBooks.push(book);
+                                            }
+                                        }
+                                    }
+                                }
+                            } catch (error) {
+                                console.error('Erreur lors de la recherche du livre:', error);
+                            }
+                        }
+                        
+                        // Utiliser le titre du livre ou un titre par défaut traduit
+                        const bookTitle = book ? book.title : getTranslatedText('book_not_found');
+                        const isbn = loan.isbn || '-';
                         const copiesCount = loan.copiesCount || 1;
                         
                         // Calculer les jours de retard
@@ -1450,44 +1509,63 @@
                         
                         let overdueClass = '';
                         let overdueText = '';
+                        
                         if (daysOverdue > 0) {
                             if (daysOverdue >= 7) {
                                 overdueClass = 'critical';
-                                overdueText = `متأخر ${daysOverdue} يوم`;
                             } else if (daysOverdue >= 3) {
                                 overdueClass = 'moderate';
-                                overdueText = `متأخر ${daysOverdue} يوم`;
                             } else {
                                 overdueClass = 'recent';
+                            }
+                            
+                            if (currentLanguage === 'ar') {
                                 overdueText = `متأخر ${daysOverdue} يوم`;
+                            } else if (currentLanguage === 'fr') {
+                                overdueText = `${daysOverdue} jour${daysOverdue > 1 ? 's' : ''} de retard`;
+                            } else {
+                                overdueText = `${daysOverdue} day${daysOverdue > 1 ? 's' : ''} overdue`;
                             }
                         } else if (daysOverdue === 0) {
-                            overdueText = 'مطلوب اليوم';
                             overdueClass = 'today';
+                            if (currentLanguage === 'ar') {
+                                overdueText = 'مطلوب اليوم';
+                            } else if (currentLanguage === 'fr') {
+                                overdueText = 'Dû aujourd\'hui';
+                            } else {
+                                overdueText = 'Due today';
+                            }
                         } else {
                             const daysLeft = Math.abs(daysOverdue);
-                            overdueText = `${daysLeft} يوم متبقي`;
                             overdueClass = 'future';
+                            if (currentLanguage === 'ar') {
+                                overdueText = `${daysLeft} يوم متبقي`;
+                            } else if (currentLanguage === 'fr') {
+                                overdueText = `${daysLeft} jour${daysLeft > 1 ? 's' : ''} restant${daysLeft > 1 ? 's' : ''}`;
+                            } else {
+                                overdueText = `${daysLeft} day${daysLeft > 1 ? 's' : ''} remaining`;
+                            }
                         }
                         
                         tableHTML += `<tr>
                             <td>${loan.studentName}</td>
                             <td>${loan.studentClass || '-'}</td>
-                            <td>${book.title}</td>
-                            <td><span class="copies-badge">${copiesCount}</span></td>
-                            <td>${formatDateByLanguage(loan.loanDate)}</td>
-                            <td>${formatDateByLanguage(loan.returnDate)}</td>
-                            <td><span class="overdue-status ${overdueClass}">${overdueText}</span></td>
-                            <td>
+                            <td style="text-align: center; font-family: monospace;">${isbn}</td>
+                            <td>${bookTitle}</td>
+                            <td style="text-align: center;"><span class="copies-badge">${copiesCount}</span></td>
+                            <td style="text-align: center;">${formatDateByLanguage(loan.loanDate)}</td>
+                            <td style="text-align: center;">${formatDateByLanguage(loan.returnDate)}</td>
+                            <td style="text-align: center;"><span class="overdue-status ${overdueClass}">${overdueText}</span></td>
+                            <td style="text-align: center;">
                                 <button class="btn-action btn-return" data-isbn="${loan.isbn}" data-student="${loan.studentName}">
-                                    <i class="fas fa-undo"></i> <span data-key="return_book">إرجاع</span>
+                                    <i class="fas fa-undo"></i> <span data-key="return_book">${getTranslatedText('return_book')}</span>
                                 </button>
                                 <button class="btn-action btn-extend" data-isbn="${loan.isbn}" data-student="${loan.studentName}" data-current-date="${loan.returnDate}">
-                                    <i class="fas fa-calendar-plus"></i> تمديد
+                                    <i class="fas fa-calendar-plus"></i> ${currentLanguage === 'ar' ? 'تمديد' : currentLanguage === 'fr' ? 'Prolonger' : 'Extend'}
                                 </button>
                             </td>
                         </tr>`;
-                    });
+                    }
                     
                     tableHTML += '</tbody></table>';
                     loansModalContent.innerHTML = tableHTML;

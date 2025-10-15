@@ -534,13 +534,30 @@ footer { text-align: center; padding: 1.5rem; background-color: var(--primary-co
     }
 }
 
-/* Styles pour la section pleine largeur - UNIFIÉ */
+/* Styles pour la section pleine largeur - UNIFIÉ ET CENTRÉ */
 .full-width-section {
     width: 100vw !important;
     margin-left: calc(-50vw + 50%) !important;
     padding: 2rem !important;
     box-sizing: border-box;
     position: relative;
+    text-align: center; /* Centre le contenu */
+}
+
+.full-width-section h2 {
+    text-align: center; /* Centre le titre */
+    margin-bottom: 1.5rem;
+}
+
+.full-width-section .form-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centre les contrôles de recherche */
+    gap: 1rem;
+}
+
+.full-width-section .search-controls {
+    justify-content: center; /* Centre les boutons de recherche */
 }
 
 .full-width-section .table-container {
@@ -548,6 +565,7 @@ footer { text-align: center; padding: 1.5rem; background-color: var(--primary-co
     max-width: none !important;
     overflow-x: auto;
     margin: 0 auto;
+    text-align: initial; /* Restaure l'alignement normal pour le tableau */
 }
 
 /* Sélecteur de langue */
