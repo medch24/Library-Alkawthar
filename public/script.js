@@ -6,65 +6,80 @@ let currentLanguage = 'ar';
 let currentPage = 1;
 let totalPages = 1;
 let isLoading = false;
-let pendingChanges = [];
-let barcodeStream = null;
-let barcodeScanner = null;
+let currentSort = { column: 'title', order: 'asc' }; // État de tri par défaut
+let barcodeStream = null; // Pour la caméra
 
-// Fonction pour formater les dates selon la langue courante
-function formatDateByLanguage(date, language = currentLanguage) {
-    const d = new Date(date);
-    switch (language) {
-        case 'ar':
-            return d.toLocaleDateString('fr-FR'); // Utilise les chiffres français même en arabe
-        case 'fr':
-            return d.toLocaleDateString('fr-FR');
-        case 'en':
-            return d.toLocaleDateString('en-US');
-        default:
-            return d.toLocaleDateString('fr-FR');
-    }
-}
-
-// Fonction pour obtenir le texte traduit
-function getTranslatedText(key) {
-    return translations[currentLanguage] && translations[currentLanguage][key] || key;
-}
-
-// Dictionnaire des traductions
+// --- TRADUCTIONS COMPLÈTES ---
 const translations = {
     ar: {
+        welcome_title: 'مرحباً بكم في مكتبة مدارس الكوثر العالمية',
+        welcome_subtitle: 'الرجاء إدخال بيانات الاعتماد الخاصة بك للوصول إلى لوحة التحكم.',
+        username_placeholder: 'اسم المستخدم',
+        password_placeholder: 'كلمة المرور',
+        login_button: 'تسجيل الدخول',
+        dashboard_title: 'لوحة تحكم مكتبة الكوثر',
         school_name: 'مدارس الكوثر العالمية',
         logout: 'تسجيل الخروج',
+        loading_data: 'تحميل البيانات...',
+        overdue_books_title: 'كتب متأخرة في الإرجاع',
+        dismiss: 'إخفاء التنبيه',
         library_stats: 'إحصائيات المكتبة',
         total_books: 'إجمالي الكتب',
         loaned_books: 'الكتب المعارة',
         available_books: 'الكتب المتاحة',
         copies_loaned: 'عدد النسخ المعارة',
+        view_student_borrowers: 'عرض الطلاب المستعيرين',
+        view_teacher_borrowers: 'عرض المدرسين المستعيرين',
+        export_excel_data: 'تحميل بيانات Excel',
+        loan_management: 'إدارة الإعارة',
+        loan_isbn_label: 'ISBN الكتاب',
+        scan_barcode_title: 'مسح الباركود',
+        book_title_label: 'عنوان الكتاب',
+        borrower_type_label: 'نوع المستعير',
+        student_option: 'طالب',
+        teacher_option: 'مدرس/ة',
+        borrower_name_label: 'اسم المستعير',
+        class_subject_label: 'الفصل/المادة',
+        loan_copies_label: 'عدد النسخ المستعارة',
+        available_copies_info: 'عدد النسخ المتاحة:',
+        loan_date_label: 'تاريخ الإعارة',
+        return_date_label: 'تاريخ التسليم',
+        loan_book_button: 'إعارة الكتاب',
+        add_book_manually: 'إضافة كتاب يدوياً',
+        manual_isbn_label: 'ISBN',
+        manual_title_label: 'عنوان الكتاب',
+        manual_copies_label: 'عدد النسخ',
+        manual_subject_label: 'المادة',
+        manual_level_label: 'المستوى',
+        manual_language_label: 'اللغة',
+        manual_corner_name_label: 'اسم الركن',
+        manual_corner_number_label: 'رقم الركن',
+        add_book_button: 'إضافة الكتاب',
+        upload_excel: 'رفع ملف Excel للكتب',
+        choose_excel_file_label: 'اختر ملف Excel',
+        upload_file_button: 'رفع الملف',
         inventory_search: 'البحث في المخزون وإدارة الكتب',
         search_placeholder: 'ابحث بالعنوان أو ISBN أو المادة...',
         refresh: 'تحديث',
-        scan_barcode: 'مسح الباركود',
         save_all_changes: 'حفظ جميع التغييرات',
+        previous_page: 'السابق',
+        next_page: 'التالي',
+        page_info: 'صفحة {currentPage} من {totalPages}',
+        copyright: '© 2025 مدارس الكوثر العالمية - جميع الحقوق محفوظة.',
         books_loaned_list: 'قائمة الكتب المعارة',
-        search_in_loans: 'ابحث في الإعارات...',
         student_borrowers_list: 'قائمة الطلاب المستعيرين',
         teacher_borrowers_list: 'قائمة المدرسين المستعيرين',
+        search_in_loans: 'ابحث بالاسم، العنوان، أو ISBN...',
         extend_return_date: 'تمديد فترة الارجاع',
+        current_return_date: 'تاريخ الإرجاع الحالي',
         new_return_date: 'تاريخ الإرجاع الجديد',
         extend_loan: 'تمديد الإعارة',
-        current_return_date: 'تاريخ الإرجاع الحالي',
-        return_book: 'إرجاع',
-        book_returned_success: 'تم إرجاع الكتاب بنجاح!',
-        return_error: 'خطأ في إرجاع الكتاب',
-        cannot_delete_loaned: 'لا يمكن حذف هذا الكتاب!',
-        copies_currently_loaned: 'نسخة معارة حالياً',
-        must_return_all_copies: 'يجب إرجاع جميع النسخ أولاً',
-        borrower_name: 'اسم المستعير',
-        class_section: 'الصف/القسم',
-        loan_type: 'النوع',
-        loan_date_col: 'تاريخ الإعارة',
-        return_date_col: 'تاريخ الإرجاع',
-        loading_data: 'تحميل البيانات...',
+        scan_barcode_modal_title: 'مسح الباركود',
+        start_scan_button: 'بدء المسح',
+        stop_scan_button: 'إيقاف المسح',
+        code_detected_text: 'تم اكتشاف الرمز:',
+        use_this_code_button: 'استخدام هذا الرمز',
+        camera_help_text: 'وجه الكاميرا نحو الباركود للمسح التلقائي',
         isbn: 'ISBN',
         title: 'العنوان',
         total_copies: 'إجمالي النسخ',
@@ -76,127 +91,193 @@ const translations = {
         corner_name: 'اسم الركن',
         corner_number: 'رقم الركن',
         actions: 'الإجراءات',
-        teacher_name: 'اسم المدرس',
-        student_name: 'اسم الطالب',
-        book_title: 'عنوان الكتاب',
-        copies_count: 'عدد النسخ',
-        overdue_days: 'أيام التأخير',
+        edit: 'تعديل',
+        delete: 'حذف',
+        return_book: 'إرجاع',
+        extend: 'تمديد',
         book_not_found: 'كتاب غير موجود',
-        loading_books: 'جاري تحميل الكتب...',
-        loading_loans: 'جاري تحميل الإعارات...',
-        loading_stats: 'جاري حساب الإحصائيات...',
-        data_loaded: 'تم تحميل البيانات بنجاح!',
-        loan_management: 'إدارة الإعارة',
-        add_book_manually: 'إضافة كتاب يدوياً',
-        upload_excel: 'رفع ملف Excel للكتب',
-        overdue_books_title: 'كتب متأخرة في الإرجاع',
-        dismiss: 'إخفاء التنبيه',
-        borrower_type: 'نوع المستعير',
-        student: 'طالب',
-        teacher: 'مدرس/ة',
-        view_student_borrowers: 'عرض الطلاب المستعيرين',
-        view_teacher_borrowers: 'عرض المدرسين المستعيرين',
-        export_excel_data: 'تحميل بيانات Excel'
+        no_results: 'لا توجد نتائج.',
+        select_a_valid_book: 'الرجاء تحديد كتاب صالح أولاً.',
+        confirm_delete_title: 'تأكيد الحذف',
+        confirm_delete_text: 'هل أنت متأكد من حذف الكتاب "{title}"؟ لا يمكن التراجع عن هذا الإجراء.',
+        cancel: 'إلغاء',
+        confirm: 'تأكيد',
+        loan_limit_reached: 'لقد بلغ المستعير الحد الأقصى لعدد الكتب المستعارة.',
+        not_enough_copies: 'لا توجد نسخ كافية متاحة. المتاح: {available}',
+        select_book_title: 'تحديد كتاب',
+        multiple_books_found: 'تم العثور على عدة كتب بنفس رقم ISBN. الرجاء تحديد الكتاب الصحيح للإعارة:',
+        loan_date_col: 'تاريخ الإعارة',
+        return_date_col: 'تاريخ الإرجاع',
+        overdue_days: 'أيام التأخير',
     },
     fr: {
+        welcome_title: 'Bienvenue à la bibliothèque des Écoles Internationales Al-Kawthar',
+        welcome_subtitle: 'Veuillez saisir vos identifiants pour accéder au tableau de bord.',
+        username_placeholder: 'Nom d\'utilisateur',
+        password_placeholder: 'Mot de passe',
+        login_button: 'Se connecter',
+        dashboard_title: 'Tableau de bord de la bibliothèque Al-Kawthar',
         school_name: 'Écoles Internationales Al-Kawthar',
         logout: 'Se déconnecter',
+        loading_data: 'Chargement des données...',
+        overdue_books_title: 'Livres en retard',
+        dismiss: 'Masquer l\'alerte',
         library_stats: 'Statistiques de la bibliothèque',
         total_books: 'Total des livres',
         loaned_books: 'Livres prêtés',
         available_books: 'Livres disponibles',
-        copies_loaned: 'Nombre de copies prêtées',
+        copies_loaned: 'Copies prêtées',
+        view_student_borrowers: 'Voir les étudiants emprunteurs',
+        view_teacher_borrowers: 'Voir les enseignants emprunteurs',
+        export_excel_data: 'Exporter les données Excel',
+        loan_management: 'Gestion des prêts',
+        loan_isbn_label: 'ISBN du livre',
+        scan_barcode_title: 'Scanner le code-barres',
+        book_title_label: 'Titre du livre',
+        borrower_type_label: 'Type d\'emprunteur',
+        student_option: 'Étudiant',
+        teacher_option: 'Enseignant',
+        borrower_name_label: 'Nom de l\'emprunteur',
+        class_subject_label: 'Classe/Matière',
+        loan_copies_label: 'Nombre de copies prêtées',
+        available_copies_info: 'Copies disponibles :',
+        loan_date_label: 'Date du prêt',
+        return_date_label: 'Date de retour',
+        loan_book_button: 'Prêter le livre',
+        add_book_manually: 'Ajouter un livre manuellement',
+        manual_isbn_label: 'ISBN',
+        manual_title_label: 'Titre du livre',
+        manual_copies_label: 'Nombre de copies',
+        manual_subject_label: 'Matière',
+        manual_level_label: 'Niveau',
+        manual_language_label: 'Langue',
+        manual_corner_name_label: 'Nom du coin',
+        manual_corner_number_label: 'Numéro du coin',
+        add_book_button: 'Ajouter le livre',
+        upload_excel: 'Importer un fichier Excel',
+        choose_excel_file_label: 'Choisir un fichier Excel',
+        upload_file_button: 'Importer le fichier',
         inventory_search: 'Recherche et gestion de l\'inventaire',
-        search_placeholder: 'Rechercher par titre, ISBN ou matière...',
+        search_placeholder: 'Rechercher par titre, ISBN, matière...',
         refresh: 'Actualiser',
-        scan_barcode: 'Scanner code-barres',
-        save_all_changes: 'Sauvegarder tous les changements',
+        save_all_changes: 'Sauvegarder les changements',
+        previous_page: 'Précédent',
+        next_page: 'Suivant',
+        page_info: 'Page {currentPage} sur {totalPages}',
+        copyright: '© 2025 Écoles Internationales Al-Kawthar - Tous droits réservés.',
         books_loaned_list: 'Liste des livres prêtés',
-        search_in_loans: 'Rechercher dans les prêts...',
         student_borrowers_list: 'Liste des étudiants emprunteurs',
         teacher_borrowers_list: 'Liste des enseignants emprunteurs',
+        search_in_loans: 'Rechercher par nom, titre ou ISBN...',
         extend_return_date: 'Prolonger la date de retour',
+        current_return_date: 'Date de retour actuelle',
         new_return_date: 'Nouvelle date de retour',
         extend_loan: 'Prolonger le prêt',
-        current_return_date: 'Date de retour actuelle',
-        return_book: 'Retourner',
-        book_returned_success: 'Livre retourné avec succès!',
-        return_error: 'Erreur lors du retour',
-        cannot_delete_loaned: 'Impossible de supprimer ce livre!',
-        copies_currently_loaned: 'copies actuellement prêtées',
-        must_return_all_copies: 'Toutes les copies doivent être retournées d\'abord',
-        borrower_name: 'Nom de l\'emprunteur',
-        class_section: 'Classe/Section',
-        loan_type: 'Type',
-        loan_date_col: 'Date de prêt',
-        return_date_col: 'Date de retour',
-        loading_data: 'Chargement des données...',
+        scan_barcode_modal_title: 'Scanner le code-barres',
+        start_scan_button: 'Démarrer le scan',
+        stop_scan_button: 'Arrêter le scan',
+        code_detected_text: 'Code détecté :',
+        use_this_code_button: 'Utiliser ce code',
+        camera_help_text: 'Dirigez la caméra vers le code-barres pour un scan automatique',
         isbn: 'ISBN',
         title: 'Titre',
-        total_copies: 'Copies totales',
-        loaned_copies: 'Copies prêtées',
-        available_copies: 'Copies disponibles',
+        total_copies: 'Copies Totales',
+        loaned_copies: 'Copies Prêtées',
+        available_copies: 'Copies Disponibles',
         subject: 'Matière',
         level: 'Niveau',
         language: 'Langue',
-        corner_name: 'Nom du coin',
-        corner_number: 'Numéro du coin',
+        corner_name: 'Nom du Coin',
+        corner_number: 'N° du Coin',
         actions: 'Actions',
-        teacher_name: 'Nom de l\'enseignant',
-        student_name: 'Nom de l\'étudiant',
-        book_title: 'Titre du livre',
-        copies_count: 'Nombre de copies',
-        overdue_days: 'Jours de retard',
+        edit: 'Modifier',
+        delete: 'Supprimer',
+        return_book: 'Retourner',
+        extend: 'Prolonger',
         book_not_found: 'Livre introuvable',
-        loading_books: 'Chargement des livres...',
-        loading_loans: 'Chargement des prêts...',
-        loading_stats: 'Calcul des statistiques...',
-        data_loaded: 'Données chargées avec succès!',
-        loan_management: 'Gestion des prêts',
-        add_book_manually: 'Ajouter un livre manuellement',
-        upload_excel: 'Télécharger fichier Excel',
-        overdue_books_title: 'Livres en retard',
-        dismiss: 'Masquer l\'alerte',
-        borrower_type: 'Type d\'emprunteur',
-        student: 'Étudiant',
-        teacher: 'Enseignant',
-        view_student_borrowers: 'Voir les étudiants emprunteurs',
-        view_teacher_borrowers: 'Voir les enseignants emprunteurs',
-        export_excel_data: 'Télécharger données Excel'
+        no_results: 'Aucun résultat.',
+        select_a_valid_book: 'Veuillez d\'abord sélectionner un livre valide.',
+        confirm_delete_title: 'Confirmer la suppression',
+        confirm_delete_text: 'Êtes-vous sûr de vouloir supprimer le livre "{title}" ? Cette action est irréversible.',
+        cancel: 'Annuler',
+        confirm: 'Confirmer',
+        loan_limit_reached: 'L\'emprunteur a atteint la limite de prêts.',
+        not_enough_copies: 'Pas assez de copies disponibles. Disponibles : {available}',
+        select_book_title: 'Sélectionner un livre',
+        multiple_books_found: 'Plusieurs livres trouvés avec cet ISBN. Veuillez sélectionner le bon livre à prêter :',
+        loan_date_col: 'Date de prêt',
+        return_date_col: 'Date de retour',
+        overdue_days: 'Jours de retard',
     },
     en: {
+        welcome_title: 'Welcome to Al-Kawthar International Schools Library',
+        welcome_subtitle: 'Please enter your credentials to access the dashboard.',
+        username_placeholder: 'Username',
+        password_placeholder: 'Password',
+        login_button: 'Login',
+        dashboard_title: 'Al-Kawthar Library Dashboard',
         school_name: 'Al-Kawthar International Schools',
         logout: 'Logout',
+        loading_data: 'Loading data...',
+        overdue_books_title: 'Overdue Books',
+        dismiss: 'Dismiss Alert',
         library_stats: 'Library Statistics',
         total_books: 'Total Books',
         loaned_books: 'Loaned Books',
         available_books: 'Available Books',
         copies_loaned: 'Copies Loaned',
+        view_student_borrowers: 'View Student Borrowers',
+        view_teacher_borrowers: 'View Teacher Borrowers',
+        export_excel_data: 'Export Excel Data',
+        loan_management: 'Loan Management',
+        loan_isbn_label: 'Book ISBN',
+        scan_barcode_title: 'Scan Barcode',
+        book_title_label: 'Book Title',
+        borrower_type_label: 'Borrower Type',
+        student_option: 'Student',
+        teacher_option: 'Teacher',
+        borrower_name_label: 'Borrower Name',
+        class_subject_label: 'Class/Subject',
+        loan_copies_label: 'Number of Copies Loaned',
+        available_copies_info: 'Available copies:',
+        loan_date_label: 'Loan Date',
+        return_date_label: 'Return Date',
+        loan_book_button: 'Loan Book',
+        add_book_manually: 'Add Book Manually',
+        manual_isbn_label: 'ISBN',
+        manual_title_label: 'Book Title',
+        manual_copies_label: 'Number of Copies',
+        manual_subject_label: 'Subject',
+        manual_level_label: 'Level',
+        manual_language_label: 'Language',
+        manual_corner_name_label: 'Corner Name',
+        manual_corner_number_label: 'Corner Number',
+        add_book_button: 'Add Book',
+        upload_excel: 'Upload Excel File',
+        choose_excel_file_label: 'Choose Excel File',
+        upload_file_button: 'Upload File',
         inventory_search: 'Inventory Search & Management',
-        search_placeholder: 'Search by title, ISBN or subject...',
+        search_placeholder: 'Search by title, ISBN, or subject...',
         refresh: 'Refresh',
-        scan_barcode: 'Scan Barcode',
         save_all_changes: 'Save All Changes',
+        previous_page: 'Previous',
+        next_page: 'Next',
+        page_info: 'Page {currentPage} of {totalPages}',
+        copyright: '© 2025 Al-Kawthar International Schools - All rights reserved.',
         books_loaned_list: 'Loaned Books List',
-        search_in_loans: 'Search in loans...',
         student_borrowers_list: 'Student Borrowers List',
         teacher_borrowers_list: 'Teacher Borrowers List',
+        search_in_loans: 'Search by name, title, or ISBN...',
         extend_return_date: 'Extend Return Date',
+        current_return_date: 'Current Return Date',
         new_return_date: 'New Return Date',
         extend_loan: 'Extend Loan',
-        current_return_date: 'Current Return Date',
-        return_book: 'Return',
-        book_returned_success: 'Book returned successfully!',
-        return_error: 'Error returning book',
-        cannot_delete_loaned: 'Cannot delete this book!',
-        copies_currently_loaned: 'copies currently on loan',
-        must_return_all_copies: 'All copies must be returned first',
-        borrower_name: 'Borrower Name',
-        class_section: 'Class/Section',
-        loan_type: 'Type',
-        loan_date_col: 'Loan Date',
-        return_date_col: 'Return Date',
-        loading_data: 'Loading data...',
+        scan_barcode_modal_title: 'Scan Barcode',
+        start_scan_button: 'Start Scan',
+        stop_scan_button: 'Stop Scan',
+        code_detected_text: 'Code Detected:',
+        use_this_code_button: 'Use This Code',
+        camera_help_text: 'Point the camera at the barcode for automatic scanning',
         isbn: 'ISBN',
         title: 'Title',
         total_copies: 'Total Copies',
@@ -206,186 +287,96 @@ const translations = {
         level: 'Level',
         language: 'Language',
         corner_name: 'Corner Name',
-        corner_number: 'Corner Number',
+        corner_number: 'Corner No.',
         actions: 'Actions',
-        teacher_name: 'Teacher Name',
-        student_name: 'Student Name',
-        book_title: 'Book Title',
-        copies_count: 'Number of Copies',
-        overdue_days: 'Overdue Days',
+        edit: 'Edit',
+        delete: 'Delete',
+        return_book: 'Return',
+        extend: 'Extend',
         book_not_found: 'Book not found',
-        loading_books: 'Loading books...',
-        loading_loans: 'Loading loans...',
-        loading_stats: 'Calculating statistics...',
-        data_loaded: 'Data loaded successfully!',
-        loan_management: 'Loan Management',
-        add_book_manually: 'Add Book Manually',
-        upload_excel: 'Upload Excel File',
-        overdue_books_title: 'Overdue Books',
-        dismiss: 'Dismiss Alert',
-        borrower_type: 'Borrower Type',
-        student: 'Student',
-        teacher: 'Teacher',
-        view_student_borrowers: 'View Student Borrowers',
-        view_teacher_borrowers: 'View Teacher Borrowers',
-        export_excel_data: 'Download Excel Data'
+        no_results: 'No results found.',
+        select_a_valid_book: 'Please select a valid book first.',
+        confirm_delete_title: 'Confirm Deletion',
+        confirm_delete_text: 'Are you sure you want to delete the book "{title}"? This action cannot be undone.',
+        cancel: 'Cancel',
+        confirm: 'Confirm',
+        loan_limit_reached: 'The borrower has reached the maximum loan limit.',
+        not_enough_copies: 'Not enough copies available. Available: {available}',
+        select_book_title: 'Select a Book',
+        multiple_books_found: 'Multiple books found with this ISBN. Please select the correct book to loan:',
+        loan_date_col: 'Loan Date',
+        return_date_col: 'Return Date',
+        overdue_days: 'Overdue Days',
     }
 };
 
+// --- FONCTIONS UTILITAIRES ---
+
+function getTranslatedText(key, replacements = {}) {
+    let text = translations[currentLanguage]?.[key] || key;
+    for (const placeholder in replacements) {
+        text = text.replace(`{${placeholder}}`, replacements[placeholder]);
+    }
+    return text;
+}
+
+function updateTranslations() {
+    document.querySelectorAll('[data-key]').forEach(el => {
+        el.textContent = getTranslatedText(el.dataset.key);
+    });
+    document.querySelectorAll('[data-key-placeholder]').forEach(el => {
+        el.placeholder = getTranslatedText(el.dataset.keyPlaceholder);
+    });
+    document.querySelectorAll('[data-key-title]').forEach(el => {
+        el.title = getTranslatedText(el.dataset.keyTitle);
+    });
+    updatePaginationControls();
+    if (document.getElementById('dashboard-page').style.display !== 'none') {
+        renderTable(allBooks);
+    }
+}
+
+function changeLanguage(lang) {
+    currentLanguage = lang;
+    localStorage.setItem('preferred_language', lang);
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === lang);
+    });
+    updateTranslations();
+}
+
+function showLoadingBar() {
+    document.getElementById('loading-bar').style.display = 'block';
+}
+
+function hideLoadingBar() {
+    document.getElementById('loading-bar').style.display = 'none';
+}
+
+function formatDate(dateString) {
+    if (!dateString) return '';
+    // Utilise un format cohérent pour éviter les problèmes de fuseau horaire
+    return new Date(dateString).toLocaleDateString(currentLanguage === 'en' ? 'en-CA' : 'fr-CA');
+}
+
+
+// --- LOGIQUE PRINCIPALE ---
+
 document.addEventListener('DOMContentLoaded', () => {
+    // --- Initialisation des éléments du DOM ---
     const loginPage = document.getElementById('login-page');
     const dashboardPage = document.getElementById('dashboard-page');
     const loginForm = document.getElementById('login-form');
     const loanForm = document.getElementById('loan-form');
+    const manualBookForm = document.getElementById('manual-book-form');
     const searchInput = document.getElementById('search-input');
-    const modalOverlay = document.getElementById('modal-overlay');
-    const loansModal = document.getElementById('loans-modal');
 
-    // FONCTIONS DE TRADUCTION ET BARRE DE PROGRESSION
-    
-    // Fonction pour changer la langue
-    function changeLanguage(lang) {
-        currentLanguage = lang;
-        localStorage.setItem('preferred_language', lang);
-        
-        // Changer la direction du document
-        if (lang === 'ar') {
-            document.documentElement.setAttribute('dir', 'rtl');
-            document.documentElement.setAttribute('lang', 'ar');
-        } else {
-            document.documentElement.setAttribute('dir', 'ltr');
-            document.documentElement.setAttribute('lang', lang);
-        }
-        
-        // Mettre à jour tous les éléments traduits
-        updateTranslations();
-        
-        // Mettre à jour les boutons de langue
-        document.querySelectorAll('.lang-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.lang === lang);
-        });
-    }
-    
-    // Fonction pour mettre à jour les traductions
-    function updateTranslations() {
-        const currentTranslations = translations[currentLanguage];
-        if (!currentTranslations) {
-            console.warn('No translations found for language:', currentLanguage);
-            return;
-        }
-        
-        // Mettre à jour les éléments avec data-key
-        document.querySelectorAll('[data-key]').forEach(element => {
-            if (!element) return;
-            const key = element.getAttribute('data-key');
-            if (key && currentTranslations[key]) {
-                try {
-                    element.textContent = currentTranslations[key];
-                } catch (error) {
-                    console.warn('Error updating text for element with key:', key, error);
-                }
-            }
-        });
-        
-        // Mettre à jour les placeholders
-        document.querySelectorAll('[data-key-placeholder]').forEach(element => {
-            if (!element) return;
-            const key = element.getAttribute('data-key-placeholder');
-            if (key && currentTranslations[key]) {
-                try {
-                    element.placeholder = currentTranslations[key];
-                } catch (error) {
-                    console.warn('Error updating placeholder for element with key:', key, error);
-                }
-            }
-        });
-    }
-    
-    // Gestionnaires d'événements pour les boutons de langue
-    document.querySelectorAll('.lang-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            changeLanguage(btn.dataset.lang);
-        });
-    });
-    
-    // Charger la langue préférée après la définition des gestionnaires
-    const savedLang = localStorage.getItem('preferred_language') || 'ar';
-    // Attendre un peu pour s'assurer que le DOM est prêt
-    setTimeout(() => {
-        changeLanguage(savedLang);
-    }, 100);
-    
-    // FONCTIONS DE BARRE DE PROGRESSION
-    
-    let loadingSteps = [];
-    let currentStep = 0;
-    
-    function showLoadingBar(steps) {
-        loadingSteps = steps;
-        currentStep = 0;
-        const loadingBar = document.getElementById('loading-bar');
-        const progressFill = document.getElementById('progress-fill');
-        
-        if (loadingBar) loadingBar.style.display = 'block';
-        if (loadingBar) loadingBar.classList.add('show');
-        if (progressFill) progressFill.style.width = '0%';
-        
-        if (steps && steps.length > 0) {
-            updateLoadingText(steps[0]);
-        }
-    }
-    
-    function updateProgress(stepIndex, stepText) {
-        if (!loadingSteps || stepIndex >= loadingSteps.length) return;
-        
-        currentStep = stepIndex;
-        const progressPercent = ((stepIndex + 1) / loadingSteps.length) * 100;
-        const progressFill = document.getElementById('progress-fill');
-        
-        if (progressFill) {
-            progressFill.style.width = progressPercent + '%';
-        }
-        
-        if (stepText) {
-            updateLoadingText(stepText);
-        }
-        
-        // Si c'est la dernière étape, cacher la barre après un délai
-        if (stepIndex === loadingSteps.length - 1) {
-            setTimeout(() => {
-                hideLoadingBar();
-            }, 1000);
-        }
-    }
-    
-    function updateLoadingText(text) {
-        const loadingTextSpan = document.getElementById('loading-text-span');
-        if (loadingTextSpan) {
-            // Utiliser la traduction si disponible
-            const currentTranslations = translations[currentLanguage];
-            const translatedText = currentTranslations[text] || text;
-            loadingTextSpan.textContent = translatedText;
-        }
-    }
-    
-    function hideLoadingBar() {
-        const loadingBar = document.getElementById('loading-bar');
-        if (!loadingBar) return;
-        
-        loadingBar.classList.remove('show');
-        loadingBar.classList.add('hide');
-        
-        setTimeout(() => {
-            loadingBar.style.display = 'none';
-            loadingBar.classList.remove('hide');
-        }, 500);
-    }
-
-    // Connexion
+    // --- GESTION DE LA CONNEXION ---
     loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        if (document.getElementById('username').value === 'Alkawthar@30' && 
-            document.getElementById('password').value === 'Alkawthar@30') {
+        if (document.getElementById('username').value === 'Alkawthar@30' && document.getElementById('password').value === 'Alkawthar@30') {
             localStorage.setItem('isLoggedIn', 'true');
             showDashboard();
         } else {
@@ -393,29 +384,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Déconnexion
     document.getElementById('logout-btn').addEventListener('click', () => {
         localStorage.removeItem('isLoggedIn');
         window.location.reload();
     });
 
-    // Afficher le tableau de bord
     function showDashboard() {
         loginPage.style.display = 'none';
         dashboardPage.style.display = 'block';
+        const savedLang = localStorage.getItem('preferred_language') || 'ar';
+        changeLanguage(savedLang);
+        initializeBarcodeScanner();
         loadAllData();
     }
 
-    // Vérifier la session après définition de toutes les fonctions
     if (localStorage.getItem('isLoggedIn') === 'true') {
         showDashboard();
     }
 
-    // Charger les données avec pagination optimisée
-    async function loadAllData(page = 1, search = '') {
+    // --- CHARGEMENT DES DONNÉES ---
+    async function loadAllData() {
         if (isLoading) return;
         isLoading = true;
-        
+        showLoadingBar();
         try {
             console.log('Démarrage du chargement des données...');
             // Afficher la barre de progression
@@ -483,27 +474,15 @@ document.addEventListener('DOMContentLoaded', () => {
             
             console.log('Données chargées avec succès:', allBooks.length, 'livres,', allLoans.length, 'prêts');
         } catch (error) {
-            console.error('Erreur lors du chargement des données:', error);
-            hideLoadingBar();
-            
-            // Message d'erreur plus informatif
-            let errorMessage = 'خطأ في تحميل البيانات';
-            if (error.message.includes('fetch')) {
-                errorMessage += ' - مشكلة في الاتصال بالخادم';
-            } else if (error.message.includes('HTTP Error')) {
-                errorMessage += ' - خطأ في الخادم: ' + error.message;
-            } else {
-                errorMessage += ': ' + error.message;
-            }
-            
-            alert(errorMessage);
+            console.error('Erreur de chargement des données:', error);
+            alert('Failed to load data: ' + error.message);
         } finally {
             isLoading = false;
+            hideLoadingBar();
         }
     }
 
-    // Mettre à jour les statistiques depuis l'API
-    async function updateStatsFromAPI() {
+    async function loadBooks(page = 1, search = '') {
         try {
             const response = await fetch('/api/statistics');
             if (response.ok) {
@@ -514,323 +493,127 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('copies-loaned-stat').textContent = stats.loanedCopies || 0;
             }
         } catch (error) {
-            console.error('Erreur lors du chargement des statistiques:', error);
-            // Fallback vers le calcul local
-            updateStats();
-        }
-    }
-    
-    // Mettre à jour les statistiques (méthode locale de fallback)
-    function updateStats() {
-        const totalCopies = allBooks.reduce((sum, book) => sum + (book.totalCopies || 0), 0);
-        const loanedCopies = allBooks.reduce((sum, book) => sum + (book.loanedCopies || 0), 0);
-        document.getElementById('total-books-stat').textContent = totalCopies;
-        document.getElementById('loaned-books-stat').textContent = loanedCopies;
-        document.getElementById('available-books-stat').textContent = totalCopies - loanedCopies;
-        document.getElementById('copies-loaned-stat').textContent = loanedCopies;
-    }
-    
-    // Contrôles de pagination
-    function updatePaginationControls() {
-        const paginationControls = document.getElementById('pagination-controls');
-        const pageInfo = document.getElementById('page-info');
-        const prevBtn = document.getElementById('prev-page-btn');
-        const nextBtn = document.getElementById('next-page-btn');
-        
-        if (totalPages > 1) {
-            paginationControls.style.display = 'flex';
-            pageInfo.textContent = `الصفحة ${currentPage} من ${totalPages}`;
-            prevBtn.disabled = currentPage <= 1;
-            nextBtn.disabled = currentPage >= totalPages;
-        } else {
-            paginationControls.style.display = 'none';
+            console.error("Erreur lors du chargement des livres:", error);
+            document.getElementById('books-table-body').innerHTML = `<tr><td colspan="11">${error.message}</td></tr>`;
         }
     }
 
-    // Vérifier les livres en retard avec différents niveaux de criticité
-    function checkOverdueBooks() {
-        const currentDate = new Date();
-        currentDate.setHours(0, 0, 0, 0); // Reset time to compare dates only
-        
-        const overdueLoans = allLoans.filter(loan => {
-            const returnDate = new Date(loan.returnDate);
-            returnDate.setHours(0, 0, 0, 0);
-            return returnDate < currentDate;
-        });
-        
-        // Catégoriser par niveau de retard
-        const criticalOverdue = overdueLoans.filter(loan => {
-            const returnDate = new Date(loan.returnDate);
-            const daysDiff = Math.floor((currentDate - returnDate) / (1000 * 60 * 60 * 24));
-            return daysDiff >= 7; // 7 jours ou plus
-        });
-        
-        const moderateOverdue = overdueLoans.filter(loan => {
-            const returnDate = new Date(loan.returnDate);
-            const daysDiff = Math.floor((currentDate - returnDate) / (1000 * 60 * 60 * 24));
-            return daysDiff >= 3 && daysDiff < 7; // 3-6 jours
-        });
-        
-        const recentOverdue = overdueLoans.filter(loan => {
-            const returnDate = new Date(loan.returnDate);
-            const daysDiff = Math.floor((currentDate - returnDate) / (1000 * 60 * 60 * 24));
-            return daysDiff > 0 && daysDiff < 3; // 1-2 jours
-        });
-        
-        const overdueNotifications = document.getElementById('overdue-notifications');
-        const overdueList = document.getElementById('overdue-list');
-        
-        if (overdueLoans.length > 0) {
-            let overdueHTML = '';
-            
-            // Section critique (7+ jours)
-            if (criticalOverdue.length > 0) {
-                overdueHTML += '<div class="overdue-section critical-overdue">';
-                overdueHTML += `<h4><i class="fas fa-exclamation-triangle"></i> تأخير خطير (${criticalOverdue.length} كتاب)</h4>`;
-                
-                criticalOverdue.forEach(loan => {
-                    const book = allBooks.find(b => b.isbn === loan.isbn);
-                    const bookTitle = book ? book.title : 'عنوان غير محدد';
-                    const daysOverdue = Math.floor((currentDate - new Date(loan.returnDate)) / (1000 * 60 * 60 * 24));
-                    const borrowerTypeAr = loan.borrowerType === 'teacher' ? 'المدرس' : 'الطالب';
-                    
-                    overdueHTML += `
-                        <div class="overdue-item critical">
-                            <div class="overdue-info">
-                                <strong>${loan.studentName}</strong> (${borrowerTypeAr})
-                                <br>
-                                <span class="book-title">${bookTitle}</span>
-                                <br>
-                                <span class="overdue-days critical">متأخر ${daysOverdue} يوم</span>
-                                <span class="due-date">(الموعد المحدد: ${formatDateByLanguage(loan.returnDate)})</span>
-                            </div>
-                            <div class="overdue-actions">
-                                <button class="btn-small btn-danger contact-borrower" data-name="${loan.studentName}" data-type="${loan.borrowerType}">
-                                    <i class="fas fa-phone"></i> تواصل عاجل
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                });
-                overdueHTML += '</div>';
-            }
-            
-            // Section modérée (3-6 jours)
-            if (moderateOverdue.length > 0) {
-                overdueHTML += '<div class="overdue-section moderate-overdue">';
-                overdueHTML += `<h4><i class="fas fa-clock"></i> تأخير متوسط (${moderateOverdue.length} كتاب)</h4>`;
-                
-                moderateOverdue.forEach(loan => {
-                    const book = allBooks.find(b => b.isbn === loan.isbn);
-                    const bookTitle = book ? book.title : 'عنوان غير محدد';
-                    const daysOverdue = Math.floor((currentDate - new Date(loan.returnDate)) / (1000 * 60 * 60 * 24));
-                    const borrowerTypeAr = loan.borrowerType === 'teacher' ? 'المدرس' : 'الطالب';
-                    
-                    overdueHTML += `
-                        <div class="overdue-item moderate">
-                            <div class="overdue-info">
-                                <strong>${loan.studentName}</strong> (${borrowerTypeAr})
-                                <br>
-                                <span class="book-title">${bookTitle}</span>
-                                <br>
-                                <span class="overdue-days moderate">متأخر ${daysOverdue} يوم</span>
-                                <span class="due-date">(الموعد المحدد: ${formatDateByLanguage(loan.returnDate)})</span>
-                            </div>
-                            <div class="overdue-actions">
-                                <button class="btn-small btn-warning contact-borrower" data-name="${loan.studentName}" data-type="${loan.borrowerType}">
-                                    <i class="fas fa-phone"></i> تذكير
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                });
-                overdueHTML += '</div>';
-            }
-            
-            // Section récente (1-2 jours)
-            if (recentOverdue.length > 0) {
-                overdueHTML += '<div class="overdue-section recent-overdue">';
-                overdueHTML += `<h4><i class="fas fa-info-circle"></i> تأخير حديث (${recentOverdue.length} كتاب)</h4>`;
-                
-                recentOverdue.forEach(loan => {
-                    const book = allBooks.find(b => b.isbn === loan.isbn);
-                    const bookTitle = book ? book.title : 'عنوان غير محدد';
-                    const daysOverdue = Math.floor((currentDate - new Date(loan.returnDate)) / (1000 * 60 * 60 * 24));
-                    const borrowerTypeAr = loan.borrowerType === 'teacher' ? 'المدرس' : 'الطالب';
-                    
-                    overdueHTML += `
-                        <div class="overdue-item recent">
-                            <div class="overdue-info">
-                                <strong>${loan.studentName}</strong> (${borrowerTypeAr})
-                                <br>
-                                <span class="book-title">${bookTitle}</span>
-                                <br>
-                                <span class="overdue-days recent">متأخر ${daysOverdue} يوم</span>
-                                <span class="due-date">(الموعد المحدد: ${formatDateByLanguage(loan.returnDate)})</span>
-                            </div>
-                            <div class="overdue-actions">
-                                <button class="btn-small btn-info contact-borrower" data-name="${loan.studentName}" data-type="${loan.borrowerType}">
-                                    <i class="fas fa-phone"></i> تواصل
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                });
-                overdueHTML += '</div>';
-            }
-            
-            overdueList.innerHTML = overdueHTML;
-            overdueNotifications.style.display = 'block';
-            
-            // Add event listeners for contact buttons
-            document.querySelectorAll('.contact-borrower').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const name = this.dataset.name;
-                    const type = this.dataset.type;
-                    const typeAr = type === 'teacher' ? 'المدرس' : 'الطالب';
-                    alert(`يرجى التواصل مع ${typeAr}: ${name}
-لتذكيره بإرجاع الكتاب المتأخر.`);
-                });
-            });
-        } else {
-            overdueNotifications.style.display = 'none';
+    async function loadAllLoansOnce() {
+        if (allLoans.length > 0 && !isLoading) return;
+        try {
+            const response = await fetch(API_BASE_URL + '/api/loans/students'); // Exemple, pourrait être une route unifiée
+            if (!response.ok) throw new Error('Failed to fetch loans');
+            allLoans = await response.json();
+        } catch (error) {
+            console.error("Erreur lors du chargement des prêts:", error);
+            allLoans = [];
         }
     }
-    
-    // Add dismiss alert event listener after DOM is ready
-    setTimeout(() => {
-        const dismissButton = document.getElementById('dismiss-alert');
-        if (dismissButton) {
-            dismissButton.addEventListener('click', () => {
-                document.getElementById('overdue-notifications').style.display = 'none';
-            });
-        }
-    }, 1000);
 
-    // Afficher le tableau des livres - VERSION COMPLÈTE AVEC ÉDITION
+    async function updateStatsFromAPI() {
+        try {
+            const response = await fetch(API_BASE_URL + '/api/statistics');
+            if (!response.ok) throw new Error('Failed to fetch stats');
+            const stats = await response.json();
+            document.getElementById('total-books-stat').textContent = stats.totalCopies || 0;
+            document.getElementById('loaned-books-stat').textContent = stats.loanedCopies || 0;
+            document.getElementById('available-books-stat').textContent = stats.availableCopies || 0;
+            document.getElementById('copies-loaned-stat').textContent = stats.loanedCopies || 0;
+        } catch (error) {
+            console.error("Erreur lors de la mise à jour des statistiques:", error);
+        }
+    }
+
+    // --- GESTION DU TABLEAU (AFFICHAGE, TRI, ACTIONS) ---
+    function sortBooks(column) {
+        const order = (currentSort.column === column && currentSort.order === 'asc') ? 'desc' : 'asc';
+        currentSort = { column, order };
+        allBooks.sort((a, b) => {
+            const valA = a[column] || '';
+            const valB = b[column] || '';
+            if (typeof valA === 'number' && typeof valB === 'number') {
+                return order === 'asc' ? valA - valB : valB - valA;
+            }
+            return order === 'asc' ? String(valA).localeCompare(String(valB), undefined, { numeric: true }) : String(valB).localeCompare(String(valA), undefined, { numeric: true });
+        });
+        renderTable(allBooks);
+    }
+
     function renderTable(bookList) {
         const tableBody = document.getElementById('books-table-body');
-        if (!tableBody) {
-            console.error('Element books-table-body not found');
-            return;
-        }
-        
-        if (!Array.isArray(bookList)) {
-            console.warn('bookList is not an array:', bookList);
-            bookList = [];
-        }
-        
-        let tableHTML = '';
-        bookList.forEach((book, index) => {
-            if (!book || typeof book !== 'object') {
-                console.warn('Invalid book object at index', index, ':', book);
-                return;
-            }
-            
-            const totalCopies = parseInt(book.totalCopies) || 0;
-            const loanedCopies = parseInt(book.loanedCopies) || 0;
-            const availableCopies = totalCopies - loanedCopies;
-            const availabilityClass = availableCopies > 0 ? 'status-available' : 'status-unavailable';
-            const availabilityText = `${availableCopies}`;
-            
-            // Escape HTML content to prevent XSS
-            const escapeHtml = (text) => {
-                const div = document.createElement('div');
-                div.textContent = text || '';
-                return div.innerHTML;
-            };
-            
-            // Affichage amélioré avec gestion des copies multiples
-            const loanedCopiesDisplay = loanedCopies > 0 ? 
-                `<span class="loaned-copies-badge">${loanedCopies}</span>` : 
-                `<span class="no-loans">0</span>`;
-            
-            tableHTML += `<tr data-isbn="${escapeHtml(book.isbn)}" class="book-row">
-                <td class="editable-cell" data-field="isbn" data-original="${escapeHtml(book.isbn || '')}">${escapeHtml(book.isbn || '')}</td>
-                <td class="editable-cell" data-field="title" data-original="${escapeHtml(book.title || '')}">${escapeHtml(book.title || '')}</td>
-                <td class="editable-cell" data-field="totalCopies" data-original="${totalCopies}">${totalCopies}</td>
-                <td class="loaned-copies-cell">${loanedCopiesDisplay}</td>
-                <td class="${availabilityClass} availability-cell">${availabilityText}</td>
-                <td class="editable-cell" data-field="subject" data-original="${escapeHtml(book.subject || 'Non classé')}">${escapeHtml(book.subject || 'Non classé')}</td>
-                <td class="editable-cell" data-field="level" data-original="${escapeHtml(book.level || 'undefined')}">${escapeHtml(book.level || 'undefined')}</td>
-                <td class="editable-cell" data-field="language" data-original="${escapeHtml(book.language || 'Non spécifié')}">${escapeHtml(book.language || 'Non spécifié')}</td>
-                <td class="editable-cell" data-field="cornerName" data-original="${escapeHtml(book.cornerName || 'Non classé')}">${escapeHtml(book.cornerName || 'Non classé')}</td>
-                <td class="editable-cell" data-field="cornerNumber" data-original="${escapeHtml(book.cornerNumber || '0')}">${escapeHtml(book.cornerNumber || '0')}</td>
-                <td class="action-buttons">
-                    <button class="btn-small btn-primary edit-book-btn" data-isbn="${escapeHtml(book.isbn || '')}" title="Modifier le livre">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn-small btn-danger delete-book-btn" data-isbn="${escapeHtml(book.isbn || '')}" title="Supprimer le livre">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                    <button class="btn-small btn-info history-book-btn" data-isbn="${escapeHtml(book.isbn || '')}" title="Voir l'historique">
-                        <i class="fas fa-history"></i>
-                    </button>
-                </td>
+        const tableHead = document.querySelector('#books-table thead');
+        tableHead.innerHTML = `
+            <tr>
+                <th class="col-isbn" data-sort="isbn">${getTranslatedText('isbn')} <span class="sort-indicator">▲</span></th>
+                <th class="col-title" data-sort="title">${getTranslatedText('title')} <span class="sort-indicator">▲</span></th>
+                <th class="col-total" data-sort="totalCopies">${getTranslatedText('total_copies')} <span class="sort-indicator">▲</span></th>
+                <th class="col-loaned" data-sort="loanedCopies">${getTranslatedText('loaned_copies')} <span class="sort-indicator">▲</span></th>
+                <th class="col-available">${getTranslatedText('available_copies')}</th>
+                <th class="col-subject" data-sort="subject">${getTranslatedText('subject')} <span class="sort-indicator">▲</span></th>
+                <th class="col-level" data-sort="level">${getTranslatedText('level')} <span class="sort-indicator">▲</span></th>
+                <th class="col-lang" data-sort="language">${getTranslatedText('language')} <span class="sort-indicator">▲</span></th>
+                <th class="col-corner-name" data-sort="cornerName">${getTranslatedText('corner_name')} <span class="sort-indicator">▲</span></th>
+                <th class="col-corner-num" data-sort="cornerNumber">${getTranslatedText('corner_number')} <span class="sort-indicator">▲</span></th>
+                <th class="col-actions">${getTranslatedText('actions')}</th>
             </tr>`;
+        tableHead.querySelectorAll('th[data-sort]').forEach(th => {
+            if (th.dataset.sort === currentSort.column) th.classList.add('sorted', currentSort.order);
+            th.addEventListener('click', () => sortBooks(th.dataset.sort));
         });
-        
-        tableBody.innerHTML = tableHTML;
-        console.log('Table rendered with', bookList.length, 'books');
-        
-        // Ajouter les gestionnaires d'événements pour l'édition
-        try {
-            addTableEventListeners();
-        } catch (error) {
-            console.error('Error adding table event listeners:', error);
-        }
-        
-        // Mettre à jour les traductions après le rendu du tableau
-        setTimeout(() => {
-            try {
-                updateTranslations();
-            } catch (error) {
-                console.error('Error updating translations after table render:', error);
-            }
-        }, 100);
+        tableBody.innerHTML = (bookList || []).map(book => {
+            const availableCopies = (book.totalCopies || 0) - (book.loanedCopies || 0);
+            return `
+                <tr data-id="${book._id}" data-isbn="${book.isbn}">
+                    <td class="col-isbn">${book.isbn || ''}</td>
+                    <td class="col-title">${book.title || ''}</td>
+                    <td class="col-total">${book.totalCopies || 0}</td>
+                    <td class="col-loaned">${book.loanedCopies || 0}</td>
+                    <td class="availability-cell ${availableCopies > 0 ? 'status-available' : 'status-unavailable'}">${availableCopies}</td>
+                    <td class="col-subject">${book.subject || ''}</td>
+                    <td class="col-level">${book.level || ''}</td>
+                    <td class="col-lang">${book.language || ''}</td>
+                    <td class="col-corner-name">${book.cornerName || ''}</td>
+                    <td class="col-corner-num">${book.cornerNumber || ''}</td>
+                    <td class="col-actions action-buttons">
+                         <button class="btn-small btn-primary edit-book-btn" title="${getTranslatedText('edit')}"><i class="fas fa-edit"></i></button>
+                         <button class="btn-small btn-danger delete-book-btn" title="${getTranslatedText('delete')}"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`;
+        }).join('');
+        addTableActionListeners();
     }
 
-    // Recherche optimisée avec debounce
-    let searchTimeout;
-    searchInput.addEventListener('input', (e) => {
-        clearTimeout(searchTimeout);
-        const searchTerm = e.target.value.toLowerCase();
-        
-        // Debounce pour éviter trop de requêtes
-        searchTimeout = setTimeout(() => {
-            currentPage = 1; // Reset à la première page lors d'une nouvelle recherche
-            loadAllData(currentPage, searchTerm);
-        }, 300);
-    });
-    
-    // Gestionnaires de pagination
-    document.getElementById('prev-page-btn').addEventListener('click', () => {
-        if (currentPage > 1) {
-            currentPage--;
-            const searchTerm = searchInput.value.toLowerCase();
-            loadAllData(currentPage, searchTerm);
-        }
-    });
-    
-    document.getElementById('next-page-btn').addEventListener('click', () => {
-        if (currentPage < totalPages) {
-            currentPage++;
-            const searchTerm = searchInput.value.toLowerCase();
-            loadAllData(currentPage, searchTerm);
-        }
-    });
+    function addTableActionListeners() {
+        document.querySelectorAll('.delete-book-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const row = e.target.closest('tr');
+                const bookId = row.dataset.id;
+                const bookTitle = row.querySelector('.col-title').textContent;
+                if (confirm(getTranslatedText('confirm_delete_text', { title: bookTitle }))) {
+                    deleteBook(bookId);
+                }
+            });
+        });
+        // Listener pour l'édition à ajouter ici si nécessaire
+    }
 
-    // Mise à jour du titre du livre et des copies disponibles lors de la saisie ISBN
-    document.getElementById('loan-isbn').addEventListener('input', async (e) => {
+    async function deleteBook(bookId) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/books/${bookId}`, { method: 'DELETE' });
+            if (response.ok) {
+                await loadAllData();
+            } else {
+                const error = await response.json();
+                alert(`Error: ${error.message}`);
+            }
+        } catch (error) {
+            alert(`Network error: ${error.message}`);
+        }
+    }
+    
+    // --- GESTION DES PRÊTS ET ISBN MULTIPLES ---
+    document.getElementById('loan-isbn').addEventListener('change', async (e) => {
         const isbn = e.target.value.trim();
-        const bookTitleElement = document.getElementById('loan-book-title');
-        const availableCopiesDisplay = document.getElementById('available-copies-display');
-        const loanCopiesInput = document.getElementById('loan-copies');
-        
-        // Reset les champs d'abord
-        bookTitleElement.textContent = '-';
-        availableCopiesDisplay.textContent = '-';
-        
         if (!isbn) return;
         
         // Chercher le livre dans les données locales d'abord
@@ -882,53 +665,88 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Gestion des prêts avec support pour multiples copies
+    function populateLoanForm(book) {
+        const loanTitleEl = document.getElementById('loan-book-title');
+        const availableCopiesEl = document.getElementById('available-copies-display');
+        const loanCopiesInput = document.getElementById('loan-copies');
+
+        if (!book) {
+            loanTitleEl.textContent = getTranslatedText('book_not_found');
+            availableCopiesEl.textContent = '-';
+            loanForm.dataset.bookId = '';
+            return;
+        }
+        loanTitleEl.textContent = book.title;
+        const available = (book.totalCopies || 0) - (book.loanedCopies || 0);
+        availableCopiesEl.textContent = available;
+        loanCopiesInput.max = available;
+        loanCopiesInput.disabled = available <= 0;
+        loanForm.dataset.bookId = book._id;
+    }
+
+    function showBookSelectionModal(books) {
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
+        overlay.style.display = 'flex';
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <button class="close-modal-btn">&times;</button>
+            <h2>${getTranslatedText('select_book_title')}</h2>
+            <div class="modal-content">
+                <p>${getTranslatedText('multiple_books_found')}</p>
+                <ul id="book-selection-list" style="list-style: none; padding: 0;"></ul>
+            </div>`;
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+        const list = modal.querySelector('#book-selection-list');
+        books.forEach(book => {
+            const li = document.createElement('li');
+            li.textContent = `${book.title} (${getTranslatedText('available_copies')}: ${book.totalCopies - book.loanedCopies})`;
+            li.style.cursor = 'pointer';
+            li.style.padding = '10px';
+            li.style.borderBottom = '1px solid #eee';
+            li.dataset.bookId = book._id;
+            li.addEventListener('click', () => {
+                const selectedBook = books.find(b => b._id === li.dataset.bookId);
+                populateLoanForm(selectedBook);
+                document.body.removeChild(overlay);
+            });
+            list.appendChild(li);
+        });
+        const close = () => document.body.removeChild(overlay);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+        modal.querySelector('.close-modal-btn').addEventListener('click', close);
+    }
+    
     loanForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
-        const isbn = document.getElementById('loan-isbn').value.trim();
-        const requestedCopies = parseInt(document.getElementById('loan-copies').value) || 1;
-        const book = allBooks.find(b => b.isbn === isbn);
-        
-        if (!book) {
-            const alertText = currentLanguage === 'ar' ? 'الكتاب غير موجود!' :
-                            currentLanguage === 'fr' ? 'Livre introuvable!' : 'Book not found!';
-            alert(alertText);
+        const bookId = loanForm.dataset.bookId;
+        if (!bookId) {
+            alert(getTranslatedText('select_a_valid_book'));
             return;
         }
-        
-        const availableCopies = (book.totalCopies || 0) - (book.loanedCopies || 0);
-        if (requestedCopies > availableCopies) {
-            alert(`عدد النسخ المطلوبة (${requestedCopies}) أكبر من المتاح (${availableCopies})!`);
-            return;
-        }
-        
         const loanData = {
-            isbn: isbn,
-            title: book.title,
-            subject: book.subject || 'Non classé',
-            language: book.language || 'Non spécifié',
+            bookId,
             studentName: document.getElementById('student-name').value,
             studentClass: document.getElementById('student-class').value,
             borrowerType: document.getElementById('borrower-type').value,
-            loanDate: document.getElementById('loan-date').value,
+            loanDate: document.getElementById('loan-date').value || new Date().toISOString().split('T')[0],
             returnDate: document.getElementById('return-date').value,
-            copiesCount: requestedCopies
+            copiesCount: parseInt(document.getElementById('loan-copies').value) || 1
         };
-        
         try {
             await fetch('/api/loans', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(loanData)
             });
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message);
+            }
             loanForm.reset();
-            document.getElementById('loan-book-title').textContent = '-';
-            document.getElementById('available-copies-display').textContent = '-';
-            document.getElementById('loan-copies').value = 1;
-            document.getElementById('loan-copies').disabled = false;
-            document.getElementById('available-copies-display').style.color = '';
-            alert(`تم إعارة ${requestedCopies} نسخة من الكتاب بنجاح!`);
+            populateLoanForm(null);
             await loadAllData();
         } catch (error) {
             alert('خطأ في إعارة الكتاب');
@@ -967,40 +785,34 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('خطأ في تحميل ملف Excel');
         }
     });
-
-    // Manual book addition
-    document.getElementById('manual-book-form').addEventListener('submit', async (e) => {
+    
+    // --- AUTRES FORMULAIRES ---
+    manualBookForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
         const bookData = {
             isbn: document.getElementById('manual-isbn').value,
             title: document.getElementById('manual-title').value,
             totalCopies: parseInt(document.getElementById('manual-copies').value),
-            subject: document.getElementById('manual-subject').value || 'Non classé',
-            level: document.getElementById('manual-level').value || 'undefined',
-            language: document.getElementById('manual-language').value || 'Non spécifié',
-            cornerName: document.getElementById('manual-corner-name').value || 'Non classé',
-            cornerNumber: document.getElementById('manual-corner-number').value || '0',
-            loanedCopies: 0
+            subject: document.getElementById('manual-subject').value,
+            level: document.getElementById('manual-level').value,
+            language: document.getElementById('manual-language').value,
+            cornerName: document.getElementById('manual-corner-name').value,
+            cornerNumber: document.getElementById('manual-corner-number').value,
         };
-        
         try {
             const response = await fetch('/api/books', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(bookData)
             });
-            
-            if (response.ok) {
-                document.getElementById('manual-book-form').reset();
-                alert('تم إضافة الكتاب بنجاح!');
-                await loadAllData();
-            } else {
+            if (!response.ok) {
                 const error = await response.json();
-                alert('خطأ في إضافة الكتاب: ' + (error.message || 'خطأ غير معروف'));
+                throw new Error(error.message);
             }
+            manualBookForm.reset();
+            await loadAllData();
         } catch (error) {
-            alert('خطأ في إضافة الكتاب: ' + error.message);
+            alert(`Erreur d'ajout: ${error.message}`);
         }
     });
 
@@ -1037,13 +849,27 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             statusDiv.innerHTML = `<i class="fas fa-exclamation-circle" style="color: red;"></i> خطأ في رفع الملف: ${error.message}`;
         }
-    });
+    }
 
-    // Afficher les prêts - Version corrigée avec FIX CRITIQUE pour 'غير موجود'
-    async function displayLoans(loanType) {
-        const loansModalContent = document.getElementById('loans-modal-content');
-        const loansModalTitle = document.getElementById('loans-modal-title');
-        
+    let searchTimeout;
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            loadBooks(1, e.target.value);
+        }, 300);
+    });
+    document.getElementById('prev-page-btn').addEventListener('click', () => { if (currentPage > 1) loadBooks(currentPage - 1, searchInput.value); });
+    document.getElementById('next-page-btn').addEventListener('click', () => { if (currentPage < totalPages) loadBooks(currentPage + 1, searchInput.value); });
+    
+    // --- MODALES ET AUTRES FONCTIONNALITÉS ---
+    async function displayLoans(type) {
+        const modalOverlay = document.getElementById('modal-overlay');
+        const modalTitle = document.getElementById('loans-modal-title');
+        const wrapper = document.getElementById('loans-modal-content-wrapper');
+        const endpoint = type === 'students' ? '/api/loans/students' : '/api/loans/teachers';
+        modalTitle.textContent = getTranslatedText(type === 'students' ? 'student_borrowers_list' : 'teacher_borrowers_list');
+        wrapper.innerHTML = `<p>${getTranslatedText('loading_data')}</p>`;
+        modalOverlay.style.display = 'flex';
         try {
             let loans = [];
             if (loanType === 'students') {
@@ -1259,23 +1085,13 @@ document.addEventListener('DOMContentLoaded', () => {
             await loadAllData();
             alert(getTranslatedText('book_returned_success'));
         } catch (error) {
-            alert(getTranslatedText('return_error'));
+            wrapper.innerHTML = `<p>${error.message}</p>`;
         }
     }
-
-    // Gestion des modales
-    function openModal(modalElement) {
-        modalOverlay.style.display = 'flex';
-        modalElement.style.display = 'flex';
-    }
-
-    function closeModal() {
-        modalOverlay.style.display = 'none';
-        loansModal.style.display = 'none';
-    }
-
-    modalOverlay.addEventListener('click', (e) => {
-        if (e.target === modalOverlay) closeModal();
+    document.getElementById('view-student-loans-btn').addEventListener('click', () => displayLoans('students'));
+    document.getElementById('view-teacher-loans-btn').addEventListener('click', () => displayLoans('teachers'));
+    document.querySelector('#modal-overlay .close-modal-btn').addEventListener('click', () => {
+        document.getElementById('modal-overlay').style.display = 'none';
     });
 
     document.querySelectorAll('.close-modal-btn').forEach(btn => 
@@ -1427,6 +1243,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             alert('خطأ في حذف الكتاب: ' + error.message);
         }
+        document.getElementById('dismiss-alert').addEventListener('click', () => {
+            overdueNotifications.style.display = 'none';
+        });
     }
 
     // Afficher l'historique d'un livre
@@ -1471,263 +1290,62 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Gestion du scanner de code-barres
     function initializeBarcodeScanner() {
-        const scanBtn = document.getElementById('scan-barcode-btn');
         const barcodeModal = document.getElementById('barcode-modal-overlay');
-        const closeBarcodeModal = document.getElementById('close-barcode-modal');
-        const startCameraBtn = document.getElementById('start-camera-btn');
-        const stopCameraBtn = document.getElementById('stop-camera-btn');
         const video = document.getElementById('barcode-video');
-        const canvas = document.getElementById('barcode-canvas');
-        const barcodeResult = document.getElementById('barcode-result');
-        const barcodeValue = document.getElementById('barcode-value');
-        const useBarcodeBtn = document.getElementById('use-barcode-btn');
-        
-        let animationId;
-        let scannedCode = null;
-        
-        scanBtn.addEventListener('click', () => {
+        const startBtn = document.getElementById('start-camera-btn');
+        const stopBtn = document.getElementById('stop-camera-btn');
+        let currentTargetInput = null;
+
+        const openScanner = (targetInputId) => {
+            currentTargetInput = document.getElementById(targetInputId);
             barcodeModal.style.display = 'flex';
-            barcodeResult.style.display = 'none';
-            scannedCode = null;
-        });
+        };
+
+        document.getElementById('scan-barcode-btn').addEventListener('click', () => openScanner('loan-isbn'));
+        document.getElementById('scan-search-barcode-btn').addEventListener('click', () => openScanner('search-input'));
         
-        closeBarcodeModal.addEventListener('click', () => {
-            stopScanning();
-            barcodeModal.style.display = 'none';
-        });
-        
-        startCameraBtn.addEventListener('click', async () => {
+        startBtn.addEventListener('click', async () => {
             try {
-                barcodeStream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        facingMode: 'environment',
-                        width: { ideal: 640 },
-                        height: { ideal: 480 }
-                    } 
-                });
+                barcodeStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
                 video.srcObject = barcodeStream;
                 video.play();
-                startCameraBtn.style.display = 'none';
-                stopCameraBtn.style.display = 'inline-block';
-                
-                // Commencer le scan
-                scanForBarcode();
-            } catch (error) {
-                console.error('Erreur d\'accès à la caméra:', error);
-                alert('لا يمكن الوصول إلى الكاميرا. تأكد من إعطاء الإذن للموقع.');
+                startBtn.style.display = 'none';
+                stopBtn.style.display = 'block';
+                scanFrame();
+            } catch (err) {
+                alert("Erreur de caméra: " + err);
             }
         });
-        
-        stopCameraBtn.addEventListener('click', () => {
-            stopScanning();
-        });
-        
-        function scanForBarcode() {
-            if (!barcodeStream) return;
-            
-            const ctx = canvas.getContext('2d');
-            let scanAttempts = 0;
-            
-            function scan() {
-                if (!barcodeStream) return;
-                
-                // Wait for video to be ready
-                if (video.videoWidth === 0 || video.videoHeight === 0) {
-                    if (scanAttempts < 50) { // Retry for 5 seconds
-                        scanAttempts++;
-                        animationId = requestAnimationFrame(scan);
-                        return;
-                    }
-                }
-                
-                canvas.width = video.videoWidth || 640;
-                canvas.height = video.videoHeight || 480;
-                
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                
-                // Try jsQR first
-                if (typeof jsQR !== 'undefined') {
-                    try {
-                        const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                            inversionAttempts: "dontInvert",
-                        });
-                        if (code && code.data) {
-                            scannedCode = code.data;
-                            console.log('jsQR - Code détecté:', scannedCode);
-                            barcodeValue.textContent = scannedCode;
-                            barcodeResult.style.display = 'block';
-                            stopScanning();
-                            return;
-                        }
-                    } catch (e) {
-                        console.warn('jsQR error:', e);
-                    }
-                }
-                
-                // Alternative: Try with different jsQR options
-                if (typeof jsQR !== 'undefined') {
-                    try {
-                        const codeInverted = jsQR(imageData.data, imageData.width, imageData.height, {
-                            inversionAttempts: "attemptBoth",
-                        });
-                        if (codeInverted && codeInverted.data) {
-                            scannedCode = codeInverted.data;
-                            console.log('jsQR inverted - Code détecté:', scannedCode);
-                            barcodeValue.textContent = scannedCode;
-                            barcodeResult.style.display = 'block';
-                            stopScanning();
-                            return;
-                        }
-                    } catch (e) {
-                        console.warn('jsQR inverted error:', e);
-                    }
-                }
-                
-                // Continue scanning
-                animationId = requestAnimationFrame(scan);
-            }
-            
-            // Start scanning after a small delay
-            setTimeout(scan, 100);
-        }
-        
-        function stopScanning() {
+
+        const stopScanning = () => {
             if (barcodeStream) {
                 barcodeStream.getTracks().forEach(track => track.stop());
                 barcodeStream = null;
             }
-            
-            if (animationId) {
-                cancelAnimationFrame(animationId);
-                animationId = null;
-            }
-            
-            startCameraBtn.style.display = 'inline-block';
-            stopCameraBtn.style.display = 'none';
-        }
-        
-        useBarcodeBtn.addEventListener('click', () => {
-            if (scannedCode) {
-                document.getElementById('loan-isbn').value = scannedCode;
-                // Déclencher l'événement input pour mettre à jour les infos du livre
-                document.getElementById('loan-isbn').dispatchEvent(new Event('input'));
-                barcodeModal.style.display = 'none';
-                stopScanning();
-            }
-        });
-        
-        // Gestion de l'input manuel
-        const manualInputBtn = document.getElementById('manual-input-btn');
-        const manualBarcodeInput = document.getElementById('manual-barcode-input');
-        const manualBarcodeField = document.getElementById('manual-barcode-field');
-        const useManualBarcodeBtn = document.getElementById('use-manual-barcode-btn');
-        
-        manualInputBtn.addEventListener('click', () => {
-            manualBarcodeInput.style.display = manualBarcodeInput.style.display === 'none' ? 'block' : 'none';
-            if (manualBarcodeInput.style.display === 'block') {
-                manualBarcodeField.focus();
-            }
-        });
-        
-        useManualBarcodeBtn.addEventListener('click', () => {
-            const manualCode = manualBarcodeField.value.trim();
-            if (manualCode) {
-                scannedCode = manualCode;
-                barcodeValue.textContent = scannedCode;
-                barcodeResult.style.display = 'block';
-                manualBarcodeInput.style.display = 'none';
-                manualBarcodeField.value = '';
-            }
-        });
-        
-        manualBarcodeField.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                useManualBarcodeBtn.click();
-            }
-        });
-        
-        // Fermer modal en cliquant à l'extérieur
-        barcodeModal.addEventListener('click', (e) => {
-            if (e.target === barcodeModal) {
-                stopScanning();
-                barcodeModal.style.display = 'none';
-            }
-        });
-    }
-    
-    // Gestion optimisée des modifications avec système de sauvegarde batch
-    function initializeBatchEditing() {
-        const saveAllBtn = document.getElementById('save-all-changes-btn');
-        
-        // Nouvelle fonction d'édition qui accumule les changements
-        function editCellOptimized(cell) {
-            if (cell.classList.contains('editing')) return;
-            
-            const originalValue = cell.dataset.original || cell.textContent.trim();
-            const field = cell.dataset.field;
-            const isbn = cell.parentElement.dataset.isbn;
-            
-            cell.classList.add('editing');
-            cell.innerHTML = `<input type="text" value="${originalValue}" data-original="${originalValue}">`;
-            
-            const input = cell.querySelector('input');
-            input.focus();
-            input.select();
-            
-            // Sauvegarder en appuyant sur Entrée
-            input.addEventListener('keydown', async function(e) {
-                if (e.key === 'Enter') {
-                    await saveCellOptimized(cell, field, isbn, this.value);
-                } else if (e.key === 'Escape') {
-                    cancelEditOptimized(cell, originalValue);
-                }
-            });
-            
-            // Sauvegarder en perdant le focus
-            input.addEventListener('blur', async function() {
-                await saveCellOptimized(cell, field, isbn, this.value);
-            });
-        }
-        
-        // Sauvegarder les modifications de manière optimisée
-        async function saveCellOptimized(cell, field, isbn, newValue) {
-            const originalValue = cell.querySelector('input').dataset.original;
-            
-            if (newValue === originalValue) {
-                cancelEditOptimized(cell, originalValue);
+            video.srcObject = null;
+            startBtn.style.display = 'block';
+            stopBtn.style.display = 'none';
+        };
+
+        stopBtn.addEventListener('click', stopScanning);
+
+        function scanFrame() {
+            if (!barcodeStream || video.readyState !== video.HAVE_ENOUGH_DATA) {
                 return;
             }
-            
-            // Ajouter aux changements en attente
-            const existingChangeIndex = pendingChanges.findIndex(change => 
-                change.isbn === isbn && change.updateData[field] !== undefined
-            );
-            
-            if (existingChangeIndex !== -1) {
-                // Mettre à jour le changement existant
-                pendingChanges[existingChangeIndex].updateData[field] = 
-                    field === 'totalCopies' ? parseInt(newValue) || 1 : newValue;
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
+            if (code) {
+                document.getElementById('barcode-value').textContent = code.data;
+                document.getElementById('barcode-result').style.display = 'block';
             } else {
-                // Ajouter nouveau changement
-                const updateData = {};
-                updateData[field] = field === 'totalCopies' ? parseInt(newValue) || 1 : newValue;
-                pendingChanges.push({ isbn, updateData });
+                requestAnimationFrame(scanFrame);
             }
-            
-            // Marquer la cellule comme modifiée
-            cell.classList.remove('editing');
-            cell.classList.add('modified');
-            cell.textContent = newValue;
-            cell.dataset.original = newValue;
-            
-            // Afficher le bouton de sauvegarde
-            saveAllBtn.style.display = 'inline-block';
-        }
-        
-        function cancelEditOptimized(cell, originalValue) {
-            cell.classList.remove('editing');
-            cell.textContent = originalValue;
         }
         
         // Sauvegarder tous les changements en une seule requête batch
@@ -1773,36 +1391,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 saveAllBtn.disabled = false;
                 saveAllBtn.innerHTML = '<i class="fas fa-save"></i> حفظ جميع التغييرات';
             }
+            barcodeModal.style.display = 'none';
+            stopScanning();
         });
-        
-        // Remplacer la fonction editCell existante
-        window.editCell = editCellOptimized;
-    }
-    
-    // Scanner de code-barres pour la recherche
-    function initializeSearchScanner() {
-        const searchScanBtn = document.getElementById('scan-search-barcode-btn');
-        
-        searchScanBtn.addEventListener('click', () => {
-            // Réutiliser le même modal de scan, mais rediriger le résultat vers la recherche
-            const barcodeModal = document.getElementById('barcode-modal-overlay');
-            barcodeModal.style.display = 'flex';
-            
-            // Modifier temporairement le comportement du bouton d'utilisation
-            const useBarcodeBtn = document.getElementById('use-barcode-btn');
-            const originalHandler = useBarcodeBtn.onclick;
-            
-            useBarcodeBtn.onclick = () => {
-                const scannedCode = document.getElementById('barcode-value').textContent;
-                if (scannedCode) {
-                    document.getElementById('search-input').value = scannedCode;
-                    // Déclencher la recherche
-                    document.getElementById('search-input').dispatchEvent(new Event('input'));
-                    barcodeModal.style.display = 'none';
-                    // Restaurer le gestionnaire original
-                    useBarcodeBtn.onclick = originalHandler;
-                }
-            };
+
+        document.getElementById('close-barcode-modal').addEventListener('click', () => {
+            barcodeModal.style.display = 'none';
+            stopScanning();
         });
     }
     
@@ -1887,9 +1482,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Initialiser les nouvelles fonctionnalités
-    initializeBarcodeScanner();
-    initializeBatchEditing();
-    initializeSearchScanner();
-    
+    document.getElementById('refresh-books-btn').addEventListener('click', loadAllData);
 });
