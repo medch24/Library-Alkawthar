@@ -275,6 +275,8 @@
 
     <script>
         // INLINE JAVASCRIPT FOR VERCEL COMPATIBILITY
+        console.log('=== STARTING JAVASCRIPT EXECUTION ===');
+        
         const API_BASE_URL = '';
         let allBooks = [];
         let allLoans = [];
@@ -368,8 +370,8 @@
             });
 
             // Add borrowers list functionality
-            const studentBtn = document.getElementById('view-student-borrowers');
-            const teacherBtn = document.getElementById('view-teacher-borrowers');
+            const studentBtn = document.getElementById('view-student-loans-btn');
+            const teacherBtn = document.getElementById('view-teacher-loans-btn');
             
             if (studentBtn) {
                 studentBtn.addEventListener('click', () => showBorrowersList('students'));
