@@ -849,7 +849,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             statusDiv.innerHTML = `<i class="fas fa-exclamation-circle" style="color: red;"></i> خطأ في رفع الملف: ${error.message}`;
         }
-    }
+    });
 
     let searchTimeout;
     searchInput.addEventListener('input', (e) => {
