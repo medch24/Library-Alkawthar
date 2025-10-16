@@ -513,19 +513,24 @@ app.get('/api/loans', async (req, res) => {
     }
 });
 
-// Démarrer le serveur
-app.listen(PORT, '0.0.0.0', () => {
-    console.log('Serveur démarré sur le port ' + PORT);
-    console.log('Mode: ' + (devMode ? 'Développement (données en mémoire)' : 'Production (MongoDB)'));
-    console.log('URL locale: http://localhost:' + PORT);
-    console.log('API Status: http://localhost:' + PORT + '/api');
-    console.log('--- Endpoints disponibles ---');
-    console.log('GET  /api - Status de API');
-    console.log('GET  /api/statistics - Statistiques de la bibliotheque');
-    console.log('GET  /api/books - Liste des livres (avec pagination)');
-    console.log('GET  /api/books/:isbn - Détails livre');
-    console.log('GET  /api/loans - Liste des prêts');
-    console.log('GET  /api/loans/students - Prêts étudiants');
-    console.log('GET  /api/loans/teachers - Prêts enseignants');
-    console.log('=====================================');
-});
+// Export pour Vercel
+module.exports = app;
+
+// Démarrer le serveur local si ce n'est pas Vercel
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+    app.listen(PORT, '0.0.0.0', () => {
+        console.log('Serveur démarré sur le port ' + PORT);
+        console.log('Mode: ' + (devMode ? 'Développement (données en mémoire)' : 'Production (MongoDB)'));
+        console.log('URL locale: http://localhost:' + PORT);
+        console.log('API Status: http://localhost:' + PORT + '/api');
+        console.log('--- Endpoints disponibles ---');
+        console.log('GET  /api - Status de API');
+        console.log('GET  /api/statistics - Statistiques de la bibliotheque');
+        console.log('GET  /api/books - Liste des livres (avec pagination)');
+        console.log('GET  /api/books/:isbn - Détails livre');
+        console.log('GET  /api/loans - Liste des prêts');
+        console.log('GET  /api/loans/students - Prêts étudiants');
+        console.log('GET  /api/loans/teachers - Prêts enseignants');
+        console.log('=====================================');
+    });
+}
