@@ -872,18 +872,37 @@ document.addEventListener('DOMContentLoaded', () => {
         modalOverlay.style.display = 'flex';
         try {
             let loans = [];
+            console.log(`Chargement des prêts pour: ${loanType}`);
+            
             if (loanType === 'students') {
-                loans = await fetch('/api/loans/students').then(r => r.json());
+                const response = await fetch('/api/loans/students');
+                console.log('Réponse API étudiants:', response.status, response.statusText);
+                if (!response.ok) {
+                    throw new Error(`Erreur API: ${response.status}`);
+                }
+                loans = await response.json();
+                console.log('Prêts étudiants reçus:', loans);
                 loansModalTitle.textContent = translations[currentLanguage].student_borrowers_list;
             } else {
-                loans = await fetch('/api/loans/teachers').then(r => r.json());
+                const response = await fetch('/api/loans/teachers');
+                console.log('Réponse API enseignants:', response.status, response.statusText);
+                if (!response.ok) {
+                    throw new Error(`Erreur API: ${response.status}`);
+                }
+                loans = await response.json();
+                console.log('Prêts enseignants reçus:', loans);
                 loansModalTitle.textContent = translations[currentLanguage].teacher_borrowers_list;
             }
             
-            if (loans.length === 0) {
+            if (!loans || loans.length === 0) {
+                console.log('Aucun prêt trouvé pour', loanType);
                 const noResultsText = currentLanguage === 'ar' ? 'لا توجد نتائج مطابقة.' : 
                                     currentLanguage === 'fr' ? 'Aucun résultat correspondant.' : 'No matching results.';
-                loansModalContent.innerHTML = `<p style="text-align: center; padding: 1rem;">${noResultsText}</p>`;
+                loansModalContent.innerHTML = `<p style="text-align: center; padding: 1rem; color: #666;">
+                    <i class="fas fa-info-circle" style="margin-right: 0.5rem;"></i>
+                    ${noResultsText}
+                    <br><small style="margin-top: 0.5rem; display: block;">Vérifiez que des prêts sont enregistrés dans le système.</small>
+                </p>`;
                 return;
             }
             
@@ -1070,7 +1089,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
         } catch (error) {
-            loansModalContent.innerHTML = '<p style="text-align: center; padding: 1rem; color: red;">خطأ في تحميل البيانات.</p>';
+            console.error('Erreur dans displayLoans:', error);
+            const errorMessage = currentLanguage === 'ar' ? 'خطأ في تحميل البيانات' : 
+                               currentLanguage === 'fr' ? 'Erreur de chargement des données' : 'Error loading data';
+            loansModalContent.innerHTML = `<p style="text-align: center; padding: 1rem; color: red;">
+                <i class="fas fa-exclamation-triangle" style="margin-right: 0.5rem;"></i>
+                ${errorMessage}
+                <br><small style="margin-top: 0.5rem; display: block; color: #666;">Détails: ${error.message}</small>
+            </p>`;
         }
     }
 
