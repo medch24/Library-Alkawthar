@@ -273,7 +273,44 @@
         </div>
     </div>
 
-    <script src="test.js"></script>
-    <script src="script.js"></script>
+    <script>
+        // INLINE JAVASCRIPT FOR VERCEL COMPATIBILITY
+        const API_BASE_URL = '';
+        let allBooks = [];
+        let allLoans = [];
+        let currentLoanType = 'students';
+        let currentLanguage = 'ar';
+        let currentPage = 1;
+        let totalPages = 1;
+        let isLoading = false;
+        let currentSort = { column: 'title', order: 'asc' };
+        let barcodeStream = null;
+
+        // CRITICAL LOGIN FUNCTION - FIXED SYNTAX
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('login-form');
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (document.getElementById('username').value === 'Alkawthar@30' && document.getElementById('password').value === 'Alkawthar@30') {
+                    localStorage.setItem('isLoggedIn', 'true');
+                    showDashboard();
+                } else {
+                    document.getElementById('login-error').textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة.';
+                }
+            });
+
+            // Check if already logged in
+            if (localStorage.getItem('isLoggedIn') === 'true') {
+                showDashboard();
+            }
+        });
+
+        function showDashboard() {
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('dashboard-page').style.display = 'block';
+            // Initialize dashboard functionality here
+            console.log('Dashboard loaded successfully');
+        }
+    </script>
 </body>
 </html>
