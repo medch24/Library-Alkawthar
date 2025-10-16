@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://3002-i6n7m0hxton37bk711m1i-dfc00ec5.sandbox.novita.ai';
+const API_BASE_URL = '';
 let allBooks = [];
 let allLoans = [];
 let currentLoanType = 'students';
@@ -423,8 +423,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Étape 1: Charger les livres avec pagination
             updateProgress(0, 'loading_books');
-            console.log('Chargement des livres depuis:', API_BASE_URL + '/api/books');
-            const booksUrl = `${API_BASE_URL}/api/books?page=${page}&limit=50&search=${encodeURIComponent(search)}`;
+            console.log('Chargement des livres depuis:', '/api/books');
+            const booksUrl = `/api/books?page=${page}&limit=50&search=${encodeURIComponent(search)}`;
             const booksResponse = await fetch(booksUrl);
             if (!booksResponse.ok) {
                 throw new Error(`HTTP Error: ${booksResponse.status} - ${booksResponse.statusText}`);
@@ -448,8 +448,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Étape 2: Charger les prêts (seulement si pas de recherche pour éviter de surcharger)
             updateProgress(1, 'loading_loans');
             if (!search) {
-                console.log('Chargement des prêts depuis:', API_BASE_URL + '/api/loans');
-                const loansResponse = await fetch(API_BASE_URL + '/api/loans');
+                console.log('Chargement des prêts depuis:', '/api/loans');
+                const loansResponse = await fetch('/api/loans');
                 if (loansResponse.ok) {
                     const loans = await loansResponse.json();
                     allLoans = Array.isArray(loans) ? loans : [];
@@ -505,7 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Mettre à jour les statistiques depuis l'API
     async function updateStatsFromAPI() {
         try {
-            const response = await fetch(API_BASE_URL + '/api/statistics');
+            const response = await fetch('/api/statistics');
             if (response.ok) {
                 const stats = await response.json();
                 document.getElementById('total-books-stat').textContent = stats.totalCopies || 0;
@@ -840,7 +840,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!book && isbn.length >= 10) { // ISBN minimum length
             try {
                 console.log(`Recherche du livre ISBN: ${isbn} via API...`);
-                const response = await fetch(`${API_BASE_URL}/api/books?search=${encodeURIComponent(isbn)}&limit=1`);
+                const response = await fetch(`/api/books?search=${encodeURIComponent(isbn)}&limit=1`);
                 if (response.ok) {
                     const data = await response.json();
                     if (data.books && data.books.length > 0) {
@@ -917,7 +917,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         
         try {
-            await fetch(API_BASE_URL + '/api/loans', {
+            await fetch('/api/loans', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(loanData)
@@ -952,7 +952,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Export Excel
     document.getElementById('export-excel-btn').addEventListener('click', async () => {
         try {
-            const response = await fetch(API_BASE_URL + '/api/export/excel');
+            const response = await fetch('/api/export/excel');
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -985,7 +985,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         
         try {
-            const response = await fetch(API_BASE_URL + '/api/books', {
+            const response = await fetch('/api/books', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(bookData)
@@ -1020,7 +1020,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري رفع الملف...';
             
-            const response = await fetch(API_BASE_URL + '/api/books/upload', {
+            const response = await fetch('/api/books/upload', {
                 method: 'POST',
                 body: formData
             });
@@ -1047,10 +1047,10 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             let loans = [];
             if (loanType === 'students') {
-                loans = await fetch(API_BASE_URL + '/api/loans/students').then(r => r.json());
+                loans = await fetch('/api/loans/students').then(r => r.json());
                 loansModalTitle.textContent = translations[currentLanguage].student_borrowers_list;
             } else {
-                loans = await fetch(API_BASE_URL + '/api/loans/teachers').then(r => r.json());
+                loans = await fetch('/api/loans/teachers').then(r => r.json());
                 loansModalTitle.textContent = translations[currentLanguage].teacher_borrowers_list;
             }
             
@@ -1107,7 +1107,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.log(`Recherche du livre ISBN: ${loan.isbn} via API...`);
                         
                         // Recherche directe par ISBN d'abord (plus précise)
-                        const directResponse = await fetch(`${API_BASE_URL}/api/books/${encodeURIComponent(loan.isbn)}`);
+                        const directResponse = await fetch(`/api/books/${encodeURIComponent(loan.isbn)}`);
                         if (directResponse.ok) {
                             const directBook = await directResponse.json();
                             if (directBook && directBook.title) {
@@ -1121,7 +1121,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         // Si pas trouvé, essayer la recherche générale
                         if (!bookTitle) {
-                            const searchResponse = await fetch(`${API_BASE_URL}/api/books?search=${encodeURIComponent(loan.isbn)}&limit=5`);
+                            const searchResponse = await fetch(`/api/books?search=${encodeURIComponent(loan.isbn)}&limit=5`);
                             if (searchResponse.ok) {
                                 const data = await searchResponse.json();
                                 if (data.books && data.books.length > 0) {
@@ -1251,7 +1251,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Retourner un livre
     async function returnLoan(isbn, studentName) {
         try {
-            await fetch(API_BASE_URL + '/api/loans', {
+            await fetch('/api/loans', {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ isbn, studentName })
@@ -1367,7 +1367,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const updateData = {};
             updateData[field] = field === 'totalCopies' ? parseInt(newValue) || 1 : newValue;
             
-            const response = await fetch(`${API_BASE_URL}/api/books/${isbn}`, {
+            const response = await fetch(`/api/books/${isbn}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updateData)
@@ -1414,7 +1414,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         try {
-            const response = await fetch(`${API_BASE_URL}/api/books/${isbn}`, {
+            const response = await fetch(`/api/books/${isbn}`, {
                 method: 'DELETE'
             });
             
@@ -1432,7 +1432,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Afficher l'historique d'un livre
     async function showBookHistory(isbn) {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/history/book/${isbn}`);
+            const response = await fetch(`/api/history/book/${isbn}`);
             const history = await response.json();
             
             const book = allBooks.find(b => b.isbn === isbn);
@@ -1738,7 +1738,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 saveAllBtn.disabled = true;
                 saveAllBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
                 
-                const response = await fetch(`${API_BASE_URL}/api/books/batch-update`, {
+                const response = await fetch(`/api/books/batch-update`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ updates: pendingChanges })
@@ -1838,7 +1838,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     async function extendReturnDate(isbn, studentName, newReturnDate) {
         try {
-            const response = await fetch(API_BASE_URL + '/api/loans/extend', {
+            const response = await fetch('/api/loans/extend', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
