@@ -1,0 +1,58 @@
+[
+  {
+    "isbn": "978-0-7475-3269-9",
+    "studentName": "Miss Jana",
+    "studentClass": "Grade 6A",
+    "borrowerType": "student",
+    "loanDate": "2025-10-07T00:00:00.000Z",
+    "returnDate": "2025-10-14T00:00:00.000Z"
+  },
+  {
+    "isbn": "978-2-8104-1234-5",
+    "studentName": "Miss Nour Hnich",
+    "studentClass": "CE2 B",
+    "borrowerType": "student",
+    "loanDate": "2025-09-30T00:00:00.000Z",
+    "returnDate": "2025-10-31T00:00:00.000Z"
+  },
+  {
+    "isbn": "978-1-4012-1234-5",
+    "studentName": "Ahmed Ali",
+    "studentClass": "6A",
+    "borrowerType": "student",
+    "loanDate": "2025-10-01T00:00:00.000Z",
+    "returnDate": "2025-10-15T00:00:00.000Z"
+  },
+  {
+    "isbn": "978-1-4012-1234-5",
+    "studentName": "Sarah Mohamed",
+    "studentClass": "6B",
+    "borrowerType": "student",
+    "loanDate": "2025-10-05T00:00:00.000Z",
+    "returnDate": "2025-10-19T00:00:00.000Z"
+  },
+  {
+    "isbn": "978-2-2101-5678-9",
+    "studentName": "Prof. Martin Dupont",
+    "studentClass": "Physique",
+    "borrowerType": "teacher",
+    "loanDate": "2025-10-01T00:00:00.000Z",
+    "returnDate": "2025-11-01T00:00:00.000Z"
+  },
+  {
+    "isbn": "978-3-1615-4321-8",
+    "studentName": "Fatima Hassan",
+    "studentClass": "5A",
+    "borrowerType": "student",
+    "loanDate": "2025-10-08T00:00:00.000Z",
+    "returnDate": "2025-10-22T00:00:00.000Z"
+  },
+  {
+    "isbn": "978-1-2345-6789-0",
+    "studentName": "Omar Abdullah",
+    "studentClass": "4B",
+    "borrowerType": "student",
+    "loanDate": "2025-10-09T00:00:00.000Z",
+    "returnDate": "2025-10-23T00:00:00.000Z"
+  }
+]
