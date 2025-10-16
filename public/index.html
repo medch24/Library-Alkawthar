@@ -288,7 +288,6 @@
 
         // CRITICAL LOGIN FUNCTION - FIXED SYNTAX  
         console.log('JavaScript loaded successfully');
-        alert('Site is working! JavaScript loaded.');
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM content loaded');
             const loginForm = document.getElementById('login-form');
@@ -308,11 +307,84 @@
             }
         });
 
+        // Translation functionality
+        const translations = {
+            ar: {
+                welcome_title: 'مرحباً بكم في مكتبة مدارس الكوثر العالمية',
+                logout: 'تسجيل الخروج',
+                dashboard_title: 'لوحة تحكم مكتبة الكوثر',
+                view_student_borrowers: 'عرض الطلاب المستعيرين',
+                view_teacher_borrowers: 'عرض المدرسين المستعيرين',
+            },
+            fr: {
+                welcome_title: 'Bienvenue à la bibliothèque des Écoles Internationales Al-Kawthar',
+                logout: 'Se déconnecter',
+                dashboard_title: 'Tableau de bord de la bibliothèque Al-Kawthar',
+                view_student_borrowers: 'Voir les étudiants emprunteurs',
+                view_teacher_borrowers: 'Voir les enseignants emprunteurs',
+            },
+            en: {
+                welcome_title: 'Welcome to Al-Kawthar International Schools Library',
+                logout: 'Logout',
+                dashboard_title: 'Al-Kawthar Library Dashboard',
+                view_student_borrowers: 'View Student Borrowers',
+                view_teacher_borrowers: 'View Teacher Borrowers',
+            }
+        };
+
+        function updateLanguage(lang) {
+            currentLanguage = lang;
+            document.querySelectorAll('[data-key]').forEach(element => {
+                const key = element.getAttribute('data-key');
+                if (translations[lang] && translations[lang][key]) {
+                    element.textContent = translations[lang][key];
+                }
+            });
+        }
+
         function showDashboard() {
             document.getElementById('login-page').style.display = 'none';
             document.getElementById('dashboard-page').style.display = 'block';
-            // Initialize dashboard functionality here
+            
+            // Add logout functionality
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', () => {
+                    localStorage.removeItem('isLoggedIn');
+                    document.getElementById('dashboard-page').style.display = 'none';
+                    document.getElementById('login-page').style.display = 'flex';
+                });
+            }
+
+            // Add language switching
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const lang = btn.getAttribute('data-lang');
+                    updateLanguage(lang);
+                    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                });
+            });
+
+            // Add borrowers list functionality
+            const studentBtn = document.getElementById('view-student-borrowers');
+            const teacherBtn = document.getElementById('view-teacher-borrowers');
+            
+            if (studentBtn) {
+                studentBtn.addEventListener('click', () => showBorrowersList('students'));
+            }
+            if (teacherBtn) {
+                teacherBtn.addEventListener('click', () => showBorrowersList('teachers'));
+            }
+
             console.log('Dashboard loaded successfully');
+        }
+
+        function showBorrowersList(type) {
+            console.log(`Showing ${type} borrowers list`);
+            // This would load and display the borrowers data
+            // For now, just show a message
+            alert(`${type} borrowers list would be loaded here`);
         }
     </script>
 </body>
