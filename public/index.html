@@ -287,7 +287,9 @@
         let barcodeStream = null;
 
         // CRITICAL LOGIN FUNCTION - FIXED SYNTAX
+        console.log('JavaScript loaded successfully');
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM content loaded');
             const loginForm = document.getElementById('login-form');
             loginForm.addEventListener('submit', (e) => {
                 e.preventDefault();
