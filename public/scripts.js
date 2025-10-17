@@ -326,7 +326,14 @@ function getTranslatedText(key, replacements = {}) {
 
 function updateTranslations() {
     document.querySelectorAll('[data-key]').forEach(el => {
-        el.textContent = getTranslatedText(el.dataset.key);
+        const translatedText = getTranslatedText(el.dataset.key);
+        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+            el.value = translatedText;
+        } else if (el.tagName === 'OPTION') {
+            el.textContent = translatedText;
+        } else {
+            el.textContent = translatedText;
+        }
     });
     document.querySelectorAll('[data-key-placeholder]').forEach(el => {
         el.placeholder = getTranslatedText(el.dataset.keyPlaceholder);
@@ -334,7 +341,9 @@ function updateTranslations() {
     document.querySelectorAll('[data-key-title]').forEach(el => {
         el.title = getTranslatedText(el.dataset.keyTitle);
     });
-    updatePaginationControls();
+    if (typeof updatePaginationControls === 'function') {
+        updatePaginationControls();
+    }
 }
 
 function changeLanguage(lang) {
@@ -422,61 +431,134 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.reload();
     });
 
-    function showDashboard() {
+    async function showDashboard() {
         loginPage.style.display = 'none';
         dashboardPage.style.display = 'block';
         const savedLang = localStorage.getItem('preferred_language') || 'ar';
         changeLanguage(savedLang);
+        initializeDates();
         initializeBarcodeScanner();
-        loadAllData();
+        
+        // Vérifier la connexion à l'API avant de charger les données
+        try {
+            console.log('🔍 Vérification de la connexion à l\'API...');
+            const apiCheck = await fetch('/api');
+            if (apiCheck.ok) {
+                const apiInfo = await apiCheck.json();
+                console.log('✅ API connectée:', apiInfo);
+                await loadAllData();
+            } else {
+                throw new Error('API non disponible');
+            }
+        } catch (error) {
+            console.error('❌ Erreur de connexion à l\'API:', error);
+            alert('⚠️ Impossible de se connecter à l\'API. Vérifiez que le serveur est démarré.');
+        }
     }
 
+    // Initialiser les dates par défaut dans les formulaires
+    function initializeDates() {
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        
+        // Date de prêt par défaut (aujourd'hui)
+        const loanDateInput = document.getElementById('loan-date');
+        if (loanDateInput) {
+            loanDateInput.value = todayStr;
+        }
+        
+        // Date de retour par défaut (dans 2 semaines)
+        const returnDateInput = document.getElementById('return-date');
+        if (returnDateInput) {
+            const twoWeeksLater = new Date(today);
+            twoWeeksLater.setDate(today.getDate() + 14);
+            returnDateInput.value = twoWeeksLater.toISOString().split('T')[0];
+            returnDateInput.min = todayStr;
+        }
+    }
+
+    // Vérifier si déjà connecté et afficher le dashboard
     if (localStorage.getItem('isLoggedIn') === 'true') {
+        console.log('✅ Utilisateur déjà connecté - Affichage du dashboard');
         showDashboard();
+    } else {
+        console.log('⚠️ Utilisateur non connecté - Affichage de la page de connexion');
     }
 
-    // Gestion des langues
-    document.querySelectorAll('.lang-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            changeLanguage(btn.dataset.lang);
+    // Gestion des langues - FIX: Assurer que les boutons fonctionnent
+    function initializeLanguageButtons() {
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const lang = btn.dataset.lang || btn.getAttribute('data-lang');
+                if (lang) {
+                    console.log('🌍 Changement de langue vers:', lang);
+                    changeLanguage(lang);
+                }
+            });
         });
-    });
+    }
+    
+    // Appeler immédiatement
+    initializeLanguageButtons();
 
-    // --- CHARGEMENT DES DONNÉES ---
+    // --- CHARGEMENT DES DONNÉES DEPUIS MONGODB ---
     async function loadAllData() {
         if (isLoading) return;
         isLoading = true;
         showLoadingBar();
         try {
-            const searchValue = searchInput.value || '';
+            console.log('🔄 Chargement des données depuis MongoDB...');
+            const searchValue = searchInput ? searchInput.value || '' : '';
             const booksUrl = `/api/books?page=${currentPage}&limit=50&search=${encodeURIComponent(searchValue)}`;
+            
+            console.log('📡 Requête:', booksUrl);
             const booksResponse = await fetch(booksUrl);
             
             if (!booksResponse.ok) {
-                throw new Error(`HTTP Error: ${booksResponse.status}`);
+                throw new Error(`HTTP Error: ${booksResponse.status} - ${booksResponse.statusText}`);
             }
             
             const booksData = await booksResponse.json();
+            console.log('✅ Données reçues:', booksData);
+            
             allBooks = booksData.books || [];
             currentPage = booksData.currentPage || 1;
             totalPages = booksData.totalPages || 1;
+            
+            console.log(`📚 ${allBooks.length} livres chargés depuis MongoDB`);
             
             updatePaginationControls();
             await updateStatsFromAPI();
             renderTable(allBooks);
             
+            // Charger les prêts actifs
             if (!searchValue) {
-                const loansResponse = await fetch('/api/loans');
-                if (loansResponse.ok) {
-                    allLoans = await loansResponse.json();
+                try {
+                    const loansResponse = await fetch('/api/loans');
+                    if (loansResponse.ok) {
+                        allLoans = await loansResponse.json();
+                        console.log(`📋 ${allLoans.length} prêts chargés depuis MongoDB`);
+                    }
+                    checkOverdueBooks();
+                } catch (loanError) {
+                    console.error('Erreur chargement prêts:', loanError);
                 }
-                checkOverdueBooks();
             }
             
             setTimeout(() => updateTranslations(), 200);
         } catch (error) {
-            console.error('Erreur de chargement:', error);
-            alert('Erreur de chargement des données: ' + error.message);
+            console.error('❌ Erreur de chargement:', error);
+            const errorMsg = currentLanguage === 'ar' ? 'خطأ في الاتصال بقاعدة البيانات MongoDB. تحقق من الاتصال' : 
+                             currentLanguage === 'fr' ? 'Erreur de connexion à MongoDB. Vérifiez la connexion' : 
+                             'MongoDB connection error. Please check connection';
+            
+            // Afficher un message d'erreur plus détaillé
+            const detailedMsg = `${errorMsg}\n\nDétails: ${error.message}\n\nVérifiez que MongoDB est accessible à:\nmongodb+srv://cherifmed2030_db_user:***@library.ve29w9g.mongodb.net/`;
+            alert(detailedMsg);
+            
+            // Essayer de réafficher le tableau vide pour éviter un écran blanc
+            renderTable([]);
         } finally {
             isLoading = false;
             hideLoadingBar();
