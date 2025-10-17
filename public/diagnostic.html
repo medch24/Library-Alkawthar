@@ -5,312 +5,87 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diagnostic - Bibliothèque Al-Kawthar</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
-            min-height: 100vh;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-        h1 {
-            color: #667eea;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        .status-box {
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 8px;
-            border-left: 5px solid;
-        }
-        .status-box.loading {
-            background: #e3f2fd;
-            border-color: #2196F3;
-        }
-        .status-box.success {
-            background: #e8f5e9;
-            border-color: #4CAF50;
-        }
-        .status-box.error {
-            background: #ffebee;
-            border-color: #f44336;
-        }
-        .status-box.warning {
-            background: #fff3e0;
-            border-color: #ff9800;
-        }
-        .test-item {
-            margin: 10px 0;
-            padding: 10px;
-            background: #f5f5f5;
-            border-radius: 5px;
-        }
-        .test-item strong {
-            display: inline-block;
-            width: 200px;
-        }
-        .btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            margin: 10px 5px;
-        }
-        .btn:hover {
-            background: #5568d3;
-        }
-        code {
-            background: #f5f5f5;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: 'Courier New', monospace;
-        }
-        pre {
-            background: #263238;
-            color: #aed581;
-            padding: 15px;
-            border-radius: 5px;
-            overflow-x: auto;
-            margin: 10px 0;
-        }
-        .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-            margin-right: 10px;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f4f7f9; color: #333; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 10px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        h1 { color: #005f73; text-align: center; border-bottom: 2px solid #0a9396; padding-bottom: 10px; margin-bottom: 20px; }
+        .status-box { padding: 15px; margin: 15px 0; border-radius: 8px; border-left: 5px solid; font-size: 1.1em; display: flex; align-items: center; gap: 15px; }
+        .status-box.loading { background: #e3f2fd; border-color: #2196F3; }
+        .status-box.success { background: #e8f5e9; border-color: #4CAF50; }
+        .status-box.error { background: #ffebee; border-color: #f44336; }
+        .status-box.warning { background: #fff3e0; border-color: #ff9800; }
+        .icon { font-size: 1.5em; }
+        pre { background: #2d333b; color: #adbac7; padding: 15px; border-radius: 5px; overflow-x: auto; margin-top: 10px; font-family: "SF Mono", "Consolas", monospace; }
+        .btn { display: inline-block; background: #005f73; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 20px; text-decoration: none; }
+        .btn:hover { background: #0a9396; }
+        .instructions { background: #fff3e0; border: 1px solid #ff9800; padding: 20px; border-radius: 8px; margin-top: 30px; }
+        .instructions h3 { margin-top: 0; color: #af6a00; }
+        .instructions li { margin-bottom: 10px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔍 Diagnostic du Système</h1>
-        
-        <div class="status-box loading" id="main-status">
-            <div class="spinner"></div>
-            <span>Lancement des tests de diagnostic...</span>
-        </div>
-
+        <h1>🔍 Diagnostic du Système de Bibliothèque</h1>
         <div id="results"></div>
-
-        <div style="text-align: center; margin-top: 30px;">
-            <button class="btn" onclick="runDiagnostic()">🔄 Relancer les tests</button>
-            <button class="btn" onclick="window.location.href='/'">🏠 Retour à l'accueil</button>
+        <div style="text-align: center;">
+            <a href="#" class="btn" onclick="runDiagnostic()">🔄 Relancer les tests</a>
+            <a href="/" class="btn">🏠 Retour à l'accueil</a>
         </div>
-
-        <div style="margin-top: 30px; padding: 20px; background: #fff3e0; border-radius: 8px;">
-            <h3>📋 Instructions si les tests échouent:</h3>
-            <ol style="margin-left: 20px; line-height: 1.8;">
-                <li>Vérifiez que la variable <code>MONGODB_URI</code> est configurée sur Vercel</li>
-                <li>Allez sur <a href="https://vercel.com/dashboard" target="_blank">Vercel Dashboard</a></li>
-                <li>Sélectionnez votre projet → Settings → Environment Variables</li>
-                <li>Ajoutez <code>MONGODB_URI</code> avec la valeur MongoDB</li>
-                <li>Redéployez le projet (Deployments → ... → Redeploy)</li>
+        <div class="instructions">
+            <h3>🚨 Que faire si les tests échouent ?</h3>
+            <p>Si le test de connexion à MongoDB échoue, suivez ces étapes :</p>
+            <ol>
+                <li>Allez sur votre tableau de bord <a href="https://vercel.com" target="_blank">Vercel</a>.</li>
+                <li>Sélectionnez votre projet `library-alkawthar`.</li>
+                <li>Allez dans l'onglet <strong>Settings</strong> &rarr; <strong>Environment Variables</strong>.</li>
+                <li>Vérifiez qu'il existe une variable nommée <code>MONGODB_URI</code>.</li>
+                <li>Si elle n'existe pas, créez-la. Collez votre chaîne de connexion MongoDB complète dans le champ "Value".</li>
+                <li><strong>TRÈS IMPORTANT :</strong> Après avoir ajouté ou modifié la variable, vous devez redéployer votre projet. Allez dans l'onglet <strong>Deployments</strong>, trouvez le dernier déploiement, cliquez sur les trois points (⋮) et sélectionnez <strong>Redeploy</strong>.</li>
             </ol>
         </div>
     </div>
 
     <script>
-        async function runDiagnostic() {
-            const resultsDiv = document.getElementById('results');
-            const mainStatus = document.getElementById('main-status');
-            resultsDiv.innerHTML = '';
-            
-            const results = {
-                passed: 0,
-                failed: 0,
-                warnings: 0
-            };
+        const resultsDiv = document.getElementById('results');
 
-            function addResult(title, status, message, data = null) {
-                const statusClass = status === 'success' ? 'success' : status === 'error' ? 'error' : 'warning';
-                const icon = status === 'success' ? '✅' : status === 'error' ? '❌' : '⚠️';
-                
-                if (status === 'success') results.passed++;
-                else if (status === 'error') results.failed++;
-                else results.warnings++;
-
-                const div = document.createElement('div');
-                div.className = `status-box ${statusClass}`;
-                div.innerHTML = `
-                    <strong>${icon} ${title}</strong>
-                    <div style="margin-top: 5px;">${message}</div>
-                    ${data ? `<pre>${JSON.stringify(data, null, 2)}</pre>` : ''}
-                `;
-                resultsDiv.appendChild(div);
+        function addResult(status, icon, title, message, data = null) {
+            const div = document.createElement('div');
+            div.className = `status-box ${status}`;
+            let html = `<div class="icon">${icon}</div><div><strong>${title}</strong><br>${message}</div>`;
+            if (data) {
+                html += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
             }
+            div.innerHTML = html;
+            resultsDiv.appendChild(div);
+        }
 
-            // Test 1: Connexion API de base
+        async function runDiagnostic() {
+            resultsDiv.innerHTML = '';
+            addResult('loading', '⏳', 'Test en cours...', 'Veuillez patienter.');
+
+            // Test 1: Connexion à l'API
             try {
                 const response = await fetch('/api');
-                if (response.ok) {
-                    const data = await response.json();
-                    addResult(
-                        'Test 1: Connexion API',
-                        'success',
-                        'L\'API est accessible et répond correctement',
-                        data
-                    );
+                const data = await response.json();
+                resultsDiv.innerHTML = ''; // Nettoyer le message de chargement
 
-                    // Vérifier le statut de la base de données
+                if (response.ok) {
+                    addResult('success', '✅', 'Test 1: Connexion API', 'L\'API est accessible et répond correctement.', data);
+
+                    // Test 1.1: Statut de la base de données
                     if (data.database && data.database.connected) {
-                        addResult(
-                            'Test 1.1: MongoDB Connection',
-                            'success',
-                            `MongoDB est connecté avec ${data.database.booksCount || 0} livres dans la base`,
-                            data.database
-                        );
+                        addResult('success', '✅', 'Test 2: Connexion à MongoDB', `La base de données est bien connectée. ${data.database.booksCount} livres trouvés.`, data.database);
                     } else {
-                        addResult(
-                            'Test 1.1: MongoDB Connection',
-                            'error',
-                            'MongoDB n\'est PAS connecté. Vérifiez la variable MONGODB_URI sur Vercel!',
-                            data.database || {}
-                        );
-                    }
-
-                    if (data.environment) {
-                        if (data.environment.hasMongoUri) {
-                            addResult(
-                                'Test 1.2: Variable d\'environnement',
-                                'success',
-                                'La variable MONGODB_URI est configurée'
-                            );
-                        } else {
-                            addResult(
-                                'Test 1.2: Variable d\'environnement',
-                                'error',
-                                'La variable MONGODB_URI N\'EST PAS configurée sur Vercel! Configurez-la immédiatement.'
-                            );
-                        }
+                        addResult('error', '❌', 'Test 2: Connexion à MongoDB', "ÉCHEC CRITIQUE : L'API fonctionne mais n'est PAS connectée à la base de données. Vérifiez votre variable d'environnement <code>MONGODB_URI</code> sur Vercel !", data.database);
                     }
                 } else {
-                    addResult(
-                        'Test 1: Connexion API',
-                        'error',
-                        `L'API a retourné une erreur: ${response.status} ${response.statusText}`
-                    );
+                    addResult('error', '❌', 'Test 1: Connexion API', `L'API a retourné une erreur: ${response.status}`, data);
                 }
             } catch (error) {
-                addResult(
-                    'Test 1: Connexion API',
-                    'error',
-                    `Impossible de se connecter à l'API: ${error.message}`
-                );
-            }
-
-            // Test 2: Récupération des livres
-            try {
-                const response = await fetch('/api/books?page=1&limit=10');
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.books && data.books.length > 0) {
-                        addResult(
-                            'Test 2: Chargement des livres',
-                            'success',
-                            `${data.totalBooks} livres disponibles dans la base de données`,
-                            {
-                                totalBooks: data.totalBooks,
-                                currentPage: data.currentPage,
-                                totalPages: data.totalPages,
-                                firstBook: data.books[0]?.title || 'N/A'
-                            }
-                        );
-                    } else {
-                        addResult(
-                            'Test 2: Chargement des livres',
-                            'warning',
-                            'Aucun livre trouvé dans la base de données. La base est vide.',
-                            data
-                        );
-                    }
-                } else {
-                    const errorText = await response.text();
-                    addResult(
-                        'Test 2: Chargement des livres',
-                        'error',
-                        `Erreur lors du chargement des livres: ${response.status}`,
-                        { status: response.status, error: errorText }
-                    );
-                }
-            } catch (error) {
-                addResult(
-                    'Test 2: Chargement des livres',
-                    'error',
-                    `Erreur de connexion: ${error.message}`
-                );
-            }
-
-            // Test 3: Statistiques
-            try {
-                const response = await fetch('/api/statistics');
-                if (response.ok) {
-                    const data = await response.json();
-                    addResult(
-                        'Test 3: Statistiques',
-                        'success',
-                        'Les statistiques sont accessibles',
-                        data
-                    );
-                } else {
-                    addResult(
-                        'Test 3: Statistiques',
-                        'error',
-                        `Erreur de chargement des statistiques: ${response.status}`
-                    );
-                }
-            } catch (error) {
-                addResult(
-                    'Test 3: Statistiques',
-                    'error',
-                    `Erreur: ${error.message}`
-                );
-            }
-
-            // Résumé final
-            mainStatus.className = 'status-box ' + (results.failed === 0 ? 'success' : 'error');
-            mainStatus.innerHTML = `
-                <h3>Résumé des tests:</h3>
-                <div style="margin-top: 10px;">
-                    ✅ Tests réussis: ${results.passed}<br>
-                    ❌ Tests échoués: ${results.failed}<br>
-                    ⚠️ Avertissements: ${results.warnings}
-                </div>
-            `;
-
-            if (results.failed > 0) {
-                mainStatus.innerHTML += `
-                    <div style="margin-top: 15px; padding: 10px; background: white; border-radius: 5px;">
-                        <strong>🚨 Action requise:</strong><br>
-                        Configurez la variable MONGODB_URI sur Vercel et redéployez le projet.
-                    </div>
-                `;
+                resultsDiv.innerHTML = '';
+                addResult('error', '❌', 'Test 1: Connexion API', `Impossible de contacter le serveur sur /api. Vérifiez la configuration de Vercel (vercel.json) et les logs du serveur. Erreur: ${error.message}`);
             }
         }
 
-        // Lancer le diagnostic au chargement
         window.addEventListener('DOMContentLoaded', runDiagnostic);
     </script>
 </body>
