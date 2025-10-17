@@ -1,3 +1,4 @@
+public/styles.css:
 /* --- IMPORTS ET VARIABLES GLOBALES --- */
 @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap');
 
@@ -614,20 +615,60 @@ footer { text-align: center; padding: 1.5rem; background-color: var(--primary-co
     .container { padding: 0 0.5rem; }
     .search-controls { flex-direction: column; align-items: stretch; }
 }
-
-/* === NOUVELLES RÈGLES POUR CORRIGER LE TABLEAU === */
-
-.table-wrapper {
-    overflow-x: initial; /* Supprime la barre de défilement horizontale */
-}
-
-#books-table {
-    table-layout: auto; /* Permet au navigateur de gérer la largeur des colonnes */
+/* --- STYLES POUR L'ÉDITION DIRECTE DANS LE TABLEAU --- */
+.inline-edit-input {
     width: 100%;
-    min-width: 0; /* Annule la largeur minimale */
+    padding: 6px 8px;
+    border: 2px solid var(--accent-color);
+    border-radius: 6px;
+    background-color: #fff;
+    font-family: inherit;
+    font-size: 0.95rem;
+    box-shadow: 0 0 5px rgba(238, 155, 0, 0.5);
+    outline: none;
 }
 
-#books-table td, #books-table th {
-    white-space: normal; /* Permet au texte d'aller à la ligne */
-    word-break: break-word; /* Coupe les mots longs si nécessaire */
+tr.row-editing {
+    background-color: #fff9e6 !important; /* Jaune très clair pour indiquer l'édition */
+}
+
+tr.row-editing td {
+    vertical-align: middle;
+}
+
+.btn-small {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+    line-height: 1;
+    margin: 0 4px;
+}
+
+.btn-small:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.btn-small.btn-primary { color: var(--primary-color); }
+.btn-small.btn-danger { color: var(--delete-color); }
+.btn-small.btn-secondary { color: #6c757d; }
+
+#save-all-changes-btn {
+    background-color: var(--accent-color);
+    animation: pulse 1.5s infinite;
+}
+
+#save-all-changes-btn:hover {
+    animation: none;
+    background-color: #d48a00;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
 }
