@@ -453,6 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     async function showDashboard() {
+        console.log('🚀 showDashboard() appelée');
         loginPage.style.display = 'none';
         dashboardPage.style.display = 'block';
         const savedLang = localStorage.getItem('preferred_language') || 'ar';
@@ -460,20 +461,44 @@ document.addEventListener('DOMContentLoaded', () => {
         initializeDates();
         initializeBarcodeScanner();
         
-        // Vérifier la connexion à l'API avant de charger les données
+        // Charger les données immédiatement avec gestion d'erreur améliorée
         try {
             console.log('🔍 Vérification de la connexion à l\'API...');
-            const apiCheck = await fetch('/api');
+            const apiCheck = await fetch('/api', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+            
+            console.log('📡 Réponse API:', apiCheck.status, apiCheck.statusText);
+            
             if (apiCheck.ok) {
                 const apiInfo = await apiCheck.json();
                 console.log('✅ API connectée:', apiInfo);
+                // Charger les données immédiatement
                 await loadAllData();
             } else {
-                throw new Error('API non disponible');
+                const errorText = await apiCheck.text();
+                console.error('❌ Erreur API:', apiCheck.status, errorText);
+                throw new Error(`API returned ${apiCheck.status}: ${apiCheck.statusText}`);
             }
         } catch (error) {
             console.error('❌ Erreur de connexion à l\'API:', error);
-            alert('⚠️ Impossible de se connecter à l\'API. Vérifiez que le serveur est démarré.');
+            console.error('📋 Détails:', {
+                message: error.message,
+                stack: error.stack,
+                url: window.location.href
+            });
+            
+            // Afficher l'erreur à l'utilisateur
+            hideLoadingBar();
+            alert(`⚠️ Erreur de connexion à la base de données:\n${error.message}\n\nVérifiez que la variable MONGODB_URI est configurée sur Vercel.`);
+            
+            // Réinitialiser l'état de chargement
+            isLoading = false;
         }
     }
 
@@ -499,11 +524,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Vérifier si déjà connecté et afficher le dashboard
-    if (localStorage.getItem('isLoggedIn') === 'true') {
+    console.log('🔍 Vérification de l\'état de connexion...');
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    console.log('📊 État de connexion:', isLoggedIn);
+    
+    if (isLoggedIn) {
         console.log('✅ Utilisateur déjà connecté - Affichage du dashboard');
-        showDashboard();
+        showDashboard().catch(err => {
+            console.error('❌ Erreur lors de l\'affichage du dashboard:', err);
+        });
     } else {
         console.log('⚠️ Utilisateur non connecté - Affichage de la page de connexion');
+        loginPage.style.display = 'flex';
     }
 
     // Gestion des langues - FIX: Assurer que les boutons fonctionnent
@@ -539,15 +571,31 @@ document.addEventListener('DOMContentLoaded', () => {
             const booksUrl = `/api/books?page=1&limit=10000&search=${encodeURIComponent(searchValue)}`;
             
             console.log('📡 Requête:', booksUrl);
-            const booksResponse = await fetch(booksUrl);
+            const booksResponse = await fetch(booksUrl, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+            
+            console.log('📥 Réponse reçue:', booksResponse.status, booksResponse.statusText);
             
             if (!booksResponse.ok) {
-                throw new Error(`HTTP Error: ${booksResponse.status} - ${booksResponse.statusText}`);
+                const errorText = await booksResponse.text();
+                console.error('❌ Erreur HTTP:', errorText);
+                throw new Error(`HTTP ${booksResponse.status}: ${booksResponse.statusText}\n${errorText}`);
             }
             
             updateLoadingProgress(40, 'معالجة بيانات الكتب...');
             const booksData = await booksResponse.json();
-            console.log('✅ Données reçues:', booksData);
+            console.log('✅ Données reçues:', {
+                booksCount: booksData.books?.length || 0,
+                page: booksData.page,
+                totalPages: booksData.totalPages,
+                totalBooks: booksData.totalBooks
+            });
             
             allBooks = booksData.books || [];
             totalPages = Math.ceil(allBooks.length / 50);

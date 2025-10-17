@@ -4,20 +4,43 @@ Système complet de gestion de bibliothèque pour les Écoles Internationales Al
 
 ## 🚀 Déploiement sur Vercel
 
-### Configuration Requise
+### ⚠️ Configuration CRITIQUE - À FAIRE IMMÉDIATEMENT
 
-1. **Variable d'environnement MongoDB** - Ajouter dans Vercel :
-   ```
-   MONGODB_URI=mongodb+srv://cherifmed2030_db_user:Alkawthar01@library.ve29w9g.mongodb.net/?retryWrites=true&w=majority&appName=Library
-   ```
+**PROBLÈME**: Si le site affiche "0 livres" malgré la présence de données dans MongoDB, c'est que la variable d'environnement n'est pas configurée sur Vercel.
 
-### Étapes de Configuration Vercel
+### Étapes de Configuration Vercel (OBLIGATOIRE)
 
-1. Aller sur [Vercel Dashboard](https://vercel.com/dashboard)
-2. Sélectionner le projet `Library-Alkawthar`
-3. Aller dans **Settings** → **Environment Variables**
-4. Ajouter la variable `MONGODB_URI` avec la valeur MongoDB
-5. Redéployer le projet
+1. **Aller sur Vercel Dashboard**:
+   - Visitez: https://vercel.com/dashboard
+   - Connectez-vous avec votre compte
+
+2. **Sélectionner votre projet**:
+   - Cliquez sur `Library-Alkawthar` (ou le nom de votre projet)
+
+3. **Configurer les variables d'environnement**:
+   - Cliquez sur **Settings** (en haut)
+   - Dans le menu de gauche, cliquez sur **Environment Variables**
+   - Cliquez sur **Add New**
+   
+4. **Ajouter la variable MongoDB**:
+   - **Name (Nom)**: `MONGODB_URI`
+   - **Value (Valeur)**: 
+     ```
+     mongodb+srv://cherifmed2030_db_user:Alkawthar01@library.ve29w9g.mongodb.net/?retryWrites=true&w=majority&appName=Library
+     ```
+   - **Environment**: Sélectionner `Production`, `Preview`, et `Development` (les 3)
+   - Cliquer sur **Save**
+
+5. **Redéployer le projet** (IMPORTANT):
+   - Aller dans **Deployments** (en haut)
+   - Cliquer sur les 3 points `...` à côté du dernier déploiement
+   - Sélectionner **Redeploy**
+   - Confirmer le redéploiement
+
+6. **Vérifier la connexion**:
+   - Attendez que le déploiement soit terminé (environ 1-2 minutes)
+   - Visitez votre site: `https://library-alkawthar.vercel.app`
+   - Connectez-vous et vérifiez que les livres se chargent
 
 ## 📊 Base de Données MongoDB
 

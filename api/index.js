@@ -101,13 +101,47 @@ app.get('/', (req, res) => {
     `);
 });
 
-app.get('/api', (req, res) => {
-    res.json({
-        message: 'API Bibliothèque Al-Kawthar - Fonctionnelle',
-        mode: 'Production MongoDB',
-        timestamp: new Date(),
-        database: 'Connected'
-    });
+app.get('/api', async (req, res) => {
+    try {
+        // Vérifier la connexion MongoDB
+        const dbStatus = mongoose.connection.readyState;
+        const dbStatusText = {
+            0: 'Disconnected',
+            1: 'Connected',
+            2: 'Connecting',
+            3: 'Disconnecting'
+        }[dbStatus] || 'Unknown';
+        
+        // Compter les livres pour vérifier l'accès à la base
+        let booksCount = 0;
+        try {
+            booksCount = await Book.countDocuments();
+        } catch (e) {
+            console.error('Erreur comptage livres:', e.message);
+        }
+        
+        res.json({
+            message: 'API Bibliothèque Al-Kawthar - Fonctionnelle',
+            mode: 'Production MongoDB',
+            timestamp: new Date(),
+            database: {
+                status: dbStatusText,
+                readyState: dbStatus,
+                connected: dbStatus === 1,
+                booksCount: booksCount
+            },
+            environment: {
+                hasMongoUri: !!process.env.MONGODB_URI,
+                nodeEnv: process.env.NODE_ENV || 'development'
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: 'Erreur API',
+            error: error.message,
+            timestamp: new Date()
+        });
+    }
 });
 
 // Route pour obtenir les statistiques
@@ -170,10 +204,21 @@ app.get('/api/loans/teachers', async (req, res) => {
 // Route pour obtenir la liste des livres avec pagination et recherche
 app.get('/api/books', async (req, res) => {
     try {
+        // Vérifier la connexion MongoDB
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ 
+                message: "Base de données non connectée", 
+                error: "MongoDB connection not established",
+                dbStatus: mongoose.connection.readyState 
+            });
+        }
+
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 50;
         const search = req.query.search || '';
         const skip = (page - 1) * limit;
+
+        console.log(`📚 Requête /api/books - Page: ${page}, Limit: ${limit}, Search: "${search}"`);
 
         let query = {};
         if (search) {
@@ -189,7 +234,9 @@ app.get('/api/books', async (req, res) => {
 
         const totalBooks = await Book.countDocuments(query);
         const totalPages = Math.ceil(totalBooks / limit);
-        const books = await Book.find(query).skip(skip).limit(limit);
+        const books = await Book.find(query).skip(skip).limit(limit).lean();
+
+        console.log(`✅ ${books.length} livres retournés sur ${totalBooks} total`);
 
         res.json({
             books,
@@ -200,7 +247,12 @@ app.get('/api/books', async (req, res) => {
             hasPrevPage: page > 1
         });
     } catch (error) {
-        res.status(500).json({ message: "Erreur serveur", error: error.message });
+        console.error('❌ Erreur /api/books:', error);
+        res.status(500).json({ 
+            message: "Erreur serveur", 
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 });
 
