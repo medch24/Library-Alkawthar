@@ -360,12 +360,33 @@ function changeLanguage(lang) {
     }
 }
 
-function showLoadingBar() {
-    document.getElementById('loading-bar').style.display = 'block';
+function showLoadingBar(text = '') {
+    const loadingBar = document.getElementById('loading-bar');
+    const loadingDetails = document.getElementById('loading-details');
+    loadingBar.style.display = 'block';
+    if (text) {
+        loadingDetails.innerHTML = `<small>${text}</small>`;
+    }
+}
+
+function updateLoadingProgress(percentage, text = '') {
+    const progressFill = document.getElementById('progress-fill');
+    const loadingPercentage = document.getElementById('loading-percentage');
+    const loadingDetails = document.getElementById('loading-details');
+    
+    progressFill.style.width = percentage + '%';
+    loadingPercentage.textContent = Math.round(percentage) + '%';
+    
+    if (text) {
+        loadingDetails.innerHTML = `<small>${text}</small>`;
+    }
 }
 
 function hideLoadingBar() {
-    document.getElementById('loading-bar').style.display = 'none';
+    setTimeout(() => {
+        document.getElementById('loading-bar').style.display = 'none';
+        document.getElementById('progress-fill').style.width = '0%';
+    }, 500);
 }
 
 function formatDate(dateString) {
@@ -506,11 +527,16 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadAllData() {
         if (isLoading) return;
         isLoading = true;
-        showLoadingBar();
+        showLoadingBar('اتصال بقاعدة البيانات MongoDB...');
+        updateLoadingProgress(10, 'جاري الاتصال...');
+        
         try {
-            console.log('🔄 Chargement des données depuis MongoDB...');
+            console.log('🔄 Chargement COMPLET des données depuis MongoDB...');
+            
+            // Étape 1: Charger TOUS les livres (sans limite)
+            updateLoadingProgress(20, 'تحميل جميع الكتب...');
             const searchValue = searchInput ? searchInput.value || '' : '';
-            const booksUrl = `/api/books?page=${currentPage}&limit=50&search=${encodeURIComponent(searchValue)}`;
+            const booksUrl = `/api/books?page=1&limit=10000&search=${encodeURIComponent(searchValue)}`;
             
             console.log('📡 Requête:', booksUrl);
             const booksResponse = await fetch(booksUrl);
@@ -519,22 +545,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(`HTTP Error: ${booksResponse.status} - ${booksResponse.statusText}`);
             }
             
+            updateLoadingProgress(40, 'معالجة بيانات الكتب...');
             const booksData = await booksResponse.json();
             console.log('✅ Données reçues:', booksData);
             
             allBooks = booksData.books || [];
-            currentPage = booksData.currentPage || 1;
-            totalPages = booksData.totalPages || 1;
+            totalPages = Math.ceil(allBooks.length / 50);
             
             console.log(`📚 ${allBooks.length} livres chargés depuis MongoDB`);
+            updateLoadingProgress(60, `تم تحميل ${allBooks.length} كتاب`);
             
-            updatePaginationControls();
+            // Étape 2: Charger les statistiques
+            updateLoadingProgress(70, 'تحميل الإحصائيات...');
             await updateStatsFromAPI();
-            renderTable(allBooks);
             
-            // Charger les prêts actifs
+            // Étape 3: Afficher les données
+            updateLoadingProgress(80, 'عرض البيانات...');
+            updatePaginationControls();
+            renderTable(allBooks.slice((currentPage - 1) * 50, currentPage * 50));
+            
+            // Étape 4: Charger les prêts actifs
             if (!searchValue) {
                 try {
+                    updateLoadingProgress(90, 'تحميل الإعارات النشطة...');
                     const loansResponse = await fetch('/api/loans');
                     if (loansResponse.ok) {
                         allLoans = await loansResponse.json();
@@ -546,18 +579,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             
+            updateLoadingProgress(100, 'اكتمل التحميل! ✓');
             setTimeout(() => updateTranslations(), 200);
         } catch (error) {
             console.error('❌ Erreur de chargement:', error);
-            const errorMsg = currentLanguage === 'ar' ? 'خطأ في الاتصال بقاعدة البيانات MongoDB. تحقق من الاتصال' : 
-                             currentLanguage === 'fr' ? 'Erreur de connexion à MongoDB. Vérifiez la connexion' : 
-                             'MongoDB connection error. Please check connection';
+            updateLoadingProgress(0, '❌ خطأ في التحميل');
             
-            // Afficher un message d'erreur plus détaillé
-            const detailedMsg = `${errorMsg}\n\nDétails: ${error.message}\n\nVérifiez que MongoDB est accessible à:\nmongodb+srv://cherifmed2030_db_user:***@library.ve29w9g.mongodb.net/`;
-            alert(detailedMsg);
+            const errorMsg = currentLanguage === 'ar' ? 'خطأ في الاتصال بقاعدة البيانات MongoDB' : 
+                             currentLanguage === 'fr' ? 'Erreur de connexion à MongoDB' : 
+                             'MongoDB connection error';
             
-            // Essayer de réafficher le tableau vide pour éviter un écran blanc
+            alert(`${errorMsg}\n\nDétails: ${error.message}`);
             renderTable([]);
         } finally {
             isLoading = false;

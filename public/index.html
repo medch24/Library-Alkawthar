@@ -57,10 +57,16 @@
 
         <div id="loading-bar" class="loading-bar" style="display: none;">
             <div class="loading-progress">
-                <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                </div>
                 <div class="loading-text">
                     <i class="fas fa-spinner fa-spin"></i>
-                    <span id="loading-text-span" data-key="loading_data">تحميل البيانات...</span>
+                    <span id="loading-text-span" data-key="loading_data">تحميل البيانات من MongoDB...</span>
+                    <span id="loading-percentage">0%</span>
+                </div>
+                <div class="loading-details" id="loading-details">
+                    <small>جاري الاتصال بقاعدة البيانات...</small>
                 </div>
             </div>
         </div>

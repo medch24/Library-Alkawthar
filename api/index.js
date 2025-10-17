@@ -28,12 +28,9 @@ const upload = multer({
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://cherifmed2030_db_user:Alkawthar01@library.ve29w9g.mongodb.net/?retryWrites=true&w=majority&appName=Library';
 
 mongoose.connect(MONGODB_URI)
-  .then(async () => {
+  .then(() => {
     console.log('✅ MongoDB connecté avec succès');
     console.log('📊 Base de données: Library');
-    
-    // Initialiser des données de test si la base est vide
-    await initializeSampleData();
   })
   .catch(err => {
     console.error("❌ Erreur de connexion MongoDB:", err);
@@ -92,128 +89,6 @@ const HistorySchema = new mongoose.Schema({
 const Book = mongoose.model('Book', BookSchema);
 const Loan = mongoose.model('Loan', LoanSchema);
 const History = mongoose.model('History', HistorySchema);
-
-// Fonction pour initialiser des données de test si la base est vide
-async function initializeSampleData() {
-    try {
-        const bookCount = await Book.countDocuments();
-        console.log(`📚 Nombre de livres dans MongoDB: ${bookCount}`);
-        
-        if (bookCount === 0) {
-            console.log('🔄 Initialisation de données de test dans MongoDB...');
-            
-            const sampleBooks = [
-                {
-                    isbn: '978-0-7475-3269-9',
-                    title: 'Harry Potter and the Philosopher\'s Stone',
-                    totalCopies: 5,
-                    loanedCopies: 0,
-                    availableCopies: 5,
-                    subject: 'English Literature',
-                    level: 'Grade 6',
-                    language: 'English',
-                    cornerName: 'Fantasy Corner',
-                    cornerNumber: 'F-01'
-                },
-                {
-                    isbn: '978-2-8104-1234-5',
-                    title: 'Les Mathématiques CE2',
-                    totalCopies: 10,
-                    loanedCopies: 0,
-                    availableCopies: 10,
-                    subject: 'Mathématiques',
-                    level: 'CE2',
-                    language: 'Français',
-                    cornerName: 'Coin des Sciences',
-                    cornerNumber: 'S-02'
-                },
-                {
-                    isbn: '978-1-4012-1234-5',
-                    title: 'Science Textbook Grade 6',
-                    totalCopies: 8,
-                    loanedCopies: 0,
-                    availableCopies: 8,
-                    subject: 'Science',
-                    level: 'Grade 6',
-                    language: 'English',
-                    cornerName: 'Science Corner',
-                    cornerNumber: 'S-01'
-                },
-                {
-                    isbn: '978-3-1615-4321-8',
-                    title: 'التربية الإسلامية الصف الخامس',
-                    totalCopies: 15,
-                    loanedCopies: 0,
-                    availableCopies: 15,
-                    subject: 'التربية الإسلامية',
-                    level: 'الصف الخامس',
-                    language: 'عربي',
-                    cornerName: 'ركن التربية الإسلامية',
-                    cornerNumber: 'إ-01'
-                },
-                {
-                    isbn: '978-1-2345-6789-0',
-                    title: 'Histoire de France CM1',
-                    totalCopies: 6,
-                    loanedCopies: 0,
-                    availableCopies: 6,
-                    subject: 'Histoire',
-                    level: 'CM1',
-                    language: 'Français',
-                    cornerName: 'Coin Histoire-Géo',
-                    cornerNumber: 'H-01'
-                },
-                {
-                    isbn: '978-2-2101-5678-9',
-                    title: 'Physics for Teachers',
-                    totalCopies: 3,
-                    loanedCopies: 0,
-                    availableCopies: 3,
-                    subject: 'Physics',
-                    level: 'Teacher Reference',
-                    language: 'English',
-                    cornerName: 'Teachers Corner',
-                    cornerNumber: 'T-01'
-                },
-                {
-                    isbn: '978-0-1234-5678-9',
-                    title: 'الرياضيات للصف الرابع',
-                    totalCopies: 12,
-                    loanedCopies: 0,
-                    availableCopies: 12,
-                    subject: 'رياضيات',
-                    level: 'الصف الرابع',
-                    language: 'عربي',
-                    cornerName: 'ركن الرياضيات',
-                    cornerNumber: 'ر-02'
-                },
-                {
-                    isbn: '978-2-3456-7890-1',
-                    title: 'Géographie CM2',
-                    totalCopies: 7,
-                    loanedCopies: 0,
-                    availableCopies: 7,
-                    subject: 'Géographie',
-                    level: 'CM2',
-                    language: 'Français',
-                    cornerName: 'Coin Géographie',
-                    cornerNumber: 'G-01'
-                }
-            ];
-            
-            const insertedBooks = await Book.insertMany(sampleBooks);
-            console.log(`✅ ${insertedBooks.length} livres initialisés dans MongoDB`);
-            
-            return insertedBooks;
-        } else {
-            console.log('✅ La base de données contient déjà des livres');
-            return null;
-        }
-    } catch (error) {
-        console.error('❌ Erreur lors de l\'initialisation des données:', error);
-        return null;
-    }
-}
 
 // --- ROUTES API ---
 
