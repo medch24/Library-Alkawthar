@@ -74,7 +74,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Configuration multer pour upload de fichiers
 const upload = multer({ 
-    dest: 'uploads/',
+    dest: '/tmp/uploads',
     limits: { fileSize: 10 * 1024 * 1024 } // 10MB max
 });
 
