@@ -512,7 +512,13 @@ app.get('/api/loans', async (req, res) => {
         res.status(500).json({ message: "Erreur serveur", error });
     }
 });
-
+app.get('/', (req, res) => {
+  res.send(`
+    <h2>📚 Al-Kawthar Library API</h2>
+    <p>✅ Le serveur fonctionne correctement.</p>
+    <p>Utilisez <a href="/api">/api</a> pour accéder aux données.</p>
+  `);
+});
 // Export pour Vercel
 module.exports = app;
 
