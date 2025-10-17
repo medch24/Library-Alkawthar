@@ -24,7 +24,7 @@ const upload = multer({
     limits: { fileSize: 10 * 1024 * 1024 } // 10MB max
 });
 
-// MongoDB connection - URI fournie par l'utilisateur
+// Connexion MongoDB
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://cherifmed2030_db_user:Alkawthar01@library.ve29w9g.mongodb.net/?retryWrites=true&w=majority&appName=Library';
 
 mongoose.connect(MONGODB_URI)
@@ -37,7 +37,7 @@ mongoose.connect(MONGODB_URI)
     process.exit(1);
   });
 
-// Schémas MongoDB - Utilisation d'ID au lieu d'ISBN comme identifiant principal
+// Schémas MongoDB
 const BookSchema = new mongoose.Schema({
     isbn: { type: String, required: true },
     title: { type: String, required: true },
@@ -53,7 +53,6 @@ const BookSchema = new mongoose.Schema({
     updatedAt: { type: Date, default: Date.now }
 });
 
-// Index pour recherche rapide
 BookSchema.index({ isbn: 1 });
 BookSchema.index({ title: 'text', subject: 'text' });
 
@@ -69,7 +68,6 @@ const LoanSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
-// Index pour recherche rapide
 LoanSchema.index({ bookId: 1, studentName: 1 });
 LoanSchema.index({ isbn: 1 });
 LoanSchema.index({ borrowerType: 1 });
@@ -92,125 +90,63 @@ const History = mongoose.model('History', HistorySchema);
 
 // --- ROUTES API ---
 
-// Route de base pour vérifier que l'API fonctionne
 app.get('/', (req, res) => {
-    res.send(`
-        <h2>📚 Al-Kawthar Library API</h2>
-        <p>✅ Le serveur fonctionne correctement.</p>
-        <p>Utilisez <a href="/api">/api</a> pour accéder aux données.</p>
-    `);
+    res.send(`<h2>📚 Al-Kawthar Library API</h2><p>✅ Le serveur fonctionne correctement.</p><p>Utilisez <a href="/api">/api</a> pour accéder aux données.</p>`);
 });
 
 app.get('/api', async (req, res) => {
     try {
-        // Vérifier la connexion MongoDB
         const dbStatus = mongoose.connection.readyState;
-        const dbStatusText = {
-            0: 'Disconnected',
-            1: 'Connected',
-            2: 'Connecting',
-            3: 'Disconnecting'
-        }[dbStatus] || 'Unknown';
-        
-        // Compter les livres pour vérifier l'accès à la base
+        const dbStatusText = {0: 'Disconnected', 1: 'Connected', 2: 'Connecting', 3: 'Disconnecting'}[dbStatus] || 'Unknown';
         let booksCount = 0;
-        try {
-            booksCount = await Book.countDocuments();
-        } catch (e) {
-            console.error('Erreur comptage livres:', e.message);
+        if (dbStatus === 1) {
+            try {
+                booksCount = await Book.countDocuments();
+            } catch (e) {
+                console.error('Erreur comptage livres:', e.message);
+            }
         }
         
         res.json({
             message: 'API Bibliothèque Al-Kawthar - Fonctionnelle',
             mode: 'Production MongoDB',
             timestamp: new Date(),
-            database: {
-                status: dbStatusText,
-                readyState: dbStatus,
-                connected: dbStatus === 1,
-                booksCount: booksCount
-            },
-            environment: {
-                hasMongoUri: !!process.env.MONGODB_URI,
-                nodeEnv: process.env.NODE_ENV || 'development'
-            }
+            database: { status: dbStatusText, connected: dbStatus === 1, booksCount },
+            environment: { hasMongoUri: !!process.env.MONGODB_URI, nodeEnv: process.env.NODE_ENV || 'development' }
         });
     } catch (error) {
-        res.status(500).json({
-            message: 'Erreur API',
-            error: error.message,
-            timestamp: new Date()
-        });
+        res.status(500).json({ message: 'Erreur API', error: error.message });
     }
 });
 
-// Route pour obtenir les statistiques
 app.get('/api/statistics', async (req, res) => {
     try {
         const totalBooks = await Book.countDocuments();
         const totalCopiesResult = await Book.aggregate([{ $group: { _id: null, total: { $sum: '$totalCopies' } } }]);
         const loanedCopiesResult = await Book.aggregate([{ $group: { _id: null, total: { $sum: '$loanedCopies' } } }]);
-        const availableCopiesResult = await Book.aggregate([{ $group: { _id: null, total: { $sum: '$availableCopies' } } }]);
         const activeLoans = await Loan.countDocuments();
+
+        const totalCopies = totalCopiesResult[0]?.total || 0;
+        const loanedCopies = loanedCopiesResult[0]?.total || 0;
 
         res.json({
             totalBooks,
-            totalCopies: totalCopiesResult[0]?.total || 0,
-            loanedCopies: loanedCopiesResult[0]?.total || 0,
-            availableCopies: availableCopiesResult[0]?.total || 0,
-            activeLoans: activeLoans
+            totalCopies,
+            loanedCopies,
+            availableCopies: totalCopies - loanedCopies,
+            activeLoans
         });
     } catch (error) {
         res.status(500).json({ message: "Erreur serveur", error: error.message });
     }
 });
 
-// Route pour obtenir les prêts d'étudiants
-app.get('/api/loans/students', async (req, res) => {
-    try {
-        const loans = await Loan.find({ borrowerType: 'student' }).lean();
-        // Enrichir avec les titres des livres
-        const enrichedLoans = await Promise.all(loans.map(async (loan) => {
-            const book = await Book.findById(loan.bookId);
-            return {
-                ...loan,
-                title: book ? book.title : 'Livre non trouvé'
-            };
-        }));
-        res.json(enrichedLoans);
-    } catch (error) {
-        res.status(500).json({ message: "Erreur serveur", error: error.message });
-    }
-});
+// --- ROUTES POUR LES LIVRES (Books) ---
 
-// Route pour obtenir les prêts d'enseignants
-app.get('/api/loans/teachers', async (req, res) => {
-    try {
-        const loans = await Loan.find({ borrowerType: 'teacher' }).lean();
-        // Enrichir avec les titres des livres
-        const enrichedLoans = await Promise.all(loans.map(async (loan) => {
-            const book = await Book.findById(loan.bookId);
-            return {
-                ...loan,
-                title: book ? book.title : 'Livre non trouvé'
-            };
-        }));
-        res.json(enrichedLoans);
-    } catch (error) {
-        res.status(500).json({ message: "Erreur serveur", error: error.message });
-    }
-});
-
-// Route pour obtenir la liste des livres avec pagination et recherche
 app.get('/api/books', async (req, res) => {
     try {
-        // Vérifier la connexion MongoDB
         if (mongoose.connection.readyState !== 1) {
-            return res.status(503).json({ 
-                message: "Base de données non connectée", 
-                error: "MongoDB connection not established",
-                dbStatus: mongoose.connection.readyState 
-            });
+            return res.status(503).json({ message: "Base de données non connectée" });
         }
 
         const page = parseInt(req.query.page) || 1;
@@ -218,124 +154,199 @@ app.get('/api/books', async (req, res) => {
         const search = req.query.search || '';
         const skip = (page - 1) * limit;
 
-        console.log(`📚 Requête /api/books - Page: ${page}, Limit: ${limit}, Search: "${search}"`);
-
         let query = {};
         if (search) {
-            query = {
-                $or: [
-                    { title: { $regex: search, $options: 'i' } },
-                    { isbn: { $regex: search, $options: 'i' } },
-                    { subject: { $regex: search, $options: 'i' } },
-                    { level: { $regex: search, $options: 'i' } }
-                ]
-            };
+            const searchRegex = { $regex: search, $options: 'i' };
+            query = { $or: [{ title: searchRegex }, { isbn: searchRegex }, { subject: searchRegex }, { level: searchRegex }] };
         }
 
         const totalBooks = await Book.countDocuments(query);
         const totalPages = Math.ceil(totalBooks / limit);
-        const books = await Book.find(query).skip(skip).limit(limit).lean();
+        const books = await Book.find(query).sort({ title: 1 }).skip(skip).limit(limit).lean();
 
-        console.log(`✅ ${books.length} livres retournés sur ${totalBooks} total`);
-
-        res.json({
-            books,
-            totalBooks,
-            totalPages,
-            currentPage: page,
-            hasNextPage: page < totalPages,
-            hasPrevPage: page > 1
-        });
+        res.json({ books, totalBooks, totalPages, currentPage: page });
     } catch (error) {
         console.error('❌ Erreur /api/books:', error);
-        res.status(500).json({ 
-            message: "Erreur serveur", 
-            error: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-        });
+        res.status(500).json({ message: "Erreur serveur", error: error.message });
     }
 });
 
-// Route pour obtenir un livre spécifique par ID
 app.get('/api/books/:id', async (req, res) => {
     try {
         const id = req.params.id;
+        let book = mongoose.Types.ObjectId.isValid(id) ? await Book.findById(id) : await Book.findOne({ isbn: id });
         
-        // Chercher par ID MongoDB si c'est un ObjectId valide
-        let book;
-        if (mongoose.Types.ObjectId.isValid(id)) {
-            book = await Book.findById(id);
-        }
-        
-        // Sinon, chercher par ISBN
-        if (!book) {
-            book = await Book.findOne({ isbn: id });
-        }
-        
-        if (book) {
-            res.json(book);
-        } else {
-            res.status(404).json({ message: 'Livre non trouvé' });
-        }
+        if (book) res.json(book);
+        else res.status(404).json({ message: 'Livre non trouvé' });
     } catch (error) {
         res.status(500).json({ message: "Erreur serveur", error: error.message });
     }
 });
 
-// Route pour obtenir tous les prêts
-app.get('/api/loans', async (req, res) => {
-    try {
-        const loans = await Loan.find().lean();
-        const enrichedLoans = await Promise.all(loans.map(async (loan) => {
-            const book = await Book.findById(loan.bookId);
-            return {
-                ...loan,
-                title: book ? book.title : 'Livre non trouvé'
-            };
-        }));
-        res.json(enrichedLoans);
-    } catch (error) {
-        res.status(500).json({ message: "Erreur serveur", error: error.message });
-    }
-});
-
-// Route pour ajouter un livre manuellement
 app.post('/api/books', async (req, res) => {
     try {
-        const bookData = {
-            isbn: req.body.isbn,
-            title: req.body.title,
-            totalCopies: parseInt(req.body.totalCopies) || 1,
-            loanedCopies: 0,
-            availableCopies: parseInt(req.body.totalCopies) || 1,
-            subject: req.body.subject || '',
-            level: req.body.level || '',
-            language: req.body.language || '',
-            cornerName: req.body.cornerName || '',
-            cornerNumber: req.body.cornerNumber || ''
-        };
-
-        const newBook = new Book(bookData);
-        await newBook.save();
+        const { isbn, title, totalCopies, subject, level, language, cornerName, cornerNumber } = req.body;
+        const copies = parseInt(totalCopies) || 1;
         
-        res.status(201).json({ 
-            message: 'Livre ajouté avec succès', 
-            book: newBook 
+        const newBook = new Book({
+            isbn, title, subject, level, language, cornerName, cornerNumber,
+            totalCopies: copies,
+            availableCopies: copies,
+            loanedCopies: 0
         });
+
+        await newBook.save();
+        res.status(201).json({ message: 'Livre ajouté avec succès', book: newBook });
     } catch (error) {
-        res.status(500).json({ 
-            message: "Erreur lors de l'ajout du livre", 
-            error: error.message 
-        });
+        res.status(500).json({ message: "Erreur lors de l'ajout du livre", error: error.message });
     }
 });
 
-// Route pour uploader un fichier Excel
+app.put('/api/books/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updateData = { ...req.body, updatedAt: new Date() };
+
+        const book = await Book.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+
+        if (!book) return res.status(404).json({ message: 'Livre non trouvé' });
+
+        // Recalculer les copies disponibles si totalCopies a changé
+        if (updateData.totalCopies !== undefined) {
+            book.availableCopies = book.totalCopies - book.loanedCopies;
+            await book.save();
+        }
+
+        res.json({ message: 'Livre mis à jour avec succès', book });
+    } catch (error) {
+        res.status(500).json({ message: "Erreur lors de la mise à jour", error: error.message });
+    }
+});
+
+app.delete('/api/books/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        let book = await Book.findById(id);
+
+        if (!book) return res.status(404).json({ message: 'Livre non trouvé' });
+
+        if (book.loanedCopies > 0) {
+            return res.status(400).json({ message: `Impossible de supprimer: ${book.loanedCopies} copies sont actuellement prêtées` });
+        }
+
+        await Book.deleteOne({ _id: book._id });
+        res.json({ message: 'Livre supprimé avec succès' });
+    } catch (error) {
+        res.status(500).json({ message: "Erreur lors de la suppression", error: error.message });
+    }
+});
+
+// --- ROUTES POUR LES PRÊTS (Loans) ---
+
+// Fonction utilitaire pour obtenir les prêts avec les titres des livres
+const getEnrichedLoans = async (filter = {}) => {
+    const loans = await Loan.find(filter).lean();
+    const bookIds = loans.map(loan => loan.bookId);
+    const books = await Book.find({ _id: { $in: bookIds } }).select('title').lean();
+    const bookTitleMap = books.reduce((map, book) => {
+        map[book._id.toString()] = book.title;
+        return map;
+    }, {});
+    return loans.map(loan => ({
+        ...loan,
+        title: bookTitleMap[loan.bookId.toString()] || 'Livre non trouvé'
+    }));
+};
+
+app.get('/api/loans', (req, res) => getEnrichedLoans({}).then(data => res.json(data)).catch(err => res.status(500).json({ message: err.message })));
+app.get('/api/loans/students', (req, res) => getEnrichedLoans({ borrowerType: 'student' }).then(data => res.json(data)).catch(err => res.status(500).json({ message: err.message })));
+app.get('/api/loans/teachers', (req, res) => getEnrichedLoans({ borrowerType: 'teacher' }).then(data => res.json(data)).catch(err => res.status(500).json({ message: err.message })));
+
+app.post('/api/loans', async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+        const { bookId, studentName, studentClass, borrowerType, returnDate, copiesCount } = req.body;
+        const copies = parseInt(copiesCount) || 1;
+
+        const book = await Book.findById(bookId).session(session);
+        if (!book) return res.status(404).json({ message: 'Livre non trouvé' });
+        if (book.availableCopies < copies) return res.status(400).json({ message: `Pas assez de copies disponibles. Disponibles: ${book.availableCopies}` });
+
+        const newLoan = new Loan({ bookId, isbn: book.isbn, studentName, studentClass, borrowerType, returnDate, copiesCount: copies });
+        await newLoan.save({ session });
+
+        book.loanedCopies += copies;
+        book.availableCopies -= copies;
+        await book.save({ session });
+        
+        await session.commitTransaction();
+        res.status(201).json({ message: 'Prêt créé avec succès', loan: newLoan });
+    } catch (error) {
+        await session.abortTransaction();
+        res.status(500).json({ message: "Erreur lors de la création du prêt", error: error.message });
+    } finally {
+        session.endSession();
+    }
+});
+
+app.delete('/api/loans', async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+        const { isbn, studentName } = req.body;
+        const loan = await Loan.findOne({ isbn, studentName }).session(session);
+        if (!loan) return res.status(404).json({ message: 'Prêt non trouvé' });
+
+        const book = await Book.findById(loan.bookId).session(session);
+        if (book) {
+            const copies = loan.copiesCount || 1;
+            book.loanedCopies = Math.max(0, book.loanedCopies - copies);
+            book.availableCopies = book.totalCopies - book.loanedCopies;
+            await book.save({ session });
+        }
+
+        const historyEntry = new History({ ...loan.toObject(), _id: undefined, __v: undefined, actualReturnDate: new Date() });
+        await historyEntry.save({ session });
+        await Loan.deleteOne({ _id: loan._id }).session(session);
+
+        await session.commitTransaction();
+        res.json({ message: 'Livre retourné avec succès' });
+    } catch (error) {
+        await session.abortTransaction();
+        res.status(500).json({ message: "Erreur lors du retour", error: error.message });
+    } finally {
+        session.endSession();
+    }
+});
+
+app.put('/api/loans/extend', async (req, res) => {
+    try {
+        const { isbn, studentName, newReturnDate } = req.body;
+        if (!newReturnDate) {
+            return res.status(400).json({ message: "La nouvelle date de retour est requise." });
+        }
+
+        const loan = await Loan.findOneAndUpdate(
+            { isbn, studentName },
+            { returnDate: new Date(newReturnDate) },
+            { new: true }
+        );
+
+        if (!loan) return res.status(404).json({ message: 'Prêt non trouvé' });
+
+        res.json({ message: 'Date de retour mise à jour avec succès', loan });
+    } catch (error) {
+        res.status(500).json({ message: "Erreur lors de l'extension", error: error.message });
+    }
+});
+
+
+// --- ROUTES D'IMPORT / EXPORT ---
+
 app.post('/api/books/upload', upload.single('excelFile'), async (req, res) => {
     try {
-        if (!req.file) {
-            return res.status(400).json({ message: 'Aucun fichier fourni' });
-        }
+        if (!req.file) return res.status(400).json({ message: 'Aucun fichier fourni' });
 
         const workbook = xlsx.readFile(req.file.path);
         const sheetName = workbook.SheetNames[0];
@@ -344,312 +355,111 @@ app.post('/api/books/upload', upload.single('excelFile'), async (req, res) => {
 
         let addedCount = 0;
         const errors = [];
+        const booksToInsert = [];
 
         for (const row of data) {
-            try {
-                const bookData = {
-                    isbn: row.ISBN || row.isbn || '',
-                    title: row.Title || row.title || row['Titre'] || '',
-                    totalCopies: parseInt(row.TotalCopies || row['Total Copies'] || row['Nombre de copies'] || 1),
-                    loanedCopies: 0,
-                    availableCopies: parseInt(row.TotalCopies || row['Total Copies'] || row['Nombre de copies'] || 1),
-                    subject: row.Subject || row.subject || row['Matière'] || '',
-                    level: row.Level || row.level || row['Niveau'] || '',
-                    language: row.Language || row.language || row['Langue'] || '',
-                    cornerName: row.CornerName || row['Corner Name'] || row['Nom du coin'] || '',
-                    cornerNumber: row.CornerNumber || row['Corner Number'] || row['Numéro du coin'] || ''
-                };
+            const totalCopies = parseInt(row.TotalCopies || row['Total Copies'] || row['Nombre de copies'] || 1);
+            if (isNaN(totalCopies)) continue; // Ignorer les lignes invalides
 
-                if (bookData.isbn && bookData.title) {
-                    const newBook = new Book(bookData);
-                    await newBook.save();
-                    addedCount++;
-                }
-            } catch (err) {
-                errors.push({ row: row, error: err.message });
+            const bookData = {
+                isbn: String(row.ISBN || row.isbn || ''),
+                title: String(row.Title || row.title || row['Titre'] || ''),
+                totalCopies: totalCopies,
+                loanedCopies: 0,
+                availableCopies: totalCopies,
+                subject: String(row.Subject || row.subject || row['Matière'] || ''),
+                level: String(row.Level || row.level || row['Niveau'] || ''),
+                language: String(row.Language || row.language || row['Langue'] || ''),
+                cornerName: String(row.CornerName || row['Corner Name'] || row['Nom du coin'] || ''),
+                cornerNumber: String(row.CornerNumber || row['Corner Number'] || row['Numéro du coin'] || '')
+            };
+
+            if (bookData.isbn && bookData.title) {
+                booksToInsert.push(bookData);
             }
         }
 
-        res.json({ 
-            message: 'Import terminé', 
-            addedCount, 
-            errors: errors.length > 0 ? errors : undefined 
-        });
-    } catch (error) {
-        res.status(500).json({ 
-            message: "Erreur lors de l'import", 
-            error: error.message 
-        });
-    }
-});
-
-// Route pour créer un prêt
-app.post('/api/loans', async (req, res) => {
-    try {
-        const { bookId, studentName, studentClass, borrowerType, loanDate, returnDate, copiesCount } = req.body;
-
-        const book = await Book.findById(bookId);
-        if (!book) {
-            return res.status(404).json({ message: 'Livre non trouvé' });
-        }
-
-        const copies = copiesCount || 1;
-        if (book.availableCopies < copies) {
-            return res.status(400).json({ 
-                message: `Pas assez de copies disponibles. Disponibles: ${book.availableCopies}` 
+        if (booksToInsert.length > 0) {
+            const result = await Book.insertMany(booksToInsert, { ordered: false }).catch(err => {
+                // Gérer les erreurs de doublons, etc.
+                addedCount = err.result.nInserted;
+                errors.push(...err.writeErrors.map(e => ({ row: booksToInsert[e.index], error: e.errmsg })));
             });
+            if (result) addedCount = result.length;
         }
 
-        const loanData = {
-            bookId: book._id,
-            isbn: book.isbn,
-            studentName,
-            studentClass,
-            borrowerType: borrowerType || 'student',
-            loanDate: loanDate || new Date(),
-            returnDate,
-            copiesCount: copies
-        };
-
-        const newLoan = new Loan(loanData);
-        await newLoan.save();
-
-        // Mettre à jour les copies disponibles
-        book.loanedCopies += copies;
-        book.availableCopies -= copies;
-        book.updatedAt = new Date();
-        await book.save();
-
-        res.status(201).json({ 
-            message: 'Prêt créé avec succès', 
-            loan: newLoan 
-        });
+        res.json({ message: 'Import terminé', addedCount, errors: errors.length > 0 ? errors : undefined });
     } catch (error) {
-        res.status(500).json({ 
-            message: "Erreur lors de la création du prêt", 
-            error: error.message 
-        });
+        res.status(500).json({ message: "Erreur lors de l'import", error: error.message });
     }
 });
 
-// Route pour retourner un livre
-app.delete('/api/loans', async (req, res) => {
-    try {
-        const { isbn, studentName } = req.body;
 
-        const loan = await Loan.findOne({ isbn, studentName });
-        if (!loan) {
-            return res.status(404).json({ message: 'Prêt non trouvé' });
-        }
-
-        const book = await Book.findById(loan.bookId);
-        if (book) {
-            book.loanedCopies = Math.max(0, book.loanedCopies - (loan.copiesCount || 1));
-            book.availableCopies = book.totalCopies - book.loanedCopies;
-            book.updatedAt = new Date();
-            await book.save();
-        }
-
-        // Archiver dans l'historique
-        const historyEntry = new History({
-            bookId: loan.bookId,
-            isbn: loan.isbn,
-            studentName: loan.studentName,
-            studentClass: loan.studentClass,
-            borrowerType: loan.borrowerType,
-            loanDate: loan.loanDate,
-            returnDate: loan.returnDate,
-            actualReturnDate: new Date(),
-            copiesCount: loan.copiesCount
-        });
-        await historyEntry.save();
-
-        await Loan.deleteOne({ _id: loan._id });
-
-        res.json({ message: 'Livre retourné avec succès' });
-    } catch (error) {
-        res.status(500).json({ 
-            message: "Erreur lors du retour", 
-            error: error.message 
-        });
-    }
-});
-
-// Route pour étendre la date de retour
-app.put('/api/loans/extend', async (req, res) => {
-    try {
-        const { isbn, studentName, newReturnDate } = req.body;
-
-        const loan = await Loan.findOne({ isbn, studentName });
-        if (!loan) {
-            return res.status(404).json({ message: 'Prêt non trouvé' });
-        }
-
-        loan.returnDate = new Date(newReturnDate);
-        await loan.save();
-
-        res.json({ 
-            message: 'Date de retour mise à jour avec succès', 
-            loan 
-        });
-    } catch (error) {
-        res.status(500).json({ 
-            message: "Erreur lors de l'extension", 
-            error: error.message 
-        });
-    }
-});
-
-// Route pour modifier un livre
-app.put('/api/books/:id', async (req, res) => {
-    try {
-        const id = req.params.id;
-        const updateData = { ...req.body, updatedAt: new Date() };
-
-        let book;
-        if (mongoose.Types.ObjectId.isValid(id)) {
-            book = await Book.findByIdAndUpdate(id, updateData, { new: true });
-        }
-        
-        if (!book) {
-            book = await Book.findOneAndUpdate({ isbn: id }, updateData, { new: true });
-        }
-
-        if (!book) {
-            return res.status(404).json({ message: 'Livre non trouvé' });
-        }
-
-        // Recalculer les copies disponibles si totalCopies a changé
-        if (updateData.totalCopies !== undefined) {
-            book.availableCopies = book.totalCopies - book.loanedCopies;
-            await book.save();
-        }
-
-        res.json({ 
-            message: 'Livre mis à jour avec succès', 
-            book 
-        });
-    } catch (error) {
-        res.status(500).json({ 
-            message: "Erreur lors de la mise à jour", 
-            error: error.message 
-        });
-    }
-});
-
-// Route pour supprimer un livre
-app.delete('/api/books/:id', async (req, res) => {
-    try {
-        const id = req.params.id;
-
-        let book;
-        if (mongoose.Types.ObjectId.isValid(id)) {
-            book = await Book.findById(id);
-        }
-        
-        if (!book) {
-            book = await Book.findOne({ isbn: id });
-        }
-
-        if (!book) {
-            return res.status(404).json({ message: 'Livre non trouvé' });
-        }
-
-        // Vérifier s'il y a des prêts actifs
-        if (book.loanedCopies > 0) {
-            return res.status(400).json({ 
-                message: `Impossible de supprimer: ${book.loanedCopies} copies sont actuellement prêtées` 
-            });
-        }
-
-        await Book.deleteOne({ _id: book._id });
-
-        res.json({ message: 'Livre supprimé avec succès' });
-    } catch (error) {
-        res.status(500).json({ 
-            message: "Erreur lors de la suppression", 
-            error: error.message 
-        });
-    }
-});
-
-// Route pour obtenir l'historique d'un livre
-app.get('/api/history/book/:id', async (req, res) => {
-    try {
-        const id = req.params.id;
-        
-        let history;
-        if (mongoose.Types.ObjectId.isValid(id)) {
-            history = await History.find({ bookId: id }).sort({ actualReturnDate: -1 });
-        } else {
-            history = await History.find({ isbn: id }).sort({ actualReturnDate: -1 });
-        }
-
-        res.json(history);
-    } catch (error) {
-        res.status(500).json({ 
-            message: "Erreur lors de la récupération de l'historique", 
-            error: error.message 
-        });
-    }
-});
-
-// Route pour exporter en Excel
 app.get('/api/export/excel', async (req, res) => {
     try {
         const books = await Book.find().lean();
-        const loans = await Loan.find().lean();
+        const loans = await getEnrichedLoans(); // Utiliser notre fonction pour avoir les titres
 
-        // Créer un workbook
         const wb = xlsx.utils.book_new();
 
-        // Feuille des livres
         const booksSheet = xlsx.utils.json_to_sheet(books.map(book => ({
-            ISBN: book.isbn,
-            Titre: book.title,
+            'ISBN': book.isbn,
+            'Titre': book.title,
             'Total Copies': book.totalCopies,
             'Copies Prêtées': book.loanedCopies,
             'Copies Disponibles': book.availableCopies,
-            Matière: book.subject,
-            Niveau: book.level,
-            Langue: book.language,
+            'Matière': book.subject,
+            'Niveau': book.level,
+            'Langue': book.language,
             'Nom du Coin': book.cornerName,
             'Numéro du Coin': book.cornerNumber
         })));
         xlsx.utils.book_append_sheet(wb, booksSheet, 'Livres');
 
-        // Feuille des prêts
         const loansSheet = xlsx.utils.json_to_sheet(loans.map(loan => ({
-            ISBN: loan.isbn,
+            'ISBN': loan.isbn,
+            'Titre du Livre': loan.title,
             'Nom Emprunteur': loan.studentName,
             'Classe/Matière': loan.studentClass,
-            Type: loan.borrowerType,
-            'Date Prêt': loan.loanDate.toLocaleDateString(),
-            'Date Retour': loan.returnDate.toLocaleDateString(),
+            'Type': loan.borrowerType,
+            'Date Prêt': new Date(loan.loanDate).toLocaleDateString('fr-CA'),
+            'Date Retour': new Date(loan.returnDate).toLocaleDateString('fr-CA'),
             'Nombre Copies': loan.copiesCount
         })));
         xlsx.utils.book_append_sheet(wb, loansSheet, 'Prêts');
 
-        // Générer le buffer
         const buffer = xlsx.write(wb, { type: 'buffer', bookType: 'xlsx' });
 
         res.setHeader('Content-Disposition', 'attachment; filename=library_data.xlsx');
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.send(buffer);
     } catch (error) {
-        res.status(500).json({ 
-            message: "Erreur lors de l'export", 
-            error: error.message 
-        });
+        res.status(500).json({ message: "Erreur lors de l'export", error: error.message });
     }
 });
+
+
+// --- ROUTE POUR L'HISTORIQUE ---
+
+app.get('/api/history/book/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        let query = mongoose.Types.ObjectId.isValid(id) ? { bookId: id } : { isbn: id };
+        
+        const history = await History.find(query).sort({ actualReturnDate: -1 }).lean();
+        res.json(history);
+    } catch (error) {
+        res.status(500).json({ message: "Erreur lors de la récupération de l'historique", error: error.message });
+    }
+});
+
 
 // Export pour Vercel
 module.exports = app;
 
-// Si tu veux tester en local
+// Démarrer le serveur pour les tests locaux
 if (!process.env.VERCEL) {
     app.listen(PORT, () => {
-        console.log(`✅ Serveur local sur http://localhost:${PORT}`);
+        console.log(`✅ Serveur local démarré sur http://localhost:${PORT}`);
     });
 }
