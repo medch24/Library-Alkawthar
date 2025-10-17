@@ -42,27 +42,21 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function showLoadingBar(text = '') {
         const loadingBar = document.getElementById('loading-bar');
-        if (loadingBar) {
-            const loadingDetails = document.getElementById('loading-details');
-            loadingBar.style.display = 'block';
-            if (text) loadingDetails.innerHTML = `<small>${text}</small>`;
-        }
+        const loadingDetails = document.getElementById('loading-details');
+        loadingBar.style.display = 'block';
+        if (text) loadingDetails.innerHTML = `<small>${text}</small>`;
     }
     
     function updateLoadingProgress(percentage, text = '') {
-        const progressFill = document.getElementById('progress-fill');
-        if (progressFill) {
-            progressFill.style.width = percentage + '%';
-            document.getElementById('loading-percentage').textContent = Math.round(percentage) + '%';
-            if (text) document.getElementById('loading-details').innerHTML = `<small>${text}</small>`;
-        }
+        document.getElementById('progress-fill').style.width = percentage + '%';
+        document.getElementById('loading-percentage').textContent = Math.round(percentage) + '%';
+        if (text) document.getElementById('loading-details').innerHTML = `<small>${text}</small>`;
     }
 
     function hideLoadingBar() {
         setTimeout(() => {
-            const loadingBar = document.getElementById('loading-bar');
-            if (loadingBar) {
-                loadingBar.style.display = 'none';
+            if(document.getElementById('loading-bar')) {
+                document.getElementById('loading-bar').style.display = 'none';
                 document.getElementById('progress-fill').style.width = '0%';
             }
         }, 500);
@@ -84,16 +78,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderTableHeader() {
         const tableHead = document.querySelector('#books-table thead');
-        if (tableHead) {
-            tableHead.innerHTML = `<tr><th class="col-isbn">${getTranslatedText('isbn')}</th><th class="col-title">${getTranslatedText('title')}</th><th class="col-total">${getTranslatedText('total_copies')}</th><th class="col-loaned">${getTranslatedText('loaned_copies')}</th><th class="col-available">${getTranslatedText('available_copies')}</th><th class="col-subject">${getTranslatedText('subject')}</th><th class="col-level">${getTranslatedText('level')}</th><th class="col-lang">${getTranslatedText('language')}</th><th class="col-corner-name">${getTranslatedText('corner_name')}</th><th class="col-corner-num">${getTranslatedText('corner_number')}</th><th class="col-actions">${getTranslatedText('actions')}</th></tr>`;
-        }
+        tableHead.innerHTML = `<tr><th class="col-isbn">${getTranslatedText('isbn')}</th><th class="col-title">${getTranslatedText('title')}</th><th class="col-total">${getTranslatedText('total_copies')}</th><th class="col-loaned">${getTranslatedText('loaned_copies')}</th><th class="col-available">${getTranslatedText('available_copies')}</th><th class="col-subject">${getTranslatedText('subject')}</th><th class="col-level">${getTranslatedText('level')}</th><th class="col-lang">${getTranslatedText('language')}</th><th class="col-corner-name">${getTranslatedText('corner_name')}</th><th class="col-corner-num">${getTranslatedText('corner_number')}</th><th class="col-actions">${getTranslatedText('actions')}</th></tr>`;
     }
     
     function renderTable(books) {
         renderTableHeader();
         const tableBody = document.getElementById('books-table-body');
-        if (!tableBody) return;
-
         if (!books || books.length === 0) {
             tableBody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding: 2rem;">${getTranslatedText('no_results')}</td></tr>`;
             return;
@@ -123,18 +113,16 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function updatePaginationControls() {
         const pageInfo = document.getElementById('page-info');
-        if (pageInfo) {
-            const prevBtn = document.getElementById('prev-page-btn');
-            const nextBtn = document.getElementById('next-page-btn');
-            const controls = document.getElementById('pagination-controls');
-            if (totalPages > 1) {
-                controls.style.display = 'flex';
-                pageInfo.textContent = getTranslatedText('page_info', { currentPage, totalPages });
-                prevBtn.disabled = currentPage <= 1;
-                nextBtn.disabled = currentPage >= totalPages;
-            } else {
-                controls.style.display = 'none';
-            }
+        const prevBtn = document.getElementById('prev-page-btn');
+        const nextBtn = document.getElementById('next-page-btn');
+        const controls = document.getElementById('pagination-controls');
+        if (totalPages > 1) {
+            controls.style.display = 'flex';
+            pageInfo.textContent = getTranslatedText('page_info', { currentPage, totalPages });
+            prevBtn.disabled = currentPage <= 1;
+            nextBtn.disabled = currentPage >= totalPages;
+        } else {
+            controls.style.display = 'none';
         }
     }
 
@@ -142,15 +130,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('[data-key]').forEach(el => { el.textContent = getTranslatedText(el.dataset.key); });
         document.querySelectorAll('[data-key-placeholder]').forEach(el => { el.placeholder = getTranslatedText(el.dataset.keyPlaceholder); });
         document.querySelectorAll('[data-key-title]').forEach(el => { el.title = getTranslatedText(el.dataset.keyTitle); });
-        
-        const studentOption = document.querySelector('#borrower-type option[value="student"]');
-        if (studentOption) studentOption.textContent = getTranslatedText('student_option');
-        
-        const teacherOption = document.querySelector('#borrower-type option[value="teacher"]');
-        if (teacherOption) teacherOption.textContent = getTranslatedText('teacher_option');
-
+        document.querySelector('#borrower-type option[value="student"]').textContent = getTranslatedText('student_option');
+        document.querySelector('#borrower-type option[value="teacher"]').textContent = getTranslatedText('teacher_option');
         updatePaginationControls();
-        if (dashboardPage && dashboardPage.style.display !== 'none') {
+        if (dashboardPage.style.display !== 'none') {
             renderTable(currentBooks);
         }
     }
@@ -171,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
         isLoading = true;
         showLoadingBar(getTranslatedText('loading_data'));
         try {
-            updateLoadingProgress(30, getTranslatedText('loading_data'));
+            updateLoadingProgress(30, `تحميل صفحة ${page}...`);
             const search = searchInput.value || '';
             const response = await fetch(`${API_BASE_URL}/api/books?page=${page}&limit=50&search=${encodeURIComponent(search)}`);
             if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
@@ -179,17 +162,17 @@ document.addEventListener('DOMContentLoaded', () => {
             currentBooks = data.books || [];
             currentPage = data.currentPage;
             totalPages = data.totalPages;
-            updateLoadingProgress(70, 'Affichage des données...');
+            updateLoadingProgress(70, 'عرض البيانات...');
             renderTable(currentBooks);
             updatePaginationControls();
-            updateLoadingProgress(90, 'Mise à jour des statistiques...');
+            updateLoadingProgress(90, 'تحديث الإحصائيات...');
             await updateStatsFromAPI();
             const loansResponse = await fetch('/api/loans');
             if (loansResponse.ok) checkOverdueBooks(await loansResponse.json());
-            updateLoadingProgress(100, 'Chargement terminé !');
+            updateLoadingProgress(100, 'اكتمل التحميل!');
         } catch (error) {
             console.error('❌ Erreur de chargement:', error);
-            alert(getTranslatedText('خطأ في الاتصال بالخادم. الرجاء تحديث الصفحة.'));
+            alert('خطأ في الاتصال بالخادم. الرجاء تحديث الصفحة.');
         } finally {
             isLoading = false;
             hideLoadingBar();
@@ -215,17 +198,15 @@ document.addEventListener('DOMContentLoaded', () => {
         today.setHours(0, 0, 0, 0);
         const overdueLoans = allLoans.filter(loan => new Date(loan.returnDate) < today);
         const overdueContainer = document.getElementById('overdue-notifications');
-        if (overdueContainer) {
-            if (overdueLoans.length > 0) {
-                const overdueList = document.getElementById('overdue-list');
-                overdueList.innerHTML = overdueLoans.map(loan => {
-                    const daysOverdue = Math.floor((today - new Date(loan.returnDate)) / (1000 * 60 * 60 * 24));
-                    return `<p>• ${loan.title || getTranslatedText('book_not_found')} (${loan.studentName}) - ${getTranslatedText('overdue_days')}: ${daysOverdue}</p>`;
-                }).join('');
-                overdueContainer.style.display = 'block';
-            } else {
-                overdueContainer.style.display = 'none';
-            }
+        if (overdueLoans.length > 0) {
+            const overdueList = document.getElementById('overdue-list');
+            overdueList.innerHTML = overdueLoans.map(loan => {
+                const daysOverdue = Math.floor((today - new Date(loan.returnDate)) / (1000 * 60 * 60 * 24));
+                return `<p>• ${loan.title || getTranslatedText('book_not_found')} (${loan.studentName}) - ${getTranslatedText('overdue_days')}: ${daysOverdue}</p>`;
+            }).join('');
+            overdueContainer.style.display = 'block';
+        } else {
+            overdueContainer.style.display = 'none';
         }
     }
     
@@ -281,7 +262,8 @@ document.addEventListener('DOMContentLoaded', () => {
         loginPage.style.display = 'none';
         dashboardPage.style.display = 'block';
         const savedLang = localStorage.getItem('preferred_language') || 'ar';
-        initializeAllEventListeners();
+        initializeLanguageButtons();
+        initializeBarcodeScanner();
         changeLanguage(savedLang);
         initializeDates();
         await loadDataForPage(currentPage);
@@ -295,6 +277,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('return-date').value = twoWeeksLater.toISOString().split('T')[0];
     }
     
+    function initializeLanguageButtons() {
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', () => changeLanguage(btn.dataset.lang));
+        });
+    }
+
     async function displayLoans(type) {
         currentLoanType = type;
         const modalOverlay = document.getElementById('modal-overlay');
@@ -339,7 +327,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function returnLoan(isbn, studentName) {
         try {
-            const response = await fetch('/api/loans', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isbn, studentName }) });
+            const response = await fetch('/api/loans', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ isbn, studentName })
+            });
             if (!response.ok) throw new Error('Erreur lors du retour');
             await loadDataForPage(currentPage);
             displayLoans(currentLoanType);
@@ -376,6 +368,20 @@ document.addEventListener('DOMContentLoaded', () => {
             barcodeModal.style.display = 'flex';
             document.getElementById('barcode-result').style.display = 'none';
         };
+        document.getElementById('scan-barcode-btn').addEventListener('click', () => openScanner('loan-isbn'));
+        document.getElementById('scan-search-barcode-btn').addEventListener('click', () => openScanner('search-input'));
+        startBtn.addEventListener('click', async () => {
+            try {
+                barcodeStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                video.srcObject = barcodeStream;
+                video.play();
+                startBtn.style.display = 'none';
+                stopBtn.style.display = 'block';
+                scanFrame();
+            } catch (err) {
+                alert("Erreur de caméra: " + err.message);
+            }
+        });
         const stopScanning = () => {
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
             if (barcodeStream) {
@@ -386,6 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
             startBtn.style.display = 'block';
             stopBtn.style.display = 'none';
         };
+        stopBtn.addEventListener('click', stopScanning);
         function scanFrame() {
             if (!barcodeStream || video.readyState !== video.HAVE_ENOUGH_DATA) {
                 animationFrameId = requestAnimationFrame(scanFrame);
@@ -406,21 +413,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 animationFrameId = requestAnimationFrame(scanFrame);
             }
         }
-        document.getElementById('scan-barcode-btn').addEventListener('click', () => openScanner('loan-isbn'));
-        document.getElementById('scan-search-barcode-btn').addEventListener('click', () => openScanner('search-input'));
-        startBtn.addEventListener('click', async () => {
-            try {
-                barcodeStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                video.srcObject = barcodeStream;
-                await video.play();
-                startBtn.style.display = 'none';
-                stopBtn.style.display = 'block';
-                scanFrame();
-            } catch (err) {
-                alert("Erreur de caméra: " + err.message);
-            }
-        });
-        stopBtn.addEventListener('click', stopScanning);
         useBtn.addEventListener('click', () => {
             const code = document.getElementById('barcode-value').textContent;
             if (currentTargetInput && code) {
@@ -438,85 +430,168 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function initializeAllEventListeners() {
-        // Formulaires
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (document.getElementById('username').value === 'Alkawthar@30' && document.getElementById('password').value === 'Alkawthar@30') {
-                localStorage.setItem('isLoggedIn', 'true');
-                showDashboard();
-            } else {
-                document.getElementById('login-error').textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة.';
-            }
+    // =================================================================================
+    // 4. ÉCOUTEURS D'ÉVÉNEMENTS PRINCIPAUX
+    // =================================================================================
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (document.getElementById('username').value === 'Alkawthar@30' && document.getElementById('password').value === 'Alkawthar@30') {
+            localStorage.setItem('isLoggedIn', 'true');
+            showDashboard();
+        } else {
+            document.getElementById('login-error').textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة.';
+        }
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+        localStorage.removeItem('isLoggedIn');
+        pendingChanges = {};
+        window.location.reload();
+    });
+
+    saveChangesBtn.addEventListener('click', async () => {
+        const changesToSave = Object.entries(pendingChanges).filter(([, val]) => val._isEditing);
+        const promises = changesToSave.map(([bookId, changes]) => {
+            const updateData = { ...changes };
+            delete updateData._isEditing;
+            return fetch(`${API_BASE_URL}/api/books/${bookId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updateData) });
         });
+        try {
+            const results = await Promise.all(promises);
+            const failed = results.filter(res => !res.ok);
+            if (failed.length > 0) throw new Error(`${failed.length} mise(s) à jour ont échoué.`);
+            alert('تم حفظ جميع التغييرات بنجاح!');
+            pendingChanges = {};
+            saveChangesBtn.style.display = 'none';
+            await loadDataForPage(currentPage);
+        } catch (error) {
+            alert(`خطأ في الحفظ: ${error.message}`);
+        }
+    });
 
-        loanForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const bookId = loanForm.dataset.bookId;
-            if (!bookId) return alert(getTranslatedText('select_a_valid_book'));
-            const loanData = { bookId, studentName: document.getElementById('student-name').value, studentClass: document.getElementById('student-class').value, borrowerType: document.getElementById('borrower-type').value, returnDate: document.getElementById('return-date').value, copiesCount: parseInt(document.getElementById('loan-copies').value) || 1 };
-            try {
-                const response = await fetch('/api/loans', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(loanData) });
-                if (!response.ok) throw new Error((await response.json()).message);
-                loanForm.reset();
-                initializeDates();
-                document.getElementById('loan-book-title').textContent = '-';
-                document.getElementById('available-copies-display').textContent = '-';
-                await loadDataForPage(currentPage);
-                alert('تم إعارة الكتاب بنجاح!');
-            } catch (error) {
-                alert('خطأ في إعارة الكتاب: ' + error.message);
-            }
-        });
+    searchInput.addEventListener('input', () => { clearTimeout(searchInput.timer); searchInput.timer = setTimeout(() => loadDataForPage(1), 300); });
+    document.getElementById('refresh-books-btn').addEventListener('click', () => loadDataForPage(currentPage));
+    document.getElementById('prev-page-btn').addEventListener('click', () => { if (currentPage > 1) loadDataForPage(currentPage - 1); });
+    document.getElementById('next-page-btn').addEventListener('click', () => { if (currentPage < totalPages) loadDataForPage(currentPage + 1); });
+    
+    const bookTitleElement = document.getElementById('loan-book-title');
+    const availableCopiesDisplay = document.getElementById('available-copies-display');
+    document.getElementById('loan-isbn').addEventListener('change', async (e) => {
+        const isbn = e.target.value.trim();
+        if (!isbn) { bookTitleElement.textContent = '-'; availableCopiesDisplay.textContent = '-'; return; }
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/books/${isbn}`);
+            if (!response.ok) throw new Error('Book not found');
+            const book = await response.json();
+            bookTitleElement.textContent = book.title;
+            availableCopiesDisplay.textContent = book.availableCopies;
+            loanForm.dataset.bookId = book._id;
+            document.getElementById('loan-copies').max = book.availableCopies;
+        } catch (error) {
+            bookTitleElement.textContent = getTranslatedText('book_not_found');
+            availableCopiesDisplay.textContent = '0';
+            loanForm.dataset.bookId = '';
+        }
+    });
 
-        manualBookForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const bookData = { isbn: document.getElementById('manual-isbn').value, title: document.getElementById('manual-title').value, totalCopies: parseInt(document.getElementById('manual-copies').value), subject: document.getElementById('manual-subject').value, level: document.getElementById('manual-level').value, language: document.getElementById('manual-language').value, cornerName: document.getElementById('manual-corner-name').value, cornerNumber: document.getElementById('manual-corner-number').value };
-            try {
-                const response = await fetch('/api/books', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bookData) });
-                if (!response.ok) throw new Error((await response.json()).message);
-                manualBookForm.reset();
-                await loadDataForPage(1);
-                alert('تم إضافة الكتاب بنجاح!');
-            } catch (error) {
-                alert(`خطأ في الإضافة: ${error.message}`);
-            }
-        });
+    loanForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const bookId = loanForm.dataset.bookId;
+        if (!bookId) return alert(getTranslatedText('select_a_valid_book'));
+        const loanData = { bookId, studentName: document.getElementById('student-name').value, studentClass: document.getElementById('student-class').value, borrowerType: document.getElementById('borrower-type').value, returnDate: document.getElementById('return-date').value, copiesCount: parseInt(document.getElementById('loan-copies').value) || 1 };
+        try {
+            const response = await fetch('/api/loans', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(loanData) });
+            if (!response.ok) throw new Error((await response.json()).message);
+            loanForm.reset();
+            initializeDates();
+            bookTitleElement.textContent = '-';
+            availableCopiesDisplay.textContent = '-';
+            await loadDataForPage(currentPage);
+            alert('تم إعارة الكتاب بنجاح!');
+        } catch (error) {
+            alert('خطأ في إعارة الكتاب: ' + error.message);
+        }
+    });
 
-        // Boutons principaux
-        document.getElementById('logout-btn').addEventListener('click', () => { localStorage.removeItem('isLoggedIn'); pendingChanges = {}; window.location.reload(); });
-        saveChangesBtn.addEventListener('click', async () => { /* ... (code) ... */ });
-        searchInput.addEventListener('input', () => { clearTimeout(searchInput.timer); searchInput.timer = setTimeout(() => loadDataForPage(1), 300); });
-        document.getElementById('refresh-books-btn').addEventListener('click', () => loadDataForPage(currentPage));
-        document.getElementById('prev-page-btn').addEventListener('click', () => { if (currentPage > 1) loadDataForPage(currentPage - 1); });
-        document.getElementById('next-page-btn').addEventListener('click', () => { if (currentPage < totalPages) loadDataForPage(currentPage + 1); });
-        document.getElementById('upload-excel-btn').addEventListener('click', async () => { /* ... (code) ... */ });
-        document.getElementById('export-excel-btn').addEventListener('click', async () => { /* ... (code) ... */ });
-        
-        // CORRECTIONS
-        document.getElementById('dismiss-alert').addEventListener('click', () => { document.getElementById('overdue-notifications').style.display = 'none'; });
-        document.getElementById('view-student-loans-btn').addEventListener('click', () => displayLoans('students'));
-        document.getElementById('view-teacher-loans-btn').addEventListener('click', () => displayLoans('teachers'));
+    manualBookForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const bookData = { isbn: document.getElementById('manual-isbn').value, title: document.getElementById('manual-title').value, totalCopies: parseInt(document.getElementById('manual-copies').value), subject: document.getElementById('manual-subject').value, level: document.getElementById('manual-level').value, language: document.getElementById('manual-language').value, cornerName: document.getElementById('manual-corner-name').value, cornerNumber: document.getElementById('manual-corner-number').value, };
+        try {
+            const response = await fetch('/api/books', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bookData) });
+            if (!response.ok) throw new Error((await response.json()).message);
+            manualBookForm.reset();
+            await loadDataForPage(1);
+            alert('تم إضافة الكتاب بنجاح!');
+        } catch (error) {
+            alert(`خطأ في الإضافة: ${error.message}`);
+        }
+    });
 
-        // Modales
-        document.querySelector('#modal-overlay .close-modal-btn').addEventListener('click', () => { document.getElementById('modal-overlay').style.display = 'none'; });
-        document.getElementById('close-extend-modal').addEventListener('click', () => { document.getElementById('extend-date-modal-overlay').style.display = 'none'; });
-        document.getElementById('extend-date-form').addEventListener('submit', async (e) => { /* ... (code) ... */ });
-        
-        // Auto-remplissage ISBN
-        document.getElementById('loan-isbn').addEventListener('change', async (e) => { /* ... (code) ... */ });
-    }
+    document.getElementById('upload-excel-btn').addEventListener('click', async () => {
+        const fileInput = document.getElementById('excel-file');
+        const statusDiv = document.getElementById('upload-status');
+        if (!fileInput.files[0]) return alert('يرجى اختيار ملف Excel أولاً');
+        const formData = new FormData();
+        formData.append('excelFile', fileInput.files[0]);
+        statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري رفع الملف...';
+        try {
+            const response = await fetch('/api/books/upload', { method: 'POST', body: formData });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message);
+            statusDiv.innerHTML = `<i class="fas fa-check-circle" style="color: green;"></i> تم رفع الملف! تمت إضافة ${result.addedCount} كتاب`;
+            fileInput.value = '';
+            await loadDataForPage(1);
+        } catch (error) {
+            statusDiv.innerHTML = `<i class="fas fa-exclamation-circle" style="color: red;"></i> خطأ: ${error.message}`;
+        }
+    });
+
+    document.getElementById('view-student-loans-btn').addEventListener('click', () => displayLoans('students'));
+    document.getElementById('view-teacher-loans-btn').addEventListener('click', () => displayLoans('teachers'));
+    document.querySelector('#modal-overlay .close-modal-btn').addEventListener('click', () => { document.getElementById('modal-overlay').style.display = 'none'; });
+    document.getElementById('close-extend-modal').addEventListener('click', () => { document.getElementById('extend-date-modal-overlay').style.display = 'none'; });
+    
+    document.getElementById('extend-date-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const extendModal = document.getElementById('extend-date-modal-overlay');
+        const { isbn, student } = extendModal.dataset;
+        const newReturnDate = document.getElementById('extend-new-date').value;
+        try {
+            const response = await fetch('/api/loans/extend', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isbn, studentName: student, newReturnDate }) });
+            if (!response.ok) throw new Error('Failed to extend loan');
+            alert('تم تمديد فترة الإعارة بنجاح!');
+            extendModal.style.display = 'none';
+            await loadDataForPage(currentPage);
+            displayLoans(currentLoanType);
+        } catch (error) {
+            alert('خطأ في تمديد فترة الإعارة');
+        }
+    });
+
+    document.getElementById('export-excel-btn').addEventListener('click', async () => {
+        try {
+            const response = await fetch('/api/export/excel');
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `library_data_${new Date().toISOString().split('T')[0]}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            alert('خطأ في تحميل ملف Excel');
+        }
+    });
 
     // =================================================================================
     // 5. POINT D'ENTRÉE DE L'APPLICATION
     // =================================================================================
     if (localStorage.getItem('isLoggedIn') === 'true') {
-        showDashboard().catch(err => {
-            console.error('Erreur au démarrage:', err);
-            alert("Une erreur critique est survenue. Vérifiez la console pour plus de détails.");
-        });
+        showDashboard().catch(err => console.error('Erreur au démarrage:', err));
     } else {
         loginPage.style.display = 'flex';
-        initializeAllEventListeners(); // Initialise au moins les boutons de langue sur la page de login
+        initializeLanguageButtons();
     }
 });
