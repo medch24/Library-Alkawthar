@@ -124,8 +124,18 @@ app.get('/api/books', async (req, res) => {
 app.get('/api/books/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        let book = mongoose.Types.ObjectId.isValid(id) ? await Book.findById(id) : await Book.findOne({ isbn: id });
-        if (book) res.json(book); else res.status(404).json({ message: 'Livre non trouvé' });
+        let book = mongoose.Types.ObjectId.isValid(id) ? await Book.findById(id).lean() : await Book.findOne({ isbn: id }).lean();
+        if (book) {
+            // Recalcul robuste pour garantir la cohérence des données renvoyées.
+            const correctAvailableCopies = book.totalCopies - book.loanedCopies;
+            if (book.availableCopies !== correctAvailableCopies) {
+                console.warn(`Incohérence détectée pour le livre ${book._id}: copies disponibles stockées ${book.availableCopies}, calculées ${correctAvailableCopies}.`);
+                book.availableCopies = correctAvailableCopies;
+            }
+            res.json(book);
+        } else {
+            res.status(404).json({ message: 'Livre non trouvé' });
+        }
     } catch (error) {
         res.status(500).json({ message: "Erreur serveur", error: error.message });
     }
