@@ -185,25 +185,45 @@ app.post('/api/loans', async (req, res) => {
     session.startTransaction();
     try {
         const { bookId, copiesCount = 1, ...rest } = req.body;
+
         const book = await Book.findById(bookId).session(session);
-        if (!book) throw new Error('Livre non trouvé');
+        if (!book) {
+            throw new Error('Livre non trouvé');
+        }
+
         const numCopies = parseInt(copiesCount);
-        if (book.availableCopies < numCopies) throw new Error(`Pas assez de copies. Disponibles: ${book.availableCopies}`);
+        
+        // --- DÉBUT DE LA CORRECTION ---
+        // Ancien code (incorrect) : if (book.availableCopies < numCopies)
+        // Nouveau code : On recalcule la disponibilité réelle pour être certain.
+        const actualAvailableCopies = book.totalCopies - book.loanedCopies;
+        
+        if (actualAvailableCopies < numCopies) {
+            // On utilise la valeur fraîchement calculée dans le message d'erreur
+            throw new Error(`Pas assez de copies. Disponibles: ${actualAvailableCopies}`);
+        }
+        // --- FIN DE LA CORRECTION ---
+
         const newLoan = new Loan({ bookId, isbn: book.isbn, copiesCount: numCopies, ...rest });
         await newLoan.save({ session });
+
         book.loanedCopies += numCopies;
-        book.availableCopies -= numCopies;
+        book.availableCopies -= numCopies; // Maintenu pour la performance des requêtes générales
         await book.save({ session });
+
         await session.commitTransaction();
         res.status(201).json({ message: 'Prêt créé', loan: newLoan });
     } catch (error) {
         await session.abortTransaction();
+        // Renvoyer un statut 400 (Bad Request) pour les erreurs de logique métier
+        if (error.message.startsWith('Pas assez de copies')) {
+            return res.status(400).json({ message: error.message });
+        }
         res.status(500).json({ message: error.message });
     } finally {
         session.endSession();
     }
 });
-
 app.delete('/api/loans', async (req, res) => {
     const session = await mongoose.startSession();
     session.startTransaction();
