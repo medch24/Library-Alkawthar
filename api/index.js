@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -324,6 +325,16 @@ app.get('/api/history/book/:id', async (req, res) => {
     }
 });
 
+
+// --- Démarrage du serveur en mode développement local ---
+if (require.main === module) {
+    connectToDb().then(() => {
+        app.listen(PORT, '0.0.0.0', () => {
+            console.log(`✅ Serveur démarré sur le port ${PORT}`);
+            console.log(`🌍 Accédez au site: http://localhost:${PORT}`);
+        });
+    });
+}
 
 // --- Export pour Vercel ---
 module.exports = app;
