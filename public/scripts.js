@@ -339,11 +339,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 today.setHours(0, 0, 0, 0);
                 const daysOverdue = Math.floor((today - returnDate) / (1000 * 60 * 60 * 24));
                 const overdueText = daysOverdue > 0 ? `${daysOverdue}` : 'OK';
-                return `<tr data-loan-info='${JSON.stringify(loan)}'><td>${loan.studentName}</td><td>${loan.title || 'N/A'}</td><td>${loan.isbn}</td><td>${loan.copiesCount || 1}</td><td>${formatDateByLanguage(loan.loanDate)}</td><td>${formatDateByLanguage(loan.returnDate)}</td><td class="${daysOverdue > 0 ? 'status-unavailable' : 'status-available'}">${overdueText}</td><td class="action-buttons"><button class="btn-small btn-return" title="${getTranslatedText('return_book')}"><i class="fas fa-undo"></i></button><button class="btn-small btn-extend" title="${getTranslatedText('extend')}"><i class="fas fa-calendar-plus"></i></button></td></tr>`;
+                return `<tr data-loan-info='${JSON.stringify(loan).replace(/'/g, "&apos;")}'><td>${loan.studentName}</td><td>${loan.title || 'N/A'}</td><td>${loan.isbn}</td><td>${loan.copiesCount || 1}</td><td>${formatDateByLanguage(loan.loanDate)}</td><td>${formatDateByLanguage(loan.returnDate)}</td><td class="${daysOverdue > 0 ? 'status-unavailable' : 'status-available'}">${overdueText}</td><td class="action-buttons"><button class="btn-small btn-return" title="${getTranslatedText('return_book')}"><i class="fas fa-undo"></i></button><button class="btn-small btn-extend" title="${getTranslatedText('extend')}"><i class="fas fa-calendar-plus"></i></button></td></tr>`;
             }).join('')}
                     </tbody></table>`;
             wrapper.querySelectorAll('.btn-return').forEach(btn => btn.addEventListener('click', async (e) => {
-                const loan = JSON.parse(e.target.closest('tr').dataset.loanInfo);
+                const loan = JSON.parse(e.target.closest('tr').dataset.loanInfo.replace(/&apos;/g, "'"));
                 if (confirm(`Confirmer le retour de "${loan.title}" par ${loan.studentName}?`)) {
                     await returnLoan(loan.isbn, loan.studentName);
                 }
