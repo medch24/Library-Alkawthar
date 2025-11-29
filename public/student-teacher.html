@@ -88,6 +88,11 @@
             color: #0a9396;
         }
         
+        [dir="ltr"] .input-group i {
+            left: 15px;
+            right: auto;
+        }
+        
         .input-group input {
             width: 100%;
             padding: 1rem 2.5rem 1rem 1rem;
@@ -95,6 +100,10 @@
             border-radius: 12px;
             font-size: 1rem;
             transition: all 0.3s;
+        }
+        
+        [dir="ltr"] .input-group input {
+            padding: 1rem 1rem 1rem 2.5rem;
         }
         
         .input-group input:focus {
@@ -172,6 +181,35 @@
         
         .header-title i {
             font-size: 2rem;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .language-selector {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .lang-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid white;
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 700;
+            opacity: 0.7;
+            transition: all 0.3s;
+        }
+        
+        .lang-btn.active,
+        .lang-btn:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.3);
         }
         
         .btn-logout {
@@ -260,37 +298,14 @@
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
         }
         
-        .category-card.sciences {
-            border-top-color: #00b4d8;
-        }
-        
-        .category-card.math {
-            border-top-color: #f72585;
-        }
-        
-        .category-card.literature {
-            border-top-color: #7209b7;
-        }
-        
-        .category-card.languages {
-            border-top-color: #f77f00;
-        }
-        
-        .category-card.exams {
-            border-top-color: #06d6a0;
-        }
-        
-        .category-card.research {
-            border-top-color: #ef476f;
-        }
-        
-        .category-card.dictionary {
-            border-top-color: #118ab2;
-        }
-        
-        .category-card.digital-library {
-            border-top-color: #06d6a0;
-        }
+        .category-card.sciences { border-top-color: #00b4d8; }
+        .category-card.math { border-top-color: #f72585; }
+        .category-card.literature { border-top-color: #7209b7; }
+        .category-card.languages { border-top-color: #f77f00; }
+        .category-card.exams { border-top-color: #06d6a0; }
+        .category-card.research { border-top-color: #ef476f; }
+        .category-card.dictionary { border-top-color: #118ab2; }
+        .category-card.digital-library { border-top-color: #06d6a0; }
         
         .category-icon {
             font-size: 3.5rem;
@@ -298,37 +313,14 @@
             text-align: center;
         }
         
-        .category-card.sciences .category-icon {
-            color: #00b4d8;
-        }
-        
-        .category-card.math .category-icon {
-            color: #f72585;
-        }
-        
-        .category-card.literature .category-icon {
-            color: #7209b7;
-        }
-        
-        .category-card.languages .category-icon {
-            color: #f77f00;
-        }
-        
-        .category-card.exams .category-icon {
-            color: #06d6a0;
-        }
-        
-        .category-card.research .category-icon {
-            color: #ef476f;
-        }
-        
-        .category-card.dictionary .category-icon {
-            color: #118ab2;
-        }
-        
-        .category-card.digital-library .category-icon {
-            color: #06d6a0;
-        }
+        .category-card.sciences .category-icon { color: #00b4d8; }
+        .category-card.math .category-icon { color: #f72585; }
+        .category-card.literature .category-icon { color: #7209b7; }
+        .category-card.languages .category-icon { color: #f77f00; }
+        .category-card.exams .category-icon { color: #06d6a0; }
+        .category-card.research .category-icon { color: #ef476f; }
+        .category-card.dictionary .category-icon { color: #118ab2; }
+        .category-card.digital-library .category-icon { color: #06d6a0; }
         
         .category-card h3 {
             color: #333;
@@ -362,6 +354,10 @@
             transform: translateX(-5px);
         }
         
+        [dir="ltr"] .resource-item:hover {
+            transform: translateX(5px);
+        }
+        
         .resource-item a {
             color: #005f73;
             text-decoration: none;
@@ -377,6 +373,36 @@
         
         .resource-item i {
             color: #0a9396;
+        }
+        
+        .lang-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #e9ecef;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-left: 8px;
+        }
+        
+        [dir="ltr"] .lang-badge {
+            margin-right: 8px;
+            margin-left: 0;
+        }
+        
+        .lang-badge.fr {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .lang-badge.en {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+        
+        .lang-badge.ar {
+            background: #e8f5e9;
+            color: #388e3c;
         }
         
         /* Bouton spécial pour la bibliothèque numérique */
@@ -444,24 +470,24 @@
     <div id="login-page">
         <div class="login-container">
             <img src="https://lh3.googleusercontent.com/d/1lQ3Babrs3Wgv4rakVmkK0oCWcM0cTKPK" alt="Logo Alkawthar" class="logo">
-            <h1>فضاء المدرسين والطلاب</h1>
-            <p class="welcome-subtitle">الرجاء إدخال بيانات الاعتماد للوصول إلى الموارد التعليمية</p>
+            <h1 data-key="login_title">فضاء المدرسين والطلاب</h1>
+            <p class="welcome-subtitle" data-key="login_subtitle">الرجاء إدخال بيانات الاعتماد للوصول إلى الموارد التعليمية</p>
             <form id="login-form">
                 <div class="input-group">
                     <i class="fas fa-user"></i>
-                    <input type="text" id="username" placeholder="اسم المستخدم" required>
+                    <input type="text" id="username" data-key-placeholder="username_placeholder" placeholder="اسم المستخدم" required>
                 </div>
                 <div class="input-group">
                     <i class="fas fa-lock"></i>
-                    <input type="password" id="password" placeholder="كلمة المرور" required>
+                    <input type="password" id="password" data-key-placeholder="password_placeholder" placeholder="كلمة المرور" required>
                 </div>
                 <button type="submit" class="btn-login">
-                    <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+                    <i class="fas fa-sign-in-alt"></i> <span data-key="login_btn">تسجيل الدخول</span>
                 </button>
                 <p id="login-error" class="error-message"></p>
             </form>
             <a href="selection.html" class="back-link">
-                <i class="fas fa-arrow-left"></i> العودة إلى الصفحة الرئيسية
+                <i class="fas fa-arrow-left"></i> <span data-key="back_link">العودة إلى الصفحة الرئيسية</span>
             </a>
         </div>
     </div>
@@ -473,24 +499,31 @@
                 <div class="header-title">
                     <i class="fas fa-book-reader"></i>
                     <div>
-                        <h1>فضاء المدرسين والطلاب</h1>
-                        <p style="font-size: 0.9rem; opacity: 0.9;">مدارس الكوثر العالمية</p>
+                        <h1 data-key="header_title">فضاء المدرسين والطلاب</h1>
+                        <p style="font-size: 0.9rem; opacity: 0.9;" data-key="school_name">مدارس الكوثر العالمية</p>
                     </div>
                 </div>
-                <button id="logout-btn" class="btn-logout">
-                    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
-                </button>
+                <div class="header-actions">
+                    <div class="language-selector">
+                        <button class="lang-btn active" data-lang="ar"><i class="fas fa-globe"></i> عربي</button>
+                        <button class="lang-btn" data-lang="fr"><i class="fas fa-globe"></i> FR</button>
+                        <button class="lang-btn" data-lang="en"><i class="fas fa-globe"></i> EN</button>
+                    </div>
+                    <button id="logout-btn" class="btn-logout">
+                        <i class="fas fa-sign-out-alt"></i> <span data-key="logout_btn">تسجيل الخروج</span>
+                    </button>
+                </div>
             </div>
         </header>
 
         <div class="container">
             <div class="intro-section">
-                <h2>مرحباً بكم في مركز الموارد التعليمية</h2>
-                <p>استكشف مجموعة واسعة من المصادر الأكاديمية المجانية والمكتبة الرقمية لمدارس الكوثر</p>
+                <h2 data-key="intro_title">مرحباً بكم في مركز الموارد التعليمية</h2>
+                <p data-key="intro_desc">استكشف مجموعة واسعة من المصادر الأكاديمية المجانية والمكتبة الرقمية لمدارس الكوثر</p>
             </div>
 
             <h2 class="section-title">
-                <i class="fas fa-book-open"></i> الموارد الأكاديمية المجانية
+                <i class="fas fa-book-open"></i> <span data-key="resources_title">الموارد الأكاديمية المجانية</span>
             </h2>
 
             <div class="categories-grid">
@@ -499,27 +532,33 @@
                     <div class="category-icon">
                         <i class="fas fa-flask"></i>
                     </div>
-                    <h3>العلوم</h3>
-                    <p>مصادر في الفيزياء، الكيمياء، الأحياء وعلوم الأرض</p>
+                    <h3 data-key="cat_sciences">العلوم</h3>
+                    <p data-key="cat_sciences_desc">مصادر في الفيزياء، الكيمياء، الأحياء وعلوم الأرض</p>
                     <ul class="resources-list">
                         <li class="resource-item">
                             <a href="https://www.khanacademy.org/science" target="_blank">
-                                <i class="fas fa-external-link-alt"></i> Khan Academy - العلوم
+                                <i class="fas fa-external-link-alt"></i> Khan Academy - Sciences
+                                <span class="lang-badge en">EN</span>
+                                <span class="lang-badge fr">FR</span>
                             </a>
                         </li>
                         <li class="resource-item">
                             <a href="https://openstax.org/subjects/science" target="_blank">
-                                <i class="fas fa-external-link-alt"></i> OpenStax - كتب العلوم
+                                <i class="fas fa-external-link-alt"></i> OpenStax - Science Books
+                                <span class="lang-badge en">EN</span>
                             </a>
                         </li>
                         <li class="resource-item">
                             <a href="https://www.sciencedirect.com/" target="_blank">
                                 <i class="fas fa-external-link-alt"></i> ScienceDirect
+                                <span class="lang-badge en">EN</span>
                             </a>
                         </li>
                         <li class="resource-item">
                             <a href="https://www.coursera.org/browse/physical-science-and-engineering" target="_blank">
-                                <i class="fas fa-external-link-alt"></i> Coursera - العلوم
+                                <i class="fas fa-external-link-alt"></i> Coursera - Sciences
+                                <span class="lang-badge en">EN</span>
+                                <span class="lang-badge fr">FR</span>
                             </a>
                         </li>
                     </ul>
@@ -530,27 +569,33 @@
                     <div class="category-icon">
                         <i class="fas fa-calculator"></i>
                     </div>
-                    <h3>الرياضيات</h3>
-                    <p>موارد تعليمية في الجبر، الهندسة، التفاضل والتكامل</p>
+                    <h3 data-key="cat_math">الرياضيات</h3>
+                    <p data-key="cat_math_desc">موارد تعليمية في الجبر، الهندسة، التفاضل والتكامل</p>
                     <ul class="resources-list">
                         <li class="resource-item">
                             <a href="https://www.khanacademy.org/math" target="_blank">
-                                <i class="fas fa-external-link-alt"></i> Khan Academy - الرياضيات
+                                <i class="fas fa-external-link-alt"></i> Khan Academy - Mathématiques
+                                <span class="lang-badge en">EN</span>
+                                <span class="lang-badge fr">FR</span>
                             </a>
                         </li>
                         <li class="resource-item">
                             <a href="https://www.mathsisfun.com/" target="_blank">
                                 <i class="fas fa-external-link-alt"></i> Maths Is Fun
+                                <span class="lang-badge en">EN</span>
                             </a>
                         </li>
                         <li class="resource-item">
                             <a href="https://www.wolframalpha.com/" target="_blank">
                                 <i class="fas fa-external-link-alt"></i> Wolfram Alpha
+                                <span class="lang-badge en">EN</span>
                             </a>
                         </li>
                         <li class="resource-item">
                             <a href="https://www.geogebra.org/" target="_blank">
                                 <i class="fas fa-external-link-alt"></i> GeoGebra
+                                <span class="lang-badge en">EN</span>
+                                <span class="lang-badge fr">FR</span>
                             </a>
                         </li>
                     </ul>
@@ -561,27 +606,33 @@
                     <div class="category-icon">
                         <i class="fas fa-book"></i>
                     </div>
-                    <h3>القراءة والأدب</h3>
-                    <p>كتب ومصادر أدبية متنوعة</p>
+                    <h3 data-key="cat_literature">القراءة والأدب</h3>
+                    <p data-key="cat_literature_desc">كتب ومصادر أدبية متنوعة</p>
                     <ul class="resources-list">
                         <li class="resource-item">
                             <a href="https://www.pdfdrive.com/" target="_blank">
                                 <i class="fas fa-external-link-alt"></i> PDF Drive
+                                <span class="lang-badge en">EN</span>
+                                <span class="lang-badge fr">FR</span>
                             </a>
                         </li>
                         <li class="resource-item">
                             <a href="https://www.gutenberg.org/" target="_blank">
                                 <i class="fas fa-external-link-alt"></i> Project Gutenberg
+                                <span class="lang-badge en">EN</span>
+                                <span class="lang-badge fr">FR</span>
                             </a>
                         </li>
                         <li class="resource-item">
-                            <a href="https://openlibrary.org/" target="_blank">
-                                <i class="fas fa-external-link-alt"></i> Open Library
+                            <a href="https://gallica.bnf.fr/" target="_blank">
+                                <i class="fas fa-external-link-alt"></i> Gallica - BnF
+                                <span class="lang-badge fr">FR</span>
                             </a>
                         </li>
                         <li class="resource-item">
                             <a href="https://archive.org/details/books" target="_blank">
-                                <i class="fas fa-external-link-alt"></i> Internet Archive - الكتب
+                                <i class="fas fa-external-link-alt"></i> Internet Archive - Books
+                                <span class="lang-badge en">EN</span>
                             </a>
                         </li>
                     </ul>
@@ -592,27 +643,33 @@
                     <div class="category-icon">
                         <i class="fas fa-language"></i>
                     </div>
-                    <h3>اللغات</h3>
-                    <p>تعلم اللغات المختلفة وتطوير المهارات اللغوية</p>
+                    <h3 data-key="cat_languages">اللغات</h3>
+                    <p data-key="cat_languages_desc">تعلم اللغات المختلفة وتطوير المهارات اللغوية</p>
                     <ul class="resources-list">
                         <li class="resource-item">
                             <a href="https://www.duolingo.com/" target="_blank">
                                 <i class="fas fa-external-link-alt"></i> Duolingo
+                                <span class="lang-badge en">EN</span>
+                                <span class="lang-badge fr">FR</span>
                             </a>
                         </li>
                         <li class="resource-item">
                             <a href="https://www.bbc.co.uk/learningenglish" target="_blank">
                                 <i class="fas fa-external-link-alt"></i> BBC Learning English
+                                <span class="lang-badge en">EN</span>
                             </a>
                         </li>
                         <li class="resource-item">
-                            <a href="https://www.memrise.com/" target="_blank">
-                                <i class="fas fa-external-link-alt"></i> Memrise
+                            <a href="https://www.tv5monde.com/apprendre-francais" target="_blank">
+                                <i class="fas fa-external-link-alt"></i> TV5 Monde - Apprendre le français
+                                <span class="lang-badge fr">FR</span>
                             </a>
                         </li>
                         <li class="resource-item">
                             <a href="https://www.busuu.com/" target="_blank">
                                 <i class="fas fa-external-link-alt"></i> Busuu
+                                <span class="lang-badge en">EN</span>
+                                <span class="lang-badge fr">FR</span>
                             </a>
                         </li>
                     </ul>
@@ -623,27 +680,32 @@
                     <div class="category-icon">
                         <i class="fas fa-graduation-cap"></i>
                     </div>
-                    <h3>الامتحانات والاختبارات</h3>
-                    <p>مصادر للتحضير للامتحانات والاختبارات</p>
+                    <h3 data-key="cat_exams">الامتحانات والاختبارات</h3>
+                    <p data-key="cat_exams_desc">مصادر للتحضير للامتحانات والاختبارات</p>
                     <ul class="resources-list">
                         <li class="resource-item">
                             <a href="https://www.examinations.ie/" target="_blank">
-                                <i class="fas fa-external-link-alt"></i> State Examinations
+                                <i class="fas fa-external-link-alt"></i> State Examinations (Ireland)
+                                <span class="lang-badge en">EN</span>
                             </a>
                         </li>
                         <li class="resource-item">
                             <a href="https://quizlet.com/" target="_blank">
                                 <i class="fas fa-external-link-alt"></i> Quizlet
+                                <span class="lang-badge en">EN</span>
+                                <span class="lang-badge fr">FR</span>
                             </a>
                         </li>
                         <li class="resource-item">
-                            <a href="https://www.studyblue.com/" target="_blank">
-                                <i class="fas fa-external-link-alt"></i> StudyBlue
+                            <a href="https://www.annabac.com/" target="_blank">
+                                <i class="fas fa-external-link-alt"></i> Annabac (Bac France)
+                                <span class="lang-badge fr">FR</span>
                             </a>
                         </li>
                         <li class="resource-item">
                             <a href="https://www.sparknotes.com/" target="_blank">
                                 <i class="fas fa-external-link-alt"></i> SparkNotes
+                                <span class="lang-badge en">EN</span>
                             </a>
                         </li>
                     </ul>
@@ -654,27 +716,32 @@
                     <div class="category-icon">
                         <i class="fas fa-search"></i>
                     </div>
-                    <h3>البحث الأكاديمي</h3>
-                    <p>أدوات ومحركات بحث أكاديمية</p>
+                    <h3 data-key="cat_research">البحث الأكاديمي</h3>
+                    <p data-key="cat_research_desc">أدوات ومحركات بحث أكاديمية</p>
                     <ul class="resources-list">
                         <li class="resource-item">
                             <a href="https://scholar.google.com/" target="_blank">
                                 <i class="fas fa-external-link-alt"></i> Google Scholar
+                                <span class="lang-badge en">EN</span>
+                                <span class="lang-badge fr">FR</span>
                             </a>
                         </li>
                         <li class="resource-item">
                             <a href="https://www.researchgate.net/" target="_blank">
                                 <i class="fas fa-external-link-alt"></i> ResearchGate
+                                <span class="lang-badge en">EN</span>
                             </a>
                         </li>
                         <li class="resource-item">
-                            <a href="https://www.academia.edu/" target="_blank">
-                                <i class="fas fa-external-link-alt"></i> Academia.edu
+                            <a href="https://www.persee.fr/" target="_blank">
+                                <i class="fas fa-external-link-alt"></i> Persée (Revues françaises)
+                                <span class="lang-badge fr">FR</span>
                             </a>
                         </li>
                         <li class="resource-item">
                             <a href="https://www.jstor.org/" target="_blank">
                                 <i class="fas fa-external-link-alt"></i> JSTOR
+                                <span class="lang-badge en">EN</span>
                             </a>
                         </li>
                     </ul>
@@ -685,27 +752,31 @@
                     <div class="category-icon">
                         <i class="fas fa-spell-check"></i>
                     </div>
-                    <h3>القواميس</h3>
-                    <p>قواميس ومراجع لغوية متعددة</p>
+                    <h3 data-key="cat_dictionary">القواميس</h3>
+                    <p data-key="cat_dictionary_desc">قواميس ومراجع لغوية متعددة</p>
                     <ul class="resources-list">
                         <li class="resource-item">
                             <a href="https://www.almaany.com/" target="_blank">
                                 <i class="fas fa-external-link-alt"></i> المعاني
+                                <span class="lang-badge ar">AR</span>
                             </a>
                         </li>
                         <li class="resource-item">
                             <a href="https://dictionary.cambridge.org/" target="_blank">
                                 <i class="fas fa-external-link-alt"></i> Cambridge Dictionary
+                                <span class="lang-badge en">EN</span>
                             </a>
                         </li>
                         <li class="resource-item">
-                            <a href="https://www.merriam-webster.com/" target="_blank">
-                                <i class="fas fa-external-link-alt"></i> Merriam-Webster
+                            <a href="https://www.larousse.fr/" target="_blank">
+                                <i class="fas fa-external-link-alt"></i> Larousse
+                                <span class="lang-badge fr">FR</span>
                             </a>
                         </li>
                         <li class="resource-item">
                             <a href="https://www.oxfordlearnersdictionaries.com/" target="_blank">
                                 <i class="fas fa-external-link-alt"></i> Oxford Learner's
+                                <span class="lang-badge en">EN</span>
                             </a>
                         </li>
                     </ul>
@@ -716,26 +787,150 @@
                     <div class="category-icon">
                         <i class="fas fa-cloud"></i>
                     </div>
-                    <h3>المكتبة الرقمية - الكوثر</h3>
-                    <p>مكتبتنا الرقمية الخاصة على Google Drive</p>
+                    <h3 data-key="cat_digital_lib">المكتبة الرقمية - الكوثر</h3>
+                    <p data-key="cat_digital_lib_desc">مكتبتنا الرقمية الخاصة على Google Drive</p>
                     <a href="https://drive.google.com/drive/folders/1M4OK8hN_JYhYpPGCxpznKNPlO08Iw7Zx" target="_blank" class="digital-library-btn">
-                        <i class="fas fa-folder-open"></i> الدخول إلى المكتبة الرقمية
+                        <i class="fas fa-folder-open"></i> <span data-key="digital_lib_btn">الدخول إلى المكتبة الرقمية</span>
                     </a>
                 </div>
             </div>
         </div>
 
         <footer>
-            <p>&copy; 2025 مدارس الكوثر العالمية - جميع الحقوق محفوظة</p>
+            <p data-key="footer_text">&copy; 2025 مدارس الكوثر العالمية - جميع الحقوق محفوظة</p>
         </footer>
     </div>
 
     <script>
-        // Gestion de la connexion
+        const translations = {
+            ar: {
+                login_title: 'فضاء المدرسين والطلاب',
+                login_subtitle: 'الرجاء إدخال بيانات الاعتماد للوصول إلى الموارد التعليمية',
+                username_placeholder: 'اسم المستخدم',
+                password_placeholder: 'كلمة المرور',
+                login_btn: 'تسجيل الدخول',
+                back_link: 'العودة إلى الصفحة الرئيسية',
+                header_title: 'فضاء المدرسين والطلاب',
+                school_name: 'مدارس الكوثر العالمية',
+                logout_btn: 'تسجيل الخروج',
+                intro_title: 'مرحباً بكم في مركز الموارد التعليمية',
+                intro_desc: 'استكشف مجموعة واسعة من المصادر الأكاديمية المجانية والمكتبة الرقمية لمدارس الكوثر',
+                resources_title: 'الموارد الأكاديمية المجانية',
+                cat_sciences: 'العلوم',
+                cat_sciences_desc: 'مصادر في الفيزياء، الكيمياء، الأحياء وعلوم الأرض',
+                cat_math: 'الرياضيات',
+                cat_math_desc: 'موارد تعليمية في الجبر، الهندسة، التفاضل والتكامل',
+                cat_literature: 'القراءة والأدب',
+                cat_literature_desc: 'كتب ومصادر أدبية متنوعة',
+                cat_languages: 'اللغات',
+                cat_languages_desc: 'تعلم اللغات المختلفة وتطوير المهارات اللغوية',
+                cat_exams: 'الامتحانات والاختبارات',
+                cat_exams_desc: 'مصادر للتحضير للامتحانات والاختبارات',
+                cat_research: 'البحث الأكاديمي',
+                cat_research_desc: 'أدوات ومحركات بحث أكاديمية',
+                cat_dictionary: 'القواميس',
+                cat_dictionary_desc: 'قواميس ومراجع لغوية متعددة',
+                cat_digital_lib: 'المكتبة الرقمية - الكوثر',
+                cat_digital_lib_desc: 'مكتبتنا الرقمية الخاصة على Google Drive',
+                digital_lib_btn: 'الدخول إلى المكتبة الرقمية',
+                footer_text: '© 2025 مدارس الكوثر العالمية - جميع الحقوق محفوظة'
+            },
+            fr: {
+                login_title: 'Espace Enseignants et Élèves',
+                login_subtitle: 'Veuillez entrer vos identifiants pour accéder aux ressources éducatives',
+                username_placeholder: 'Nom d\'utilisateur',
+                password_placeholder: 'Mot de passe',
+                login_btn: 'Se connecter',
+                back_link: 'Retour à la page d\'accueil',
+                header_title: 'Espace Enseignants et Élèves',
+                school_name: 'Écoles Internationales Al-Kawthar',
+                logout_btn: 'Se déconnecter',
+                intro_title: 'Bienvenue au Centre de Ressources Éducatives',
+                intro_desc: 'Explorez une large gamme de ressources académiques gratuites et la bibliothèque numérique des Écoles Al-Kawthar',
+                resources_title: 'Ressources Académiques Gratuites',
+                cat_sciences: 'Sciences',
+                cat_sciences_desc: 'Ressources en physique, chimie, biologie et sciences de la terre',
+                cat_math: 'Mathématiques',
+                cat_math_desc: 'Ressources éducatives en algèbre, géométrie, calcul différentiel et intégral',
+                cat_literature: 'Lecture et Littérature',
+                cat_literature_desc: 'Livres et ressources littéraires variées',
+                cat_languages: 'Langues',
+                cat_languages_desc: 'Apprendre différentes langues et développer les compétences linguistiques',
+                cat_exams: 'Examens et Tests',
+                cat_exams_desc: 'Ressources pour la préparation aux examens et tests',
+                cat_research: 'Recherche Académique',
+                cat_research_desc: 'Outils et moteurs de recherche académique',
+                cat_dictionary: 'Dictionnaires',
+                cat_dictionary_desc: 'Dictionnaires et références linguistiques multiples',
+                cat_digital_lib: 'Bibliothèque Numérique - Al-Kawthar',
+                cat_digital_lib_desc: 'Notre bibliothèque numérique privée sur Google Drive',
+                digital_lib_btn: 'Accéder à la Bibliothèque Numérique',
+                footer_text: '© 2025 Écoles Internationales Al-Kawthar - Tous droits réservés'
+            },
+            en: {
+                login_title: 'Teachers and Students Space',
+                login_subtitle: 'Please enter your credentials to access educational resources',
+                username_placeholder: 'Username',
+                password_placeholder: 'Password',
+                login_btn: 'Login',
+                back_link: 'Back to home page',
+                header_title: 'Teachers and Students Space',
+                school_name: 'Al-Kawthar International Schools',
+                logout_btn: 'Logout',
+                intro_title: 'Welcome to the Educational Resources Center',
+                intro_desc: 'Explore a wide range of free academic resources and Al-Kawthar Schools\' digital library',
+                resources_title: 'Free Academic Resources',
+                cat_sciences: 'Sciences',
+                cat_sciences_desc: 'Resources in physics, chemistry, biology and earth sciences',
+                cat_math: 'Mathematics',
+                cat_math_desc: 'Educational resources in algebra, geometry, differential and integral calculus',
+                cat_literature: 'Reading and Literature',
+                cat_literature_desc: 'Various books and literary resources',
+                cat_languages: 'Languages',
+                cat_languages_desc: 'Learn different languages and develop linguistic skills',
+                cat_exams: 'Exams and Tests',
+                cat_exams_desc: 'Resources for exam and test preparation',
+                cat_research: 'Academic Research',
+                cat_research_desc: 'Academic search engines and tools',
+                cat_dictionary: 'Dictionaries',
+                cat_dictionary_desc: 'Multiple dictionaries and language references',
+                cat_digital_lib: 'Digital Library - Al-Kawthar',
+                cat_digital_lib_desc: 'Our private digital library on Google Drive',
+                digital_lib_btn: 'Access Digital Library',
+                footer_text: '© 2025 Al-Kawthar International Schools - All rights reserved'
+            }
+        };
+
+        let currentLanguage = localStorage.getItem('preferred_language') || 'ar';
         const loginPage = document.getElementById('login-page');
         const mainPage = document.getElementById('main-page');
         const loginForm = document.getElementById('login-form');
         const logoutBtn = document.getElementById('logout-btn');
+
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            localStorage.setItem('preferred_language', lang);
+            document.documentElement.lang = lang;
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === lang);
+            });
+
+            document.querySelectorAll('[data-key]').forEach(el => {
+                const key = el.dataset.key;
+                if (translations[lang] && translations[lang][key]) {
+                    el.textContent = translations[lang][key];
+                }
+            });
+
+            document.querySelectorAll('[data-key-placeholder]').forEach(el => {
+                const key = el.dataset.keyPlaceholder;
+                if (translations[lang] && translations[lang][key]) {
+                    el.placeholder = translations[lang][key];
+                }
+            });
+        }
 
         // Vérifier si déjà connecté
         if (localStorage.getItem('studentTeacherLoggedIn') === 'true') {
@@ -751,7 +946,12 @@
                 localStorage.setItem('studentTeacherLoggedIn', 'true');
                 showMainPage();
             } else {
-                document.getElementById('login-error').textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة';
+                const errorMsg = {
+                    ar: 'اسم المستخدم أو كلمة المرور غير صحيحة',
+                    fr: 'Nom d\'utilisateur ou mot de passe incorrect',
+                    en: 'Incorrect username or password'
+                };
+                document.getElementById('login-error').textContent = errorMsg[currentLanguage];
             }
         });
 
@@ -764,6 +964,13 @@
             loginPage.style.display = 'none';
             mainPage.style.display = 'block';
         }
+
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', () => changeLanguage(btn.dataset.lang));
+        });
+
+        // Appliquer la langue sauvegardée au chargement
+        changeLanguage(currentLanguage);
     </script>
 </body>
 </html>

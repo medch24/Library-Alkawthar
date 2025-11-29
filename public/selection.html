@@ -12,6 +12,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            transition: all 0.3s ease;
         }
         
         body {
@@ -38,6 +39,42 @@
             background-position: center;
             opacity: 0.1;
             z-index: 0;
+        }
+        
+        .language-selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+            display: flex;
+            gap: 10px;
+            background: rgba(255,255,255,0.2);
+            padding: 10px;
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+        }
+        
+        [dir="rtl"] .language-selector {
+            left: 20px;
+            right: auto;
+        }
+        
+        .lang-btn {
+            background: rgba(255,255,255,0.3);
+            border: 2px solid white;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 700;
+            opacity: 0.7;
+        }
+        
+        .lang-btn.active,
+        .lang-btn:hover {
+            opacity: 1;
+            background: white;
+            color: #667eea;
         }
         
         .container {
@@ -239,15 +276,31 @@
             .card h2 {
                 font-size: 1.5rem;
             }
+            
+            .language-selector {
+                top: 10px;
+                right: 10px;
+            }
+            
+            [dir="rtl"] .language-selector {
+                left: 10px;
+                right: auto;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="language-selector">
+        <button class="lang-btn active" data-lang="ar"><i class="fas fa-globe"></i> عربي</button>
+        <button class="lang-btn" data-lang="fr"><i class="fas fa-globe"></i> FR</button>
+        <button class="lang-btn" data-lang="en"><i class="fas fa-globe"></i> EN</button>
+    </div>
+
     <div class="container">
         <div class="header">
             <img src="https://lh3.googleusercontent.com/d/1lQ3Babrs3Wgv4rakVmkK0oCWcM0cTKPK" alt="Logo Alkawthar" class="logo">
-            <h1>مكتبة مدارس الكوثر العالمية</h1>
-            <p>اختر المدخل المناسب لك</p>
+            <h1 data-key="title">مكتبة مدارس الكوثر العالمية</h1>
+            <p data-key="subtitle">اختر المدخل المناسب لك</p>
         </div>
         
         <div class="selection-cards">
@@ -255,10 +308,10 @@
                 <div class="card-icon">
                     <i class="fas fa-user-shield"></i>
                 </div>
-                <h2>فضاء أمين المكتبة</h2>
-                <p>إدارة الكتب، الإعارة، والإحصائيات</p>
+                <h2 data-key="librarian_title">فضاء أمين المكتبة</h2>
+                <p data-key="librarian_desc">إدارة الكتب، الإعارة، والإحصائيات</p>
                 <a href="index.html" class="card-button">
-                    <i class="fas fa-door-open"></i> الدخول إلى لوحة التحكم
+                    <i class="fas fa-door-open"></i> <span data-key="librarian_btn">الدخول إلى لوحة التحكم</span>
                 </a>
             </div>
             
@@ -266,13 +319,75 @@
                 <div class="card-icon">
                     <i class="fas fa-users"></i>
                 </div>
-                <h2>فضاء المدرسين والطلاب</h2>
-                <p>الموارد الرقمية والمصادر التعليمية</p>
+                <h2 data-key="student_title">فضاء المدرسين والطلاب</h2>
+                <p data-key="student_desc">الموارد الرقمية والمصادر التعليمية</p>
                 <a href="student-teacher.html" class="card-button">
-                    <i class="fas fa-book-reader"></i> الدخول إلى الموارد
+                    <i class="fas fa-book-reader"></i> <span data-key="student_btn">الدخول إلى الموارد</span>
                 </a>
             </div>
         </div>
     </div>
+
+    <script>
+        const translations = {
+            ar: {
+                title: 'مكتبة مدارس الكوثر العالمية',
+                subtitle: 'اختر المدخل المناسب لك',
+                librarian_title: 'فضاء أمين المكتبة',
+                librarian_desc: 'إدارة الكتب، الإعارة، والإحصائيات',
+                librarian_btn: 'الدخول إلى لوحة التحكم',
+                student_title: 'فضاء المدرسين والطلاب',
+                student_desc: 'الموارد الرقمية والمصادر التعليمية',
+                student_btn: 'الدخول إلى الموارد'
+            },
+            fr: {
+                title: 'Bibliothèque des Écoles Internationales Al-Kawthar',
+                subtitle: 'Choisissez votre espace',
+                librarian_title: 'Espace Bibliothécaire',
+                librarian_desc: 'Gestion des livres, prêts et statistiques',
+                librarian_btn: 'Accéder au tableau de bord',
+                student_title: 'Espace Enseignants et Élèves',
+                student_desc: 'Ressources numériques et sources éducatives',
+                student_btn: 'Accéder aux ressources'
+            },
+            en: {
+                title: 'Al-Kawthar International Schools Library',
+                subtitle: 'Choose your space',
+                librarian_title: 'Librarian Space',
+                librarian_desc: 'Book management, loans and statistics',
+                librarian_btn: 'Access Dashboard',
+                student_title: 'Teachers and Students Space',
+                student_desc: 'Digital resources and educational materials',
+                student_btn: 'Access Resources'
+            }
+        };
+
+        let currentLanguage = localStorage.getItem('preferred_language') || 'ar';
+
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            localStorage.setItem('preferred_language', lang);
+            document.documentElement.lang = lang;
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === lang);
+            });
+
+            document.querySelectorAll('[data-key]').forEach(el => {
+                const key = el.dataset.key;
+                if (translations[lang] && translations[lang][key]) {
+                    el.textContent = translations[lang][key];
+                }
+            });
+        }
+
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', () => changeLanguage(btn.dataset.lang));
+        });
+
+        // Appliquer la langue sauvegardée au chargement
+        changeLanguage(currentLanguage);
+    </script>
 </body>
 </html>
